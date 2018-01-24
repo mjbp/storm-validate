@@ -7,8 +7,8 @@ export default {
 	init() {
 		//prevent browser validation
 		this.form.setAttribute('novalidate', 'novalidate');
-
-		this.groups = Array.from(this.form.querySelectorAll('input:not([type=submit]), textarea, select'))
+		this.inputs = this.form.querySelectorAll('input:not([type=submit]), textarea, select');
+		this.groups = this.inputs
 						.reduce((acc, input) => {
 							if(!acc[input.getAttribute('name')]) {
 								acc[input.getAttribute('name')] = {
@@ -33,7 +33,8 @@ export default {
 		this.form.addEventListener('submit', e => {
 			e.preventDefault();
 			this.clearErrors();
-			this.setValidityState();
+			if(this.setValidityState()) this.form.submit();
+			else this.renderErrors(), initRealtimeValidation();
 		});
 
 		this.form.addEventListener('reset', e => { this.clearErrors(); });
@@ -60,22 +61,34 @@ export default {
 
 		return this;
 	},
+	initRealtimeValidation(){
+		this.inputs.forEach(input => {
+			input.addEventListener('change', this.setValidityState);
+		});
+	},
+	setGroupValidityState(){
+
+	},
 	setValidityState(){
 		let numErrors = 0;
 		for(let group in this.groups){
-			// this.groups[group].errorMessages = [];
-			this.groups[group] = Object.assign({}, this.groups[group], { valid: true, errorMessages: [] },  this.groups[group].validators.reduce((acc, validator) => {
-				if(!methods[validator](this.groups[group])) {
-					acc = {
-						valid: false,
-						errorMessages: acc.errorMessages ? [...acc.errorMessages, messages[validator]()] : [messages[validator]()]
-					};
-				}
-				return acc;
-			}, true));
+			this.groups[group] = 
+				Object.assign({}, 
+					this.groups[group],
+					{ valid: true, errorMessages: [] }, 
+					this.groups[group].validators.reduce((acc, validator) => {
+						if(!methods[validator](this.groups[group])) {
+							acc = {
+								valid: false,
+								dirty: true,
+								errorMessages: acc.errorMessages ? [...acc.errorMessages, messages[validator]()] : [messages[validator]()]
+							};
+						}
+					return acc;
+				}, true));
 			!this.groups[group].valid && ++numErrors;
 		}
-		numErrors > 0 && this.renderErrors();
+		return numErrors === 0;
 	},
 	clearErrors(){
 		for(let group in this.groups){

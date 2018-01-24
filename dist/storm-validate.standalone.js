@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.1.0: Wed, 24 Jan 2018 21:56:21 GMT
+ * @version 0.1.0: Wed, 24 Jan 2018 22:42:32 GMT
  * @author stormid
  * @license MIT
  */
@@ -419,8 +419,8 @@ var componentPrototype = {
 
         //prevent browser validation
         this.form.setAttribute('novalidate', 'novalidate');
-
-        this.groups = Array.from(this.form.querySelectorAll('input:not([type=submit]), textarea, select')).reduce(function (acc, input) {
+        this.inputs = this.form.querySelectorAll('input:not([type=submit]), textarea, select');
+        this.groups = this.inputs.reduce(function (acc, input) {
             if (!acc[input.getAttribute('name')]) {
                 acc[input.getAttribute('name')] = {
                     valid: false,
@@ -441,7 +441,7 @@ var componentPrototype = {
         this.form.addEventListener('submit', function (e) {
             e.preventDefault();
             _this2.clearErrors();
-            _this2.setValidityState();
+            if (_this2.setValidityState()) _this2.form.submit();else _this2.renderErrors(), initRealtimeValidation();
         });
 
         this.form.addEventListener('reset', function (e) {
@@ -466,29 +466,37 @@ var componentPrototype = {
 
         return this;
     },
-    setValidityState: function setValidityState() {
+    initRealtimeValidation: function initRealtimeValidation() {
         var _this3 = this;
+
+        this.inputs.forEach(function (input) {
+            input.addEventListener('change', _this3.setValidityState);
+        });
+    },
+    setGroupValidityState: function setGroupValidityState() {},
+    setValidityState: function setValidityState() {
+        var _this4 = this;
 
         var numErrors = 0;
 
         var _loop = function _loop(group) {
-            // this.groups[group].errorMessages = [];
-            _this3.groups[group] = Object.assign({}, _this3.groups[group], { valid: true, errorMessages: [] }, _this3.groups[group].validators.reduce(function (acc, validator) {
-                if (!methods[validator](_this3.groups[group])) {
+            _this4.groups[group] = Object.assign({}, _this4.groups[group], { valid: true, errorMessages: [] }, _this4.groups[group].validators.reduce(function (acc, validator) {
+                if (!methods[validator](_this4.groups[group])) {
                     acc = {
                         valid: false,
+                        dirty: true,
                         errorMessages: acc.errorMessages ? [].concat(_toConsumableArray(acc.errorMessages), [messages[validator]()]) : [messages[validator]()]
                     };
                 }
                 return acc;
             }, true));
-            !_this3.groups[group].valid && ++numErrors;
+            !_this4.groups[group].valid && ++numErrors;
         };
 
         for (var group in this.groups) {
             _loop(group);
         }
-        numErrors > 0 && this.renderErrors();
+        return numErrors === 0;
     },
     clearErrors: function clearErrors() {
         for (var group in this.groups) {
