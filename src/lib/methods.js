@@ -1,4 +1,5 @@
 import { isSelect, isCheckable } from './utils';
+import { emailRegex } from './constants';
 
 export default {
     // https://jqueryvalidation.org/required-method/
@@ -21,31 +22,43 @@ export default {
     // },
 
     required(group){
-        return group.reduce((acc, input) => {
+        return group.fields.reduce((acc, input) => {
             if(isSelect(input)) acc = (input.value() && input.value().length > 0);
             if(isCheckable(input)) acc = this.checked;
-            else acc = input.value !== undefined && input.value !== null && input.value.length > 0; 
+            else acc = (input.value !== undefined && input.value !== null && input.value.length > 0); 
+            return acc;
         }, false);
     },
 
     // https://jqueryvalidation.org/email-method/
-    email: function( value, element ) {
+    // email: function( value, element ) {
 
-        // From https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address
-        // Retrieved 2014-01-14
-        // If you have a problem with this implementation, report a bug against the above spec
-        // Or use custom methods to implement your own email validation
-        return this.optional( element ) || /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test( value );
+    //     // From https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address
+    //     // Retrieved 2014-01-14
+    //     // If you have a problem with this implementation, report a bug against the above spec
+    //     // Or use custom methods to implement your own email validation
+    //     return this.optional( element ) || /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test( value );
+    // },
+
+    email(group) {
+        return group.fields.reduce((acc, input) => {
+            acc = emailRegex.test(input.value);
+            return acc;
+        }, false);
     },
 
     // https://jqueryvalidation.org/url-method/
-    url: function( value, element ) {
+    // url: function( value, element ) {
 
-        // Copyright (c) 2010-2013 Diego Perini, MIT licensed
-        // https://gist.github.com/dperini/729294
-        // see also https://mathiasbynens.be/demo/url-regex
-        // modified to allow protocol-relative URLs
-        return this.optional( element ) || /^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})).?)(?::\d{2,5})?(?:[/?#]\S*)?$/i.test( value );
+    //     // Copyright (c) 2010-2013 Diego Perini, MIT licensed
+    //     // https://gist.github.com/dperini/729294
+    //     // see also https://mathiasbynens.be/demo/url-regex
+    //     // modified to allow protocol-relative URLs
+    //     return this.optional( element ) || /^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})).?)(?::\d{2,5})?(?:[/?#]\S*)?$/i.test( value );
+    // },
+
+    url(group) {
+        return false;
     },
 
     // https://jqueryvalidation.org/date-method/
@@ -69,15 +82,21 @@ export default {
     },
 
     // https://jqueryvalidation.org/minlength-method/
-    minlength: function( value, element, param ) {
-        var length = $.isArray( value ) ? value.length : this.getLength( value, element );
-        return this.optional( element ) || length >= param;
+    // minlength: function( value, element, param ) {
+    //     var length = $.isArray( value ) ? value.length : this.getLength( value, element );
+    //     return this.optional( element ) || length >= param;
+    // },
+    minlength(group){
+        return false;
     },
 
     // https://jqueryvalidation.org/maxlength-method/
-    maxlength: function( value, element, param ) {
-        var length = $.isArray( value ) ? value.length : this.getLength( value, element );
-        return this.optional( element ) || length <= param;
+    // maxlength: function( value, element, param ) {
+    //     var length = $.isArray( value ) ? value.length : this.getLength( value, element );
+    //     return this.optional( element ) || length <= param;
+    // },
+    maxlength(group){
+        return true;
     },
 
     // https://jqueryvalidation.org/rangelength-method/

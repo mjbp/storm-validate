@@ -2,14 +2,21 @@ export const isSelect = field => field.nodeName.toLowerCase() === 'select';
 
 export const isCheckable = field => (/radio|checkbox/i).test(field.type);
 
+export const h = (nodeName, attributes, text) => {
+    let node = document.createElement(nodeName);
+
+    for(let prop in attributes) node.setAttribute(prop, attributes[prop]);
+    if(text !== undefined && text.length) node.appendChild(document.createTextNode(text));
+
+    return node;
+};
+
 const checkForDataConstraint = (input, constraint) => input.getAttribute(`data-rule-${constraint}`) && input.getAttribute(`data-rule-${constraint}`) !== 'false';
 
 const checkForConstraint = (input, constraint) => input.getAttribute('type') === constraint || checkForDataConstraint(input, constraint);
 
 export const normaliseValidators = input => {
     let validators = [];
-
-    console.log((input.getAttribute('required') && input.getAttribute('required') !== 'false'));
     /* 
         Extract from 
         - data-attributes

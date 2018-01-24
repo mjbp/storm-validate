@@ -1,25 +1,27 @@
 // import inputPrototype from './input-prototype';
 import methods from './methods';
 import messages from './messages';
-import { normaliseValidators } from './utils';
+import { h, normaliseValidators } from './utils';
 
 export default {
 	init() {
 		//prevent browser validation
-		this.form.setAttribute('novalidate', 'novaildate');
+		this.form.setAttribute('novalidate', 'novalidate');
 
-		this.inputs = Array.from(this.form.querySelectorAll('input:not([type=submit]), textarea, select'));
-		this.groups = this.inputs.reduce((acc, input) => {
-			if(!acc[input.getAttribute('name')]) {
-				acc[input.getAttribute('name')] = {
-					valid:  false,
-					validators: normaliseValidators(input),
-					fields: [input]
-				};
-			}
-			else acc[input.getAttribute('name')].fields.push(input);
-			return acc;
-		}, []);
+		this.groups = Array.from(this.form.querySelectorAll('input:not([type=submit]), textarea, select'))
+						.reduce((acc, input) => {
+							if(!acc[input.getAttribute('name')]) {
+								acc[input.getAttribute('name')] = {
+									valid:  false,
+									validators: normaliseValidators(input),
+									fields: [input]
+								};
+							}
+							else acc[input.getAttribute('name')].fields.push(input);
+							return acc;
+						}, []);
+
+		
 
 		// this.inputs.forEach(input => {
 		// 	input.addEventListener('change', this.boundChangeHandler);
@@ -30,10 +32,11 @@ export default {
 
 		this.form.addEventListener('submit', e => {
 			e.preventDefault();
-			
-			
-
+			this.clearErrors();
+			this.setValidityState();
 		});
+
+		this.form.addEventListener('reset', e => { this.clearErrors(); });
 
 		/*
 
@@ -52,12 +55,46 @@ export default {
 
 		*/
 
-		console.log(this);
-
 		//validate whole form
 		//set aria-invalid on invalid inputs
 
 		return this;
+	},
+	setValidityState(){
+		let numErrors = 0;
+		for(let group in this.groups){
+			// this.groups[group].errorMessages = [];
+			this.groups[group] = Object.assign({}, this.groups[group], { valid: true, errorMessages: [] },  this.groups[group].validators.reduce((acc, validator) => {
+				if(!methods[validator](this.groups[group])) {
+					acc = {
+						valid: false,
+						errorMessages: acc.errorMessages ? [...acc.errorMessages, messages[validator]()] : [messages[validator]()]
+					};
+				}
+				return acc;
+			}, true));
+			!this.groups[group].valid && ++numErrors;
+		}
+		numErrors > 0 && this.renderErrors();
+	},
+	clearErrors(){
+		for(let group in this.groups){
+			if(this.groups[group].errorDOM) {
+				this.groups[group].errorDOM.parentNode.removeChild(this.groups[group].errorDOM);
+				delete this.groups[group].errorDOM;
+			}
+		}
+	},
+	renderErrors(){
+		//support for inline and error list?
+		for(let group in this.groups){
+			if(!this.groups[group].valid) {
+				this.groups[group].errorDOM = this.groups[group]
+												.fields[this.groups[group].fields.length-1]
+												.parentNode
+												.appendChild(h('div', { class: 'error' }, this.groups[group].errorMessages[0]));
+			}
+		}
 	},
 	addMethod(name, fn, message){
 		this.groups.validators.push(fn)
