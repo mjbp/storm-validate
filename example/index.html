@@ -144,7 +144,7 @@
             <fieldset>
               <div class="form-group">
                 <label for="cn">Name (required, at least 2 characters)</label>
-                <input id="cn" name="cn" data-rule-minlength="2" type="text" data-rule-required="true">
+                <input id="cn" name="cn" data-val="true" data-val-length="Please enter at least 2 characters." data-val-min="2" type="text" data-val-required="Custom message that this field is required">
                 <!-- <span class="text-danger field-validation-valid" data-valmsg-for="cn" data-valmsg-replace="true"></span> -->
               </div>
               <div class="form-group">

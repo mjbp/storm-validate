@@ -1,13 +1,12 @@
 // import inputPrototype from './input-prototype';
+// import { chooseRealTimeEvent } from './utils';
 import { 
-	h,
-	extractGroups,
-	chooseRealtimeEvent,
-	extractErrorMessage,
 	validationReducer,
-	removeUnvalidatedGroups,
-	normaliseValidators
-} from './utils';
+	assembleValidationGroup,
+	normaliseValidators,
+	removeUnvalidatableGroups
+} from './utils/validators';
+import { h } from './utils/dom';
 
 export default {
 	init() {
@@ -16,8 +15,8 @@ export default {
 
 		//delete me please
 		this.inputs = Array.from(this.form.querySelectorAll('input:not([type=submit]), textarea, select'));
-
-		this.groups = removeUnvalidatedGroups(this.inputs.reduce(extractGroups, {}));
+		
+		this.groups = removeUnvalidatableGroups(this.inputs.reduce(assembleValidationGroup, {}));
 
 		this.initListeners();
 		
@@ -52,23 +51,22 @@ export default {
 			e.preventDefault();
 			this.clearErrors();
 			if(this.setValidityState()) this.form.submit();
-			else this.renderErrors(), this.initRealtimeValidation();
+			else this.renderErrors(), this.initRealTimeValidation();
 		});
 
 		this.form.addEventListener('reset', e => { this.clearErrors(); });
 	},
-	initRealtimeValidation(){
+	initRealTimeValidation(){
 		let handler = function(e) {
 				let group = e.target.getAttribute('name');
 				if(this.groups[group].errorDOM) this.removeError(group);
-				let validityState = this.setGroupValidityState(group);
-				if(!validityState) this.renderError(group);
+				if(!this.setGroupValidityState(group)) this.renderError(group);
 			}.bind(this);
 
 		//map/over groups instead
 		this.inputs.forEach(input => {
-			let ev = chooseRealtimeEvent(input);
-			input.addEventListener(ev, handler);
+			// let ev = chooseRealTimeEvent(input);
+			input.addEventListener('input', handler);
 		});
 	},
 	setGroupValidityState(group){

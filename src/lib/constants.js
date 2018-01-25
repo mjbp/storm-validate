@@ -24,6 +24,7 @@ export const DOTNETCORE_PARAMS = {
 
 export const DOTNETCORE_ADAPTORS = [
     //'regex', -> same as pattern, how is it applied to an element? pattern attribute? data-val-regex?
+    'required',
     'date',
     'digits',
     'email',
@@ -32,7 +33,6 @@ export const DOTNETCORE_ADAPTORS = [
     'length',
     'range',
     'equalto',
-    'required',
     'remote',
     'password' //-> maps to min, nonalphamain, and regex methods
 ];

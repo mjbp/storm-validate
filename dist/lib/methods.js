@@ -3,7 +3,7 @@ import { EMAIL_REGEX, URL_REGEX, DATE_ISO_REGEX, NUMBER_REGEX, DIGITS_REGEX } fr
 
 const regexMethod = regex => group => isOptional(group)|| group.fields.reduce((acc, input) => (acc = regex.test(input.value), acc), false);
 
-const paramMethod = (type, reducer) => group => isOptional(group) || group.fields.reduce(reducer(group.validators.filter(validator => validator.type === type)[0].param), false);
+const paramMethod = (type, reducer) => group => isOptional(group) || group.fields.reduce(reducer(group.validators.filter(validator => validator.type === type)[0].params), false);
 
 export default {
     required: group => extractValueFromGroup(group) !== false,
@@ -21,9 +21,10 @@ export default {
         'maxlength', 
         param => (acc, input) => (acc = Array.isArray(input.value) ? input.value.length <= +param : +input.value.length <= +param, acc)
     ),
-    min: paramMethod('min', param => (acc, input) => (acc = +input.value >= +param, acc)),
-    max: paramMethod('max', param => (acc, input) => (acc = +input.value <= +param, acc)),
-    range: paramMethod('range', param => (acc, input) => (acc = (+input.value >= +param[0] && +input.value <= +param[1]), acc)),
+    min: paramMethod('min', params => (acc, input) => (acc = +input.value >= +param, acc)),
+    max: paramMethod('max', params => (acc, input) => (acc = +input.value <= +param, acc)),
+    length: paramMethod('length', params => (acc, input) => (acc = (+input.value.length >= +params[0] && (params[1] === undefined || +input.value.length <= +params[1])), acc)),
+    range: paramMethod('range', params => (acc, input) => (acc = (+input.value >= +params[0] && +input.value <= +params[1]), acc)),
 
     //return this.optional( element ) || ( value >= param[ 0 ] && value <= param[ 1 ] );
     
