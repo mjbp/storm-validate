@@ -11,11 +11,15 @@ const init = (sel, opts) => {
 		if(el.getAttribute('novalidate')) return;
 		acc.push(Object.assign(Object.create(componentPrototype), {
 			form: el,
-			inputs: Array.from(el.querySelectorAll('input:not([type=submit]), textarea, select')),
 			settings: Object.assign({}, defaults, opts)
 		}).init());
 		return acc;
 	}, []);
 };
+
+/*
+	Check whether a form containing any fields with data-val=true
+	Initialise using data-val-true to designate validateable inputs
+*/
 
 export default { init };

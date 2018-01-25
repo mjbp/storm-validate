@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.1.0: Wed, 24 Jan 2018 22:42:31 GMT
+ * @version 0.1.0: Thu, 25 Jan 2018 16:53:41 GMT
  * @author stormid
  * @license MIT
  */
@@ -17,11 +17,15 @@ const init = (sel, opts) => {
 		if(el.getAttribute('novalidate')) return;
 		acc.push(Object.assign(Object.create(componentPrototype), {
 			form: el,
-			inputs: Array.from(el.querySelectorAll('input:not([type=submit]), textarea, select')),
 			settings: Object.assign({}, defaults, opts)
 		}).init());
 		return acc;
 	}, []);
 };
+
+/*
+	Check whether a form containing any fields with data-val=true
+	Initialise using data-val-true to designate validateable inputs
+*/
 
 export default { init };
