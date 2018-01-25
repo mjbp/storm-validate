@@ -20,4 +20,19 @@ export const DOTNETCORE_PARAMS = {
     minlength: ['min'],
     maxlength: ['max'],
     remote: ['url', 'type', 'additionalfields']//??
-}
+};
+
+export const DOTNETCORE_ADAPTORS = [
+    //'regex', -> same as pattern, how is it applied to an element? pattern attribute? data-val-regex?
+    'date',
+    'digits',
+    'email',
+    'number',
+    'url',
+    'length',
+    'range',
+    'equalto',
+    'required',
+    'remote',
+    'password' //-> maps to min, nonalphamain, and regex methods
+];

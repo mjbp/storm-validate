@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.1.0: Thu, 25 Jan 2018 16:48:21 GMT
+ * @version 0.1.0: Thu, 25 Jan 2018 17:42:33 GMT
  * @author stormid
  * @license MIT
  */
@@ -43,6 +43,11 @@ var DATE_ISO_REGEX = /^\d{4}[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01]
 var NUMBER_REGEX = /^(?:-?\d+|-?\d{1,3}(?:,\d{3})+)?(?:\.\d+)?$/;
 
 var DIGITS_REGEX = /^\d+$/;
+
+var DOTNETCORE_ADAPTORS = [
+//'regex', -> same as pattern, how is it applied to an element? pattern attribute? data-val-regex?
+'date', 'digits', 'email', 'number', 'url', 'length', 'range', 'equalto', 'required', 'remote', 'password' //-> maps to min, nonalphamain, and regex methods
+];
 
 var regexMethod = function regexMethod(regex) {
   return function (group) {
@@ -168,6 +173,78 @@ var messages = {
   }
 };
 
+// const checkForDataRuleConstraint = (input, constraint) => input.getAttribute(`data-rule-${constraint}`) && input.getAttribute(`data-rule-${constraint}`) !== 'false';
+
+// const checkForDataValConstraint = (input, constraint) => input.getAttribute(`data-val-${constraint}`) && input.getAttribute(`data-val-${constraint}`) !== 'false';
+
+// const checkForConstraint = (input, constraint) => input.getAttribute('type') === constraint || checkForDataRuleConstraint(input, constraint);
+
+var extractDataValValidators = function extractDataValValidators(input) {
+  return DOTNETCORE_ADAPTORS.reduce(function (validators, adaptor) {
+    var validator = {};
+    if (input.getAttribute('data-val-' + adaptor)) validator = {
+      type: adaptor,
+      message: input.getAttribute('data-val-' + adaptor)
+    };
+    // if(DOTNETCORE_PARAMS[input.getAttribute(`data-val-${adaptor}`)])
+    return validators;
+  }, []);
+};
+
+var normalise = function normalise(input) {
+  var validators = [];
+
+  //how to merge the same validator from multiple sources, e.g. DOM attribute versus data-val?
+  //assume data-val is cannonical?
+  if (input.getAttribute('data-val') === 'true') validators.concat(extractDataValValidators(input));
+
+  // To do
+  // validate the validation parameters
+
+  /*
+      - check if data-val="true"
+           validator:
+          {
+              type: String [required],
+              params: Array [optional],
+              message: String [optional]
+          }
+   */
+  /*
+  //required
+  if((input.hasAttribute('required') && input.getAttribute('required') !== 'false') || checkForDataRuleConstraint(input, 'required') || checkForDataValConstraint(input, 'required')) validators.push({type: 'required'});
+   //email
+  if(checkForConstraint(input, 'email') || checkForDataValConstraint(input, 'email')) validators.push({type: 'email'});
+   //url
+  if(checkForConstraint(input, 'url') || checkForDataValConstraint(input, 'url')) validators.push({type: 'url'});
+   //date
+  if(checkForConstraint(input, 'date') || checkForDataValConstraint(input, 'date')) validators.push({type: 'date'});
+   //dateISO
+  if(checkForConstraint(input, 'dateISO') || checkForDataValConstraint(input, 'dateISO')) validators.push({type: 'dateISO'});
+   //number
+  if(checkForConstraint(input, 'number') || checkForDataValConstraint(input, 'number')) validators.push({type: 'number'});
+   //minlength
+  if((input.getAttribute('minlength') && input.getAttribute('minlength') !== 'false') || checkForDataRuleConstraint(input, 'minlength') || checkForDataValConstraint(input, 'minlength')) validators.push({type: 'minlength', param: extractValidationParams('minlength')});
+   //maxlength
+  if((input.getAttribute('maxlength') && input.getAttribute('maxlength') !== 'false') || checkForDataRuleConstraint(input, 'maxlength') || checkForDataValConstraint(input, 'maxlength')) validators.push({type: 'maxlength', param: input.getAttribute('maxlength')});
+   //min
+  if((input.getAttribute('min') && input.getAttribute('min') !== 'false') || checkForDataRuleConstraint(input, 'min') || checkForDataValConstraint(input, 'min')) validators.push({type: 'min', param: input.getAttribute('min')});
+   //max
+  if((input.getAttribute('max') && input.getAttribute('max') !== 'false') || checkForDataRuleConstraint(input, 'max') || checkForDataValConstraint(input, 'max')) validators.push({type: 'max', param: input.getAttribute('max')});
+   //max
+  if((input.getAttribute('max') && input.getAttribute('max') !== 'false') || checkForDataRuleConstraint(input, 'max') || checkForDataValConstraint(input, 'max')) validators.push({type: 'max', param: input.getAttribute('max')});
+    //step
+   //equalTo
+   //remote
+   //digits
+   //rangelength
+  */
+
+  return validators;
+};
+
+var normaliseValidators = normalise;
+
 var isSelect = function isSelect(field) {
   return field.nodeName.toLowerCase() === 'select';
 };
@@ -259,54 +336,6 @@ var validationReducer = function validationReducer(group) {
 // const composer = (f, g) => (...args) => f(g(...args));
 // export const compose = (...fns) => fns.reduce(composer);
 // export const pipe = (...fns) => fns.reduceRight(composer);
-
-
-var normaliseValidators = function normaliseValidators(input) {
-  var validators = [];
-  // To do
-  // validate the validation parameters
-
-  /*
-      - check if data-val="true"
-           validator:
-          {
-              type: String [required],
-              params: Array [optional],
-              message: String [optional]
-          }
-   */
-  /*
-  //required
-  if((input.hasAttribute('required') && input.getAttribute('required') !== 'false') || checkForDataRuleConstraint(input, 'required') || checkForDataValConstraint(input, 'required')) validators.push({type: 'required'});
-   //email
-  if(checkForConstraint(input, 'email') || checkForDataValConstraint(input, 'email')) validators.push({type: 'email'});
-   //url
-  if(checkForConstraint(input, 'url') || checkForDataValConstraint(input, 'url')) validators.push({type: 'url'});
-   //date
-  if(checkForConstraint(input, 'date') || checkForDataValConstraint(input, 'date')) validators.push({type: 'date'});
-   //dateISO
-  if(checkForConstraint(input, 'dateISO') || checkForDataValConstraint(input, 'dateISO')) validators.push({type: 'dateISO'});
-   //number
-  if(checkForConstraint(input, 'number') || checkForDataValConstraint(input, 'number')) validators.push({type: 'number'});
-   //minlength
-  if((input.getAttribute('minlength') && input.getAttribute('minlength') !== 'false') || checkForDataRuleConstraint(input, 'minlength') || checkForDataValConstraint(input, 'minlength')) validators.push({type: 'minlength', param: extractValidationParams('minlength')});
-   //maxlength
-  if((input.getAttribute('maxlength') && input.getAttribute('maxlength') !== 'false') || checkForDataRuleConstraint(input, 'maxlength') || checkForDataValConstraint(input, 'maxlength')) validators.push({type: 'maxlength', param: input.getAttribute('maxlength')});
-   //min
-  if((input.getAttribute('min') && input.getAttribute('min') !== 'false') || checkForDataRuleConstraint(input, 'min') || checkForDataValConstraint(input, 'min')) validators.push({type: 'min', param: input.getAttribute('min')});
-   //max
-  if((input.getAttribute('max') && input.getAttribute('max') !== 'false') || checkForDataRuleConstraint(input, 'max') || checkForDataValConstraint(input, 'max')) validators.push({type: 'max', param: input.getAttribute('max')});
-   //max
-  if((input.getAttribute('max') && input.getAttribute('max') !== 'false') || checkForDataRuleConstraint(input, 'max') || checkForDataValConstraint(input, 'max')) validators.push({type: 'max', param: input.getAttribute('max')});
-    //step
-   //equalTo
-   //remote
-   //digits
-   //rangelength
-  */
-
-  return validators;
-};
 
 // import inputPrototype from './input-prototype';
 var componentPrototype = {

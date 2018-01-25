@@ -5,7 +5,8 @@ import {
 	chooseRealtimeEvent,
 	extractErrorMessage,
 	validationReducer,
-	removeUnvalidatedGroups
+	removeUnvalidatedGroups,
+	normaliseValidators
 } from './utils';
 
 export default {
