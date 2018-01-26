@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.1.0: Thu, 25 Jan 2018 22:40:40 GMT
+ * @version 0.1.0: Fri, 26 Jan 2018 13:23:27 GMT
  * @author stormid
  * @license MIT
  */
@@ -32,6 +32,10 @@ var defaults = {
     // callback: null
 };
 
+var isSelect = function isSelect(field) {
+    return field.nodeName.toLowerCase() === 'select';
+};
+
 var isCheckable = function isCheckable(field) {
     return (/radio|checkbox/i.test(field.type)
     );
@@ -43,24 +47,23 @@ var isRequired = function isRequired(group) {
     }).length > 0;
 };
 
-//isn't required and no value
-var isOptional = function isOptional(group) {
-    return !isRequired(group) && extractValueFromGroup(group) === false;
-};
-
 var hasValue = function hasValue(input) {
     return input.value !== undefined && input.value !== null && input.value.length > 0;
 };
 
-var groupValueReducer = function groupValueReducer(value, input) {
-    if (isCheckable(input) && input.checked) {
-        if (Array.isArray(value)) value.push(input.value);else value = [input.value];
-    } else if (hasValue(input)) value = input.value;
-    return value;
+var extractValueFromGroup = function extractValueFromGroup(group) {
+    return group.fields.reduce(function (acc, input) {
+        if (isCheckable(input)) {
+            if (input.checked) {
+                if (Array.isArray(acc)) acc.push(input.value);else acc = [input.value];
+            }
+        } else if (hasValue(input)) acc = input.value;
+        return acc;
+    }, false);
 };
 
-var extractValueFromGroup = function extractValueFromGroup(group) {
-    return group.fields.reduce(groupValueReducer, false);
+var chooseRealTimeEvent = function chooseRealTimeEvent(input) {
+    return ['input', 'change'][Number(isCheckable(input) || isSelect(input))];
 };
 
 // const extractValidationParams = type => input.hasAttribute(type) ? input.getAttribute(type) : input.hasAttribute(`data-rule-${type}`) ? input.hasAttribute(`data-val-${type}`)
@@ -96,6 +99,11 @@ var DOTNETCORE_ADAPTORS = [
 //'regex', -> same as pattern, how is it applied to an element? pattern attribute? data-val-regex?
 'required', 'date', 'digits', 'email', 'number', 'url', 'length', 'range', 'equalto', 'remote', 'password' //-> maps to min, nonalphamain, and regex methods
 ];
+
+//isn't required and no value
+var isOptional = function isOptional(group) {
+    return !isRequired(group) && extractValueFromGroup(group) === false;
+};
 
 var regexMethod = function regexMethod(regex) {
     return function (group) {
@@ -157,8 +165,6 @@ var methods = {
             return acc = +input.value >= +params[0] && +input.value <= +params[1], acc;
         };
     })
-
-    //return this.optional( element ) || ( value >= param[ 0 ] && value <= param[ 1 ] );
 
     // rangelength
     // https://jqueryvalidation.org/rangelength-method/
@@ -258,7 +264,15 @@ var extractAttributeValidators = function extractAttributeValidators(input) {
     if (input.getAttribute('maxlength') && input.getAttribute('maxlength') !== 'false') validators.push({ type: 'maxlength', params: [input.getAttribute('maxlength')] });
     return validators;
 };
-
+/*
+@params DOM node input
+@returns Object
+{
+    type: String [required],
+    params: Array [optional],
+    message: String [optional]
+}
+*/
 var normaliseValidators = function normaliseValidators(input) {
     var validators = [];
 
@@ -269,38 +283,15 @@ var normaliseValidators = function normaliseValidators(input) {
     // validate the validation parameters
 
     /*
-        - check if data-val="true"
-             validator:
-            {
-                type: String [required],
-                params: Array [optional],
-                message: String [optional]
-            }
-     */
-    /*
-    //required
-    if((input.hasAttribute('required') && input.getAttribute('required') !== 'false') || checkForDataRuleConstraint(input, 'required') || checkForDataValConstraint(input, 'required')) validators.push({type: 'required'});
-     //email
-    if(checkForConstraint(input, 'email') || checkForDataValConstraint(input, 'email')) validators.push({type: 'email'});
-     //url
-    if(checkForConstraint(input, 'url') || checkForDataValConstraint(input, 'url')) validators.push({type: 'url'});
-     //date
-    if(checkForConstraint(input, 'date') || checkForDataValConstraint(input, 'date')) validators.push({type: 'date'});
+    //date
      //dateISO
-    if(checkForConstraint(input, 'dateISO') || checkForDataValConstraint(input, 'dateISO')) validators.push({type: 'dateISO'});
-     //number
-    if(checkForConstraint(input, 'number') || checkForDataValConstraint(input, 'number')) validators.push({type: 'number'});
-     //minlength
-    if((input.getAttribute('minlength') && input.getAttribute('minlength') !== 'false') || checkForDataRuleConstraint(input, 'minlength') || checkForDataValConstraint(input, 'minlength')) validators.push({type: 'minlength', param: extractValidationParams('minlength')});
      //maxlength
     if((input.getAttribute('maxlength') && input.getAttribute('maxlength') !== 'false') || checkForDataRuleConstraint(input, 'maxlength') || checkForDataValConstraint(input, 'maxlength')) validators.push({type: 'maxlength', param: input.getAttribute('maxlength')});
      //min
     if((input.getAttribute('min') && input.getAttribute('min') !== 'false') || checkForDataRuleConstraint(input, 'min') || checkForDataValConstraint(input, 'min')) validators.push({type: 'min', param: input.getAttribute('min')});
      //max
     if((input.getAttribute('max') && input.getAttribute('max') !== 'false') || checkForDataRuleConstraint(input, 'max') || checkForDataValConstraint(input, 'max')) validators.push({type: 'max', param: input.getAttribute('max')});
-     //max
-    if((input.getAttribute('max') && input.getAttribute('max') !== 'false') || checkForDataRuleConstraint(input, 'max') || checkForDataValConstraint(input, 'max')) validators.push({type: 'max', param: input.getAttribute('max')});
-      //step
+     //step
      //equalTo
      //remote
      //digits
@@ -312,13 +303,11 @@ var normaliseValidators = function normaliseValidators(input) {
 
 var validationReducer = function validationReducer(group) {
     return function (acc, validator) {
-        if (!methods[validator.type](group, validator.params && validator.params.length > 0 ? validator.params : null)) {
-            acc = {
-                valid: false,
-                errorMessages: acc.errorMessages ? [].concat(_toConsumableArray(acc.errorMessages), [extractErrorMessage(validator, group)]) : [extractErrorMessage(validator, group)]
-            };
-        }
-        return acc;
+        if (methods[validator.type](group, validator.params && validator.params.length > 0 ? validator.params : null)) return acc;
+        return {
+            valid: false,
+            errorMessages: acc.errorMessages ? [].concat(_toConsumableArray(acc.errorMessages), [extractErrorMessage(validator, group)]) : [extractErrorMessage(validator, group)]
+        };
     };
 };
 
@@ -334,8 +323,6 @@ var assembleValidationGroup = function assembleValidationGroup(acc, input) {
 };
 
 var extractErrorMessage = function extractErrorMessage(validator, group) {
-    // to do
-    // implement custom vaidation messages
     return validator.message || messages[validator.type](validator.params !== undefined ? validator.params : null);
 };
 
@@ -358,7 +345,6 @@ var h = function h(nodeName, attributes, text) {
 };
 
 // import inputPrototype from './input-prototype';
-// import { chooseRealTimeEvent } from './utils';
 var componentPrototype = {
     init: function init() {
         //prevent browser validation
@@ -413,8 +399,7 @@ var componentPrototype = {
 
         //map/over groups instead
         this.inputs.forEach(function (input) {
-            // let ev = chooseRealTimeEvent(input);
-            input.addEventListener('input', handler);
+            input.addEventListener(chooseRealTimeEvent(input), handler);
         });
     },
     setGroupValidityState: function setGroupValidityState(group) {

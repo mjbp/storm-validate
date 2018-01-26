@@ -4,23 +4,35 @@ export const isCheckable = field => (/radio|checkbox/i).test(field.type);
 
 export const isRequired = group => group.validators.filter(validator => validator.type === 'required').length > 0;
 
-//isn't required and no value
-export const isOptional = group => !isRequired(group) && extractValueFromGroup(group) === false;
-
 const hasValue = input => (input.value !== undefined && input.value !== null && input.value.length > 0);
 
-const groupValueReducer = (value, input) => {
-    if(isCheckable(input) && input.checked){
-        if(Array.isArray(value)) value.push(input.value)
-        else value = [input.value];
+const groupValueReducer = (acc, input) => {
+    if(isCheckable(input)) {
+        if(input.checked){
+            if(Array.isArray(acc)) acc.push(input.value);
+            else acc = [input.value];
+        }
     }
-    else if(hasValue(input)) value = input.value;
-    return value;
+    else if(hasValue(input)) acc = input.value;
+    return acc;
+}
+
+export const extractValueFromGroup = group => {
+    return group.fields
+            .reduce((acc, input) => {
+                if(isCheckable(input)) {
+                    if(input.checked){
+                        if(Array.isArray(acc)) acc.push(input.value)
+                        else acc = [input.value];
+                    }
+                }
+                else if(hasValue(input)) acc = input.value;
+                return acc;
+            }, false);
 };
 
-export const extractValueFromGroup = group => group.fields.reduce(groupValueReducer, false);
 
-export const chooseRealTimeEvent = input => ['keyup', 'input'][Number(isCheckable(input) || isSelect(input))];
+export const chooseRealTimeEvent = input => ['input', 'change'][Number(isCheckable(input) || isSelect(input))];
 
 // const extractValidationParams = type => input.hasAttribute(type) ? input.getAttribute(type) : input.hasAttribute(`data-rule-${type}`) ? input.hasAttribute(`data-val-${type}`)
 

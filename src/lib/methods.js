@@ -1,5 +1,8 @@
-import { isSelect, isCheckable, isRequired, isOptional, extractValueFromGroup } from './utils';
+import { isSelect, isCheckable, isRequired, extractValueFromGroup } from './utils';
 import { EMAIL_REGEX, URL_REGEX, DATE_ISO_REGEX, NUMBER_REGEX, DIGITS_REGEX } from './constants';
+
+//isn't required and no value
+const isOptional = group => !isRequired(group) && extractValueFromGroup(group) === false;
 
 const regexMethod = regex => group => isOptional(group)|| group.fields.reduce((acc, input) => (acc = regex.test(input.value), acc), false);
 
@@ -25,8 +28,6 @@ export default {
     max: paramMethod('max', params => (acc, input) => (acc = +input.value <= +param, acc)),
     length: paramMethod('length', params => (acc, input) => (acc = (+input.value.length >= +params[0] && (params[1] === undefined || +input.value.length <= +params[1])), acc)),
     range: paramMethod('range', params => (acc, input) => (acc = (+input.value >= +params[0] && +input.value <= +params[1]), acc)),
-
-    //return this.optional( element ) || ( value >= param[ 0 ] && value <= param[ 1 ] );
     
     // rangelength
     // https://jqueryvalidation.org/rangelength-method/

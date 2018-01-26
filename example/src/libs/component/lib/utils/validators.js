@@ -38,7 +38,15 @@ const extractAttributeValidators = input => {
     if(input.getAttribute('maxlength') && input.getAttribute('maxlength') !== 'false') validators.push({type: 'maxlength', params: [input.getAttribute('maxlength')]});
     return validators;
 };
-
+/*
+@params DOM node input
+@returns Object
+{
+    type: String [required],
+    params: Array [optional],
+    message: String [optional]
+}
+*/
 export const normaliseValidators = input => {
     let validators = [];
     
@@ -50,37 +58,9 @@ export const normaliseValidators = input => {
     // validate the validation parameters
 
     /*
-        - check if data-val="true"
-
-            validator:
-            {
-                type: String [required],
-                params: Array [optional],
-                message: String [optional]
-            }
-
-    */
-    /*
-    //required
-    if((input.hasAttribute('required') && input.getAttribute('required') !== 'false') || checkForDataRuleConstraint(input, 'required') || checkForDataValConstraint(input, 'required')) validators.push({type: 'required'});
-
-    //email
-    if(checkForConstraint(input, 'email') || checkForDataValConstraint(input, 'email')) validators.push({type: 'email'});
-
-    //url
-    if(checkForConstraint(input, 'url') || checkForDataValConstraint(input, 'url')) validators.push({type: 'url'});
-
     //date
-    if(checkForConstraint(input, 'date') || checkForDataValConstraint(input, 'date')) validators.push({type: 'date'});
 
     //dateISO
-    if(checkForConstraint(input, 'dateISO') || checkForDataValConstraint(input, 'dateISO')) validators.push({type: 'dateISO'});
-
-    //number
-    if(checkForConstraint(input, 'number') || checkForDataValConstraint(input, 'number')) validators.push({type: 'number'});
-
-    //minlength
-    if((input.getAttribute('minlength') && input.getAttribute('minlength') !== 'false') || checkForDataRuleConstraint(input, 'minlength') || checkForDataValConstraint(input, 'minlength')) validators.push({type: 'minlength', param: extractValidationParams('minlength')});
 
     //maxlength
     if((input.getAttribute('maxlength') && input.getAttribute('maxlength') !== 'false') || checkForDataRuleConstraint(input, 'maxlength') || checkForDataValConstraint(input, 'maxlength')) validators.push({type: 'maxlength', param: input.getAttribute('maxlength')});
@@ -90,10 +70,6 @@ export const normaliseValidators = input => {
 
     //max
     if((input.getAttribute('max') && input.getAttribute('max') !== 'false') || checkForDataRuleConstraint(input, 'max') || checkForDataValConstraint(input, 'max')) validators.push({type: 'max', param: input.getAttribute('max')});
-
-    //max
-    if((input.getAttribute('max') && input.getAttribute('max') !== 'false') || checkForDataRuleConstraint(input, 'max') || checkForDataValConstraint(input, 'max')) validators.push({type: 'max', param: input.getAttribute('max')});
-
 
     //step
 
@@ -110,13 +86,11 @@ export const normaliseValidators = input => {
 };
 
 export const validationReducer = group => (acc, validator) => {
-    if(!methods[validator.type](group, validator.params && validator.params.length > 0 ? validator.params : null)) {
-        acc = {
-            valid: false,
-            errorMessages: acc.errorMessages ? [...acc.errorMessages, extractErrorMessage(validator, group)] : [extractErrorMessage(validator, group)]
-        };
-    }
-    return acc;
+    if(methods[validator.type](group, validator.params && validator.params.length > 0 ? validator.params : null)) return acc;
+    return {
+        valid: false,
+        errorMessages: acc.errorMessages ? [...acc.errorMessages, extractErrorMessage(validator, group)] : [extractErrorMessage(validator, group)]
+    };;
 };
 
 export const assembleValidationGroup = (acc, input) => {
@@ -131,11 +105,7 @@ export const assembleValidationGroup = (acc, input) => {
     return acc;
 };
 
-export const extractErrorMessage = (validator, group) => {
-    // to do
-    // implement custom vaidation messages
-    return validator.message || messages[validator.type](validator.params !== undefined ? validator.params : null);
-};
+export const extractErrorMessage = (validator, group) => validator.message || messages[validator.type](validator.params !== undefined ? validator.params : null);
 
 export const removeUnvalidatableGroups = groups => {
     let validationGroups = {};

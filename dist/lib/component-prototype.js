@@ -1,5 +1,5 @@
 // import inputPrototype from './input-prototype';
-// import { chooseRealTimeEvent } from './utils';
+import { chooseRealTimeEvent } from './utils';
 import { 
 	validationReducer,
 	assembleValidationGroup,
@@ -65,8 +65,7 @@ export default {
 
 		//map/over groups instead
 		this.inputs.forEach(input => {
-			// let ev = chooseRealTimeEvent(input);
-			input.addEventListener('input', handler);
+			input.addEventListener(chooseRealTimeEvent(input), handler);
 		});
 	},
 	setGroupValidityState(group){
