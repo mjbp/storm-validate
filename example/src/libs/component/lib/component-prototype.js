@@ -12,7 +12,7 @@ export default {
 	init() {
 		//prevent browser validation
 		this.form.setAttribute('novalidate', 'novalidate');
-		this.groups = removeUnvalidatableGroups(Array.from(this.form.querySelectorAll('input:not([type=submit]), textarea, select')).reduce(assembleValidationGroup, {}));
+		this.groups = removeUnvalidatableGroups([].slice.call(this.form.querySelectorAll('input:not([type=submit]), textarea, select')).reduce(assembleValidationGroup, {}));
 		this.initListeners();
 
 		console.log(this.groups);
@@ -42,11 +42,40 @@ export default {
 		}
 	},
 	setGroupValidityState(group){
-		this.groups[group] = Object.assign({}, 
-								this.groups[group],
-								{ valid: true, errorMessages: [] }, //reset validity and errorMessagesa
-								this.groups[group].validators.reduce(validationReducer(this.groups[group]), true));
-		return this.groups[group].valid;
+		//manage remote/async validators in reducer
+		//return promise??
+		//eagerly evaluate then update??
+
+		//if one of the validators is asynchronous,
+		//easerly set validity state to false if any of the synchronous validators are false
+		//if all others pass,
+		//set pending state whilst async validator resolves??
+
+		//return promise from this fn everytime??
+		/*
+
+		return new Promise((resolve, reject) => {
+			let s = document.createElement('script');
+			s.src = url;
+			s.async = async;
+			s.onload = s.onreadystatechange = function() {
+				if (!this.readyState || this.readyState === 'complete') resolve();
+			};
+			s.onerror = s.onabort = reject;
+			document.head.appendChild(s);
+		});
+		*/
+		return new Promise((resolve, reject) => {
+			this.groups[group] = Object.assign({}, 
+									this.groups[group],
+									{ valid: true, errorMessages: [] }, //reset validity and errorMessages
+									this.groups[group].validators.reduce(validationReducer(this.groups[group]), true));
+
+			return resolve(this.groups[group].valid);
+		});
+
+
+		
 	},
 	setValidityState(){
 		let numErrors = 0;

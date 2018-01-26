@@ -1,0 +1,4 @@
+{
+  "valid": { "data": "Everything is okay" },
+  "invalid": { "data": "" }
+}

@@ -24,7 +24,7 @@ const extractDataValValidators = input => DOTNET_ADAPTORS
                                                 []);
 
 //for data-rule-* support
-//const hasDataAttributePart = (node, part) => Array.from(node.dataset).filter(attribute => !!~attribute.indexOf(part)).length > 0;
+//const hasDataAttributePart = (node, part) => [].slice.call(node.dataset).filter(attribute => !!~attribute.indexOf(part)).length > 0;
 
 const extractAttributeValidators = input => {
     let validators = [];

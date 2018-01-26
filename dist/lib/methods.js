@@ -31,6 +31,24 @@ export default {
     max: curryParamMethod('max', (...max) => (acc, input) => (acc = +input.value <= +max, acc)),
     length: curryParamMethod('length', params => (acc, input) => (acc = (+input.value.length >= +params[0] && (params[1] === undefined || +input.value.length <= +params[1])), acc)),
     range: curryParamMethod('range', params => (acc, input) => (acc = (+input.value >= +params[0] && +input.value <= +params[1]), acc)),
+    remote: (group, params) => {
+        let [ url, type] = params;
+        fetch(url, {
+            method: type.toUpperCase(),
+            // body: JSON.stringify(data), 
+            headers: new Headers({
+              'Content-Type': 'application/json'
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log(data);
+            return true;
+        })
+
+        //async so are we returning pending state...
+        // return true;
+    }
     
     // rangelength
     // https://jqueryvalidation.org/rangelength-method/

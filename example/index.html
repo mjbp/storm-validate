@@ -165,6 +165,22 @@
     <div class="container">
         <!-- <h1>Storm Validate</h1> -->
         <form method="post" action="" autocomplete="off">
+            <!--
+                <div class="validation-summary-errors" data-valmsg-summary="true">
+            <ul>
+                <li>The Email field is required.</li>
+                <li>The Password field is required.</li>
+            </ul>
+            </div>
+
+
+            <div class="validation-summary-valid" data-valmsg-summary="true">
+            <ul>
+                <li style="display: none;"></li>
+            </ul>
+            </div>
+
+            -->
             <fieldset>
               <div class="form-group">
                 <label for="cn">Text required, at least 2 characters, recycling data-valmsg-for span for error messages</label>
@@ -200,6 +216,11 @@
                 <label for="ignored">Ignored</label>
                 <input id="ignored" name="ignored" type="text">
                </div>
+               <div class="form-group">
+                 <label for="remote">Remote</label>
+                 <input id="remote" name="remote" type="text" data-val="true" data-val-remote="Remote validaiton failed" data-val-remote-url="http://localhost:3004/valid" data-val-remote-type="get" required>
+                 <!-- 'remote-url', 'remote-type', 'remote-additionalfields' -->
+                </div>
             <div class="form-group">
                 <label for="cemail">HTML5 email required, creates error message node</label>
                 <input id="cemail" type="email" name="email" required>

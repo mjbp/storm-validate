@@ -17,7 +17,6 @@ const groupValueReducer = (acc, input) => {
 
 export const extractValueFromGroup = group => group.fields.reduce(groupValueReducer, false);
 
-
 export const chooseRealTimeEvent = input => ['input', 'change'][Number(isCheckable(input) || isSelect(input))];
 
 

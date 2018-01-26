@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.1.0: Fri, 26 Jan 2018 15:55:28 GMT
+ * @version 0.1.0: Fri, 26 Jan 2018 17:00:08 GMT
  * @author stormid
  * @license MIT
  */
@@ -12,7 +12,7 @@ const init = (candidate, opts) => {
 
 	//assume it's a dom node
 	if(typeof candidate !== 'string' && candidate.nodeName && candidate.nodeName === 'FORM') els = [candidate];
-	else els = Array.from(document.querySelectorAll(candidate));
+	else els = [].slice.call(document.querySelectorAll(candidate));
     
 	return els.reduce((acc, el) => {
 		if(el.getAttribute('novalidate')) return;
@@ -24,11 +24,9 @@ const init = (candidate, opts) => {
 	}, []);
 };
 
-/*
-	Auto-initialise
-*/
+//Auto-initialise
 { 
-	Array.from(document.querySelectorAll('form'))
+	[].slice.call(document.querySelectorAll('form'))
 	.forEach(form => { form.querySelector('[data-val=true]') && init(form); });
 }
 

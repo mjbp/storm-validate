@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.1.0: Fri, 26 Jan 2018 15:55:28 GMT
+ * @version 0.1.0: Fri, 26 Jan 2018 17:00:09 GMT
  * @author stormid
  * @license MIT
  */
@@ -23,6 +23,8 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
@@ -88,19 +90,24 @@ var DOTNET_ERROR_SPAN_DATA_ATTRIBUTE = 'data-valmsg-for';
 /* Can these two be folded into the same variable? */
 var DOTNET_PARAMS = {
     length: ['min', 'max'],
-    range: ['min', 'max'],
+    stringlength: ['length-max'],
+    range: ['range-min', 'range-max'],
     // min: ['min'],?
     // max:  ['max'],?
-    minlength: ['min'],
-    maxlength: ['max'],
+    minlength: ['minlength-min'],
+    maxlength: ['maxlength-max'],
     regex: ['regex-pattern'],
-    remote: ['url', 'type', 'additionalfields'] //??
+    equalTo: ['equalto-other'],
+    remote: ['remote-url', 'remote-type', 'remote-additionalfields'] //??
 };
 
 var DOTNET_ADAPTORS = [
 //'regex', -> same as pattern, how is it applied to an element? pattern attribute? data-val-regex?
-'required', 'date', 'regex', 'digits', 'email', 'number', 'url', 'length', 'range', 'equalto', 'remote', 'password' //-> maps to min, nonalphamain, and regex methods
-];
+'required', 'stringlength',
+// 'date',
+'regex',
+// 'digits',
+'email', 'number', 'url', 'length', 'range', 'equalto', 'remote'];
 
 var isOptional = function isOptional(group) {
     return !isRequired(group) && extractValueFromGroup(group) === false;
@@ -195,7 +202,28 @@ var methods = {
         return function (acc, input) {
             return acc = +input.value >= +params[0] && +input.value <= +params[1], acc;
         };
-    })
+    }),
+    remote: function remote(group, params) {
+        var _params = _slicedToArray(params, 2),
+            url = _params[0],
+            type = _params[1];
+
+        fetch(url, {
+            method: type.toUpperCase(),
+            // body: JSON.stringify(data), 
+            headers: new Headers({
+                'Content-Type': 'application/json'
+            })
+        }).then(function (res) {
+            return res.json();
+        }).then(function (data) {
+            console.log(data);
+            return true;
+        });
+
+        //async so are we returning pending state...
+        // return true;
+    }
 
     // rangelength
     // https://jqueryvalidation.org/rangelength-method/
@@ -269,6 +297,9 @@ var messages = {
     },
     min: function min(props) {
         return 'Please enter a value greater than or equal to ' + props + '.';
+    },
+    equalTo: function equalTo() {
+        return 'Please enter the same value again.';
     }
 };
 
@@ -287,7 +318,7 @@ var extractDataValValidators = function extractDataValValidators(input) {
 };
 
 //for data-rule-* support
-//const hasDataAttributePart = (node, part) => Array.from(node.dataset).filter(attribute => !!~attribute.indexOf(part)).length > 0;
+//const hasDataAttributePart = (node, part) => [].slice.call(node.dataset).filter(attribute => !!~attribute.indexOf(part)).length > 0;
 
 var extractAttributeValidators = function extractAttributeValidators(input) {
     var validators = [];
@@ -384,7 +415,7 @@ var componentPrototype = {
     init: function init() {
         //prevent browser validation
         this.form.setAttribute('novalidate', 'novalidate');
-        this.groups = removeUnvalidatableGroups(Array.from(this.form.querySelectorAll('input:not([type=submit]), textarea, select')).reduce(assembleValidationGroup, {}));
+        this.groups = removeUnvalidatableGroups([].slice.call(this.form.querySelectorAll('input:not([type=submit]), textarea, select')).reduce(assembleValidationGroup, {}));
         this.initListeners();
 
         console.log(this.groups);
@@ -417,9 +448,36 @@ var componentPrototype = {
         }
     },
     setGroupValidityState: function setGroupValidityState(group) {
-        this.groups[group] = Object.assign({}, this.groups[group], { valid: true, errorMessages: [] }, //reset validity and errorMessagesa
-        this.groups[group].validators.reduce(validationReducer(this.groups[group]), true));
-        return this.groups[group].valid;
+        var _this2 = this;
+
+        //manage remote/async validators in reducer
+        //return promise??
+        //eagerly evaluate then update??
+
+        //if one of the validators is asynchronous,
+        //easerly set validity state to false if any of the synchronous validators are false
+        //if all others pass,
+        //set pending state whilst async validator resolves??
+
+        //return promise from this fn everytime??
+        /*
+        	return new Promise((resolve, reject) => {
+        	let s = document.createElement('script');
+        	s.src = url;
+        	s.async = async;
+        	s.onload = s.onreadystatechange = function() {
+        		if (!this.readyState || this.readyState === 'complete') resolve();
+        	};
+        	s.onerror = s.onabort = reject;
+        	document.head.appendChild(s);
+        });
+        */
+        return new Promise(function (resolve, reject) {
+            _this2.groups[group] = Object.assign({}, _this2.groups[group], { valid: true, errorMessages: [] }, //reset validity and errorMessages
+            _this2.groups[group].validators.reduce(validationReducer(_this2.groups[group]), true));
+
+            return resolve(_this2.groups[group].valid);
+        });
     },
     setValidityState: function setValidityState() {
         var numErrors = 0;
@@ -466,7 +524,7 @@ var init = function init(candidate, opts) {
     var els = void 0;
 
     //assume it's a dom node
-    if (typeof candidate !== 'string' && candidate.nodeName && candidate.nodeName === 'FORM') els = [candidate];else els = Array.from(document.querySelectorAll(candidate));
+    if (typeof candidate !== 'string' && candidate.nodeName && candidate.nodeName === 'FORM') els = [candidate];else els = [].slice.call(document.querySelectorAll(candidate));
 
     return els.reduce(function (acc, el) {
         if (el.getAttribute('novalidate')) return;
@@ -478,11 +536,9 @@ var init = function init(candidate, opts) {
     }, []);
 };
 
-/*
-	Auto-initialise
-*/
+//Auto-initialise
 {
-    Array.from(document.querySelectorAll('form')).forEach(function (form) {
+    [].slice.call(document.querySelectorAll('form')).forEach(function (form) {
         form.querySelector('[data-val=true]') && init(form);
     });
 }

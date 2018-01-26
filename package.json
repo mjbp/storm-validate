@@ -25,6 +25,7 @@
     "build": "node_modules/.bin/gulp build",
     "serve": "node_modules/.bin/gulp server",
     "start": "node_modules/.bin/gulp",
+    "remote": "node_modules/.bin/json-server --watch fauxAPI/endpoint.json --port 3004",
     "test": "istanbul cover _mocha --report lcovonly -- -R spec && codecov",
     "test:watch": "NODE_ENV=test mocha --watch"
   },
@@ -55,20 +56,21 @@
     "gulp-notify": "^2.2.0",
     "gulp-plumber": "^1.1.0",
     "gulp-rename": "^1.2.2",
+    "gulp-rollup": "^2.11.0",
     "gulp-uglify": "^2.0.0",
     "gulp-wrap-umd": "^0.2.1",
     "istanbul": "^1.1.0-alpha.1",
     "jsdom": "^9.8.0",
     "jsdom-global": "^2.1.0",
+    "json-server": "^0.12.1",
     "mocha": "^3.1.2",
     "object-assign": "^4.0.1",
+    "rollup": "^0.41.6",
+    "rollup-plugin-commonjs": "^8.0.2",
+    "rollup-plugin-node-resolve": "^3.0.0",
     "run-sequence": "^1.1.0",
     "should": "^11.1.1",
     "vinyl-buffer": "^1.0.0",
-    "vinyl-source-stream": "^1.1.0",
-    "gulp-rollup": "^2.11.0",
-    "rollup": "^0.41.6",
-    "rollup-plugin-commonjs": "^8.0.2",
-    "rollup-plugin-node-resolve": "^3.0.0"
+    "vinyl-source-stream": "^1.1.0"
   }
 }
