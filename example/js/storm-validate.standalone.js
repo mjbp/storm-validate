@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.1.0: Fri, 26 Jan 2018 13:23:27 GMT
+ * @version 0.1.0: Fri, 26 Jan 2018 13:32:56 GMT
  * @author stormid
  * @license MIT
  */
@@ -350,10 +350,7 @@ var componentPrototype = {
         //prevent browser validation
         this.form.setAttribute('novalidate', 'novalidate');
 
-        //delete me please
-        this.inputs = Array.from(this.form.querySelectorAll('input:not([type=submit]), textarea, select'));
-
-        this.groups = removeUnvalidatableGroups(this.inputs.reduce(assembleValidationGroup, {}));
+        this.groups = removeUnvalidatableGroups(Array.from(this.form.querySelectorAll('input:not([type=submit]), textarea, select')).reduce(assembleValidationGroup, {}));
 
         this.initListeners();
 
@@ -397,10 +394,11 @@ var componentPrototype = {
             if (!this.setGroupValidityState(group)) this.renderError(group);
         }.bind(this);
 
-        //map/over groups instead
-        this.inputs.forEach(function (input) {
-            input.addEventListener(chooseRealTimeEvent(input), handler);
-        });
+        for (var group in this.groups) {
+            this.groups[group].fields.forEach(function (input) {
+                input.addEventListener(chooseRealTimeEvent(input), handler);
+            });
+        }
     },
     setGroupValidityState: function setGroupValidityState(group) {
         this.groups[group] = Object.assign({}, this.groups[group], { valid: true, errorMessages: [] }, //reset validity and errorMessagesa

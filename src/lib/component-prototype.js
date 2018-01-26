@@ -12,11 +12,8 @@ export default {
 	init() {
 		//prevent browser validation
 		this.form.setAttribute('novalidate', 'novalidate');
-
-		//delete me please
-		this.inputs = Array.from(this.form.querySelectorAll('input:not([type=submit]), textarea, select'));
 		
-		this.groups = removeUnvalidatableGroups(this.inputs.reduce(assembleValidationGroup, {}));
+		this.groups = removeUnvalidatableGroups(Array.from(this.form.querySelectorAll('input:not([type=submit]), textarea, select')).reduce(assembleValidationGroup, {}));
 
 		this.initListeners();
 		
@@ -63,10 +60,11 @@ export default {
 				if(!this.setGroupValidityState(group)) this.renderError(group);
 			}.bind(this);
 
-		//map/over groups instead
-		this.inputs.forEach(input => {
-			input.addEventListener(chooseRealTimeEvent(input), handler);
-		});
+		for(let group in this.groups){
+			this.groups[group].fields.forEach(input => {
+				input.addEventListener(chooseRealTimeEvent(input), handler);
+			});
+		}
 	},
 	setGroupValidityState(group){
 		this.groups[group] = Object.assign({}, 
