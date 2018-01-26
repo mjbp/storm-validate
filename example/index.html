@@ -160,41 +160,42 @@
         <form method="post" action="" autocomplete="off">
             <fieldset>
               <div class="form-group">
-                <label for="cn">Text (required, at least 2 characters)</label>
+                <label for="cn">Text required, at least 2 characters, recycling data-valmsg-for span for error messages</label>
                 <input id="cn" name="cn" data-val="true" data-val-length="Please enter at least 2 characters." data-val-min="2" type="text" data-val-required="Custom error message">
-                <!-- <span class="text-danger field-validation-valid" data-valmsg-for="cn" data-valmsg-replace="true"></span> -->
+                <span class="text-danger field-validation-valid" data-valmsg-for="cn" data-valmsg-replace="true"></span>
               </div>
               <div class="form-group">
-                <label for="clen">Text (required, min 2 characters, max 8 characters)</label>
+                <label for="clen">Text, required, min 2 characters, max 8 characters, recycling data-valmsg-for span for error messag</label>
                 <input id="clen" name="clen" data-val="true" data-val-length="Please enter between 2 and 8 characters"  data-val-required="This field is required" data-val-min="2" data-val-max="8" type="text">
-                <!-- <span class="text-danger field-validation-valid" data-valmsg-for="cn" data-valmsg-replace="true"></span> -->
+                <span class="text-danger field-validation-valid" data-valmsg-for="clen" data-valmsg-replace="true"></span>
               </div>
               <div class="form-group">
                 <label for="ignored">Ignored</label>
                 <input id="ignored" name="ignored" type="text">
                </div>
             <div class="form-group">
-                <label for="cemail">HTML5 email (required)</label>
+                <label for="cemail">HTML5 email required, creates error message node</label>
                 <input id="cemail" type="email" name="email" required>
             </div>
             <div class="form-group">
-                <label for="dvemail">data-val email (required)</label>
+                <label for="dvemail">data-val email, required, creates error message node</label>
                 <input id="dvemail" type="text" data-val="true" data-val-email="Please enter a valid email address." data-val-required="This field is required." name="dvemail" >
             </div>
             <div class="form-group">
-                <label for="curl">HTML5 URL (optional)</label>
+                <label for="curl">HTML5 URL (optional), creates error message node</label>
                 <input id="curl" type="url" name="url">
             </div>
             <div class="form-group">
-                <label for="dv">data-val URL (optional)</label>
+                <label for="dv">data-val URL (optional), creates error message node</label>
                 <input id="dv" data-val="true" data-val-url="Please enter a valid URL" type="text" name="dvurl">
             </div>
             <div class="form-group">
-                <label for="ccomment">HTML5 required</label>
+                <label for="ccomment">HTML5 required, creates error message node</label>
                 <textarea id="ccomment" name="comment" required></textarea>
             </div>
             <div class="form-group">
                 <fieldset>
+                    <legend>Checkbox group, creates error message node</legend>
                     <div class="boolean-group">
                         <label for="cb-1">Option 1</label>
                         <input type="checkbox" name="cb" id="cb-1" value="option 1" data-val="true" data-val-required="One of these fields is required">
@@ -207,6 +208,7 @@
             </div>
             <div class="form-group">
                 <fieldset>
+                    <legend>Radio button group, creates error message node</legend>
                     <div class="boolean-group">
                         <label for="rb-1">Option 1</label>
                         <input type="radio" name="rb" id="rb-1" value="option 1" required>

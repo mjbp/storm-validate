@@ -1,20 +1,20 @@
 import methods from '../methods';
 import messages from '../messages';
-import { DOTNETCORE_ADAPTORS, DOTNETCORE_PARAMS } from '../constants';
+import { DOTNET_ADAPTORS, DOTNET_PARAMS, DOTNET_ERROR_SPAN_DATA_ATTRIBUTE } from '../constants';
 // const checkForDataRuleConstraint = (input, constraint) => input.getAttribute(`data-rule-${constraint}`) && input.getAttribute(`data-rule-${constraint}`) !== 'false';
 
 // const checkForDataValConstraint = (input, constraint) => input.getAttribute(`data-val-${constraint}`) && input.getAttribute(`data-val-${constraint}`) !== 'false';
 
 // const checkForConstraint = (input, constraint) => input.getAttribute('type') === constraint || checkForDataRuleConstraint(input, constraint);
 
-const extractDataValValidators = input => DOTNETCORE_ADAPTORS
+const extractDataValValidators = input => DOTNET_ADAPTORS
                                             .reduce((validators, adaptor) => {
                                                 if(!input.getAttribute(`data-val-${adaptor}`)) return validators;
                                                 validators.push(Object.assign(
                                                     {type: adaptor, message: input.getAttribute(`data-val-${adaptor}`)},
-                                                    DOTNETCORE_PARAMS[adaptor]
+                                                    DOTNET_PARAMS[adaptor]
                                                         && { 
-                                                            params: DOTNETCORE_PARAMS[adaptor]
+                                                            params: DOTNET_PARAMS[adaptor]
                                                                         .reduce((acc, param) => {
                                                                             input.hasAttribute(`data-val-${param}`) 
                                                                             && acc.push(input.getAttribute(`data-val-${param}`))
@@ -98,7 +98,8 @@ export const assembleValidationGroup = (acc, input) => {
         acc[input.getAttribute('name')] = {
             valid:  false,
             validators: normaliseValidators(input),
-            fields: [input]
+            fields: [input],
+            serverErrorNode: document.querySelector(`[${DOTNET_ERROR_SPAN_DATA_ATTRIBUTE}=${input.getAttribute('name')}]`) || false
         };
     }
     else acc[input.getAttribute('name')].fields.push(input);

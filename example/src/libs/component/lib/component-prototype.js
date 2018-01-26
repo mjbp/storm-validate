@@ -6,7 +6,7 @@ import {
 	normaliseValidators,
 	removeUnvalidatableGroups
 } from './utils/validators';
-import { h } from './utils/dom';
+import { h, createErrorTextNode } from './utils/dom';
 
 export default {
 	init() {
@@ -88,6 +88,7 @@ export default {
 	},
 	removeError(group){
 		this.groups[group].errorDOM.parentNode.removeChild(this.groups[group].errorDOM);
+		this.groups[group].serverErrorNode && this.groups[group].serverErrorNode.classList.remove('error');
 		this.groups[group].fields.forEach(field => { field.removeAttribute('aria-invalid'); });//or should i set this to false if field passes validation?
 		delete this.groups[group].errorDOM;
 	},
@@ -98,10 +99,13 @@ export default {
 		}
 	},
 	renderError(group){
-		this.groups[group].errorDOM = this.groups[group]
-											.fields[this.groups[group].fields.length-1]
-											.parentNode
-											.appendChild(h('div', { class: 'error' }, this.groups[group].errorMessages[0]));
+		this.groups[group].errorDOM = 
+			this.groups[group].serverErrorNode ? 
+				createErrorTextNode(this.groups[group]) : 
+					this.groups[group]
+						.fields[this.groups[group].fields.length-1]
+						.parentNode
+						.appendChild(h('div', { class: 'error' }, this.groups[group].errorMessages[0]));
 		
 		//set aria-invalid on invalid inputs
 		this.groups[group].fields.forEach(field => { field.setAttribute('aria-invalid', 'true'); });

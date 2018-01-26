@@ -6,3 +6,9 @@ export const h = (nodeName, attributes, text) => {
 
     return node;
 };
+
+export const createErrorTextNode = group => {
+    let node = document.createTextNode(group.errorMessages[0]);
+    group.serverErrorNode.classList.add('error');
+    return group.serverErrorNode.appendChild(node);
+};

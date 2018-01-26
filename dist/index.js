@@ -1,17 +1,18 @@
 /**
  * @name storm-validate: 
- * @version 0.1.0: Fri, 26 Jan 2018 13:32:56 GMT
+ * @version 0.1.0: Fri, 26 Jan 2018 14:13:37 GMT
  * @author stormid
  * @license MIT
  */
 import defaults from './lib/defaults';
 import componentPrototype from './lib/component-prototype';
 
-const init = (sel, opts) => {
-	// let els = [].slice.call(document.querySelectorAll(sel));
-    let els = Array.from(document.querySelectorAll(sel));
+const init = (candidate, opts) => {
+	let els;
 
-	if(!els.length) return console.warn(`Validation not initialised, no augmentable elements found for selector ${sel}`);
+	//assume it's a dom node
+	if(typeof candidate !== 'string' && candidate.nodeName && candidate.nodeName === 'FORM') els = [candidate];
+	else els = Array.from(document.querySelectorAll(candidate));
     
 	return els.reduce((acc, el) => {
 		if(el.getAttribute('novalidate')) return;
@@ -24,8 +25,11 @@ const init = (sel, opts) => {
 };
 
 /*
-	Check whether a form containing any fields with data-val=true
-	Initialise using data-val-true to designate validateable inputs
+	Auto-initialise
 */
+{ 
+	Array.from(document.querySelectorAll('form'))
+	.forEach(form => { form.querySelector('[data-val=true]') && init(form); });
+}
 
 export default { init };
