@@ -14,13 +14,15 @@ export const DIGITS_REGEX = /^\d+$/;
 
 export const DOTNET_ERROR_SPAN_DATA_ATTRIBUTE = 'data-valmsg-for';
 
+/* Can these two be folded into the same variable? */
 export const DOTNET_PARAMS = {
     length: ['min', 'max'],
     range: ['min', 'max'],
-    min: ['min'],
-    max:  ['max'],
+    // min: ['min'],?
+    // max:  ['max'],?
     minlength: ['min'],
     maxlength: ['max'],
+    regex: ['regex-pattern'],
     remote: ['url', 'type', 'additionalfields']//??
 };
 
@@ -28,6 +30,7 @@ export const DOTNET_ADAPTORS = [
     //'regex', -> same as pattern, how is it applied to an element? pattern attribute? data-val-regex?
     'required',
     'date',
+    'regex',
     'digits',
     'email',
     'number',

@@ -1,6 +1,7 @@
 export default {
     required() { return 'This field is required.'; } ,
     email() { return 'Please enter a valid email address.'; },
+    pattern() { return 'The value must match the pattern.'; },
     url(){ return 'Please enter a valid URL.'; },
     date() { return 'Please enter a valid date.'; },
     dateISO() { return 'Please enter a valid date (ISO).'; },

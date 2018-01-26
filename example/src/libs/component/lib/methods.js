@@ -1,33 +1,36 @@
 import { isSelect, isCheckable, isRequired, extractValueFromGroup } from './utils';
 import { EMAIL_REGEX, URL_REGEX, DATE_ISO_REGEX, NUMBER_REGEX, DIGITS_REGEX } from './constants';
 
-//isn't required and no value
 const isOptional = group => !isRequired(group) && extractValueFromGroup(group) === false;
 
-const regexMethod = regex => group => isOptional(group)|| group.fields.reduce((acc, input) => (acc = regex.test(input.value), acc), false);
+const extractValidationParams = (group, type) => group.validators.filter(validator => validator.type === type)[0].params;
 
-const paramMethod = (type, reducer) => group => isOptional(group) || group.fields.reduce(reducer(group.validators.filter(validator => validator.type === type)[0].params), false);
+const curryRegexMethod = regex => group => isOptional(group)|| group.fields.reduce((acc, input) => (acc = regex.test(input.value), acc), false);
+
+const curryParamMethod = (type, reducer) => group => isOptional(group) || group.fields.reduce(reducer(extractValidationParams(group, type)), false);
 
 export default {
     required: group => extractValueFromGroup(group) !== false,
-    email: regexMethod(EMAIL_REGEX),
-    url: regexMethod(URL_REGEX),
+    email: curryRegexMethod(EMAIL_REGEX),
+    url: curryRegexMethod(URL_REGEX),
     date: group => isOptional(group)|| group.fields.reduce((acc, input) => (acc = !/Invalid|NaN/.test(new Date(input.value).toString()), acc), false),
-    dateISO: regexMethod(DATE_ISO_REGEX),
-    number: regexMethod(NUMBER_REGEX),
-    digits: regexMethod(DIGITS_REGEX),
-    minlength: paramMethod(
+    dateISO: curryRegexMethod(DATE_ISO_REGEX),
+    number: curryRegexMethod(NUMBER_REGEX),
+    digits: curryRegexMethod(DIGITS_REGEX),
+    minlength: curryParamMethod(
         'minlength', 
         param => (acc, input) => (acc = Array.isArray(input.value) ? input.value.length >= +param : +input.value.length >= +param, acc)
     ),
-    maxlength: paramMethod(
+    maxlength: curryParamMethod(
         'maxlength', 
         param => (acc, input) => (acc = Array.isArray(input.value) ? input.value.length <= +param : +input.value.length <= +param, acc)
     ),
-    min: paramMethod('min', params => (acc, input) => (acc = +input.value >= +param, acc)),
-    max: paramMethod('max', params => (acc, input) => (acc = +input.value <= +param, acc)),
-    length: paramMethod('length', params => (acc, input) => (acc = (+input.value.length >= +params[0] && (params[1] === undefined || +input.value.length <= +params[1])), acc)),
-    range: paramMethod('range', params => (acc, input) => (acc = (+input.value >= +params[0] && +input.value <= +params[1]), acc)),
+    pattern: curryParamMethod('pattern', (...regexStr) => (acc, input) => (acc = RegExp(regexStr).test(input.value), acc)),
+    regex: curryParamMethod('regex', (...regexStr) => (acc, input) => (acc = RegExp(regexStr).test(input.value), acc)),
+    min: curryParamMethod('min', (...min) => (acc, input) => (acc = +input.value >= +min, acc)),
+    max: curryParamMethod('max', (...max) => (acc, input) => (acc = +input.value <= +max, acc)),
+    length: curryParamMethod('length', params => (acc, input) => (acc = (+input.value.length >= +params[0] && (params[1] === undefined || +input.value.length <= +params[1])), acc)),
+    range: curryParamMethod('range', params => (acc, input) => (acc = (+input.value >= +params[0] && +input.value <= +params[1]), acc)),
     
     // rangelength
     // https://jqueryvalidation.org/rangelength-method/
@@ -48,6 +51,13 @@ export default {
     // remote
     // https://jqueryvalidation.org/remote-method/
     // https://github.com/jquery-validation/jquery-validation/blob/master/src/core.js#L1492
+    // data-val-remote="&amp;#39;UserName&amp;#39; is invalid." data-val-remote-additionalfields="*.UserName" data-val-remote-url="/Validation/IsUID_Available"
+
+    // regex
+    // data-val-regex="White space is not allowed." 
+    // data-val-regex-pattern="(\S)+" 
+
+
 
     /* 
     Extensions

@@ -7,34 +7,18 @@ export const isRequired = group => group.validators.filter(validator => validato
 const hasValue = input => (input.value !== undefined && input.value !== null && input.value.length > 0);
 
 const groupValueReducer = (acc, input) => {
-    if(isCheckable(input)) {
-        if(input.checked){
-            if(Array.isArray(acc)) acc.push(input.value);
-            else acc = [input.value];
-        }
+    if(!isCheckable(input) && hasValue(input)) acc = input.value;
+    if(isCheckable(input) && input.checked) {
+        if(Array.isArray(acc)) acc.push(input.value)
+        else acc = [input.value];
     }
-    else if(hasValue(input)) acc = input.value;
     return acc;
 }
 
-export const extractValueFromGroup = group => {
-    return group.fields
-            .reduce((acc, input) => {
-                if(isCheckable(input)) {
-                    if(input.checked){
-                        if(Array.isArray(acc)) acc.push(input.value)
-                        else acc = [input.value];
-                    }
-                }
-                else if(hasValue(input)) acc = input.value;
-                return acc;
-            }, false);
-};
+export const extractValueFromGroup = group => group.fields.reduce(groupValueReducer, false);
 
 
 export const chooseRealTimeEvent = input => ['input', 'change'][Number(isCheckable(input) || isSelect(input))];
-
-// const extractValidationParams = type => input.hasAttribute(type) ? input.getAttribute(type) : input.hasAttribute(`data-rule-${type}`) ? input.hasAttribute(`data-val-${type}`)
 
 
 // const composer = (f, g) => (...args) => f(g(...args));

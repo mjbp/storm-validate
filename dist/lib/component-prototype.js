@@ -12,35 +12,10 @@ export default {
 	init() {
 		//prevent browser validation
 		this.form.setAttribute('novalidate', 'novalidate');
-		
 		this.groups = removeUnvalidatableGroups(Array.from(this.form.querySelectorAll('input:not([type=submit]), textarea, select')).reduce(assembleValidationGroup, {}));
-
 		this.initListeners();
-		
 
 		console.log(this.groups);
-
-		/*
-
-		1. ref. <input data-rule-minlength="2" data-rule-maxlength="4" data-msg-minlength="At least two chars" data-msg-maxlength="At most fours chars">
-
-
-		2. ref. https://jqueryvalidation.org/files/demo/
-		
-		3. ref. Constraint validation API
-		Validation-repated attributes
-			- pattern, regex, 'The value must match the pattern'
-			- min, number, 'The value must be greater than or equal to the value.'
-			- max, number, 'The value must be less than or equal to the value',
-			- required, none, 'There must be a value',
-			- maxlength, int length, 'The number of characters (code points) must not exceed the value of the attribute.' 
-
-		4. ref. https://github.com/aspnet/jquery-validation-unobtrusive/blob/master/src/jquery.validate.unobtrusive.js
-
-		*/
-
-		//validate whole form
-
 		return this;
 	},
 	initListeners(){

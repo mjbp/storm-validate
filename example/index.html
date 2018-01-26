@@ -115,7 +115,8 @@
             padding:0;
         }
         input:not([type=submit]),
-        textarea {
+        textarea,
+        select {
             padding:16px;
             display: block;
             width:100%;
@@ -123,6 +124,12 @@
             background-color:#f8f8f8;
             border-bottom:1px solid #eee;
             font-size: 1rem;
+        }
+        select {
+            height:48px;
+            border-radius: 0 !important;
+            padding:0;
+            border-bottom: 0 none;
         }
         input:not([type=submit]):focus,
         textarea:focus {
@@ -170,6 +177,26 @@
                 <span class="text-danger field-validation-valid" data-valmsg-for="clen" data-valmsg-replace="true"></span>
               </div>
               <div class="form-group">
+                <label for="cmin">HTML5 number optional, at least 2, recycling data-valmsg-for span for error messages</label>
+                <input id="cmin" name="cmin" min="2" type="number">
+                <span class="text-danger field-validation-valid" data-valmsg-for="cmin" data-valmsg-replace="true"></span>
+              </div>
+              <!-- <div class="form-group">
+                <label for="cmin2">data-val Number optional, at least 2, recycling data-valmsg-for span for error messages</label>
+                <input id="cmin2" name="cmin2" data-val="true" data-val-min="Please enter a value greater than 2" data-val-min="2" type="number">
+                <span class="text-danger field-validation-valid" data-valmsg-for="cmin2" data-valmsg-replace="true"></span>
+              </div> -->
+              <div class="form-group">
+                <label for="pattern">HTML5 pattern (no leading (\S)+ whitespace), optional, recycling data-valmsg-for span for error messages</label>
+                <input id="pattern" name="pattern" pattern="(\S)+" type="text">
+                <span class="text-danger field-validation-valid" data-valmsg-for="pattern" data-valmsg-replace="true"></span>
+            </div>
+            <div class="form-group">
+              <label for="regex">data-val regex (no leading (\S)+ whitespace), optional, recycling data-valmsg-for span for error messages</label>
+              <input id="regex" name="regex" data-val="true" data-val-regex="White space is not allowed." data-val-regex-pattern="(\S)+" type="text">
+              <span class="text-danger field-validation-valid" data-valmsg-for="regex" data-valmsg-replace="true"></span>
+            </div>
+              <div class="form-group">
                 <label for="ignored">Ignored</label>
                 <input id="ignored" name="ignored" type="text">
                </div>
@@ -192,6 +219,15 @@
             <div class="form-group">
                 <label for="ccomment">HTML5 required, creates error message node</label>
                 <textarea id="ccomment" name="comment" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="cselect">HTML5 required, creates error message node</label>
+                <select name="cselect" id="cselect" required>
+                    <option value=""></option>
+                    <option value="1">Option 1</option>
+                    <option value="2">Option 2</option>
+                    <option value="3">Option 3</option>
+                </select>
             </div>
             <div class="form-group">
                 <fieldset>
