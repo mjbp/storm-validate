@@ -1,7 +1,9 @@
 // import inputPrototype from './input-prototype';
 import { chooseRealTimeEvent } from './utils';
-import { 
+import {
+	validate,
 	validationReducer,
+	extractErrorMessage,
 	assembleValidationGroup,
 	normaliseValidators,
 	removeUnvalidatableGroups
@@ -22,8 +24,11 @@ export default {
 		this.form.addEventListener('submit', e => {
 			e.preventDefault();
 			this.clearErrors();
-			if(this.setValidityState()) this.form.submit();
-			else this.renderErrors(), this.initRealTimeValidation();
+			this.setValidityState()
+					.then(res => {
+						if(![].concat(...res).includes(false)) this.form.submit();
+						else this.renderErrors(), this.initRealTimeValidation();
+					});
 		});
 
 		this.form.addEventListener('reset', e => { this.clearErrors(); });
@@ -32,7 +37,11 @@ export default {
 		let handler = function(e) {
 				let group = e.target.getAttribute('name');
 				if(this.groups[group].errorDOM) this.removeError(group);
-				if(!this.setGroupValidityState(group)) this.renderError(group);
+				// if(!this.setGroupValidityState(group)) this.renderError(group);
+				this.setGroupValidityState(group)
+					.then(res => {
+						if(res.includes(false)) this.renderError(group);
+					});
 			}.bind(this);
 
 		for(let group in this.groups){
@@ -42,55 +51,38 @@ export default {
 		}
 	},
 	setGroupValidityState(group){
-		//manage remote/async validators in reducer
-		//return promise??
-		//eagerly evaluate then update??
-
-		//if one of the validators is asynchronous,
-		//easerly set validity state to false if any of the synchronous validators are false
-		//if all others pass,
-		//set pending state whilst async validator resolves??
-
-		//return promise from this fn everytime??
-		/*
-
-		return new Promise((resolve, reject) => {
-			let s = document.createElement('script');
-			s.src = url;
-			s.async = async;
-			s.onload = s.onreadystatechange = function() {
-				if (!this.readyState || this.readyState === 'complete') resolve();
-			};
-			s.onerror = s.onabort = reject;
-			document.head.appendChild(s);
-		});
-		*/
-		let createAsyncReducers = () => {
-			let asyncReducers = this.groups[group].validators.map(validationReducer(this.groups[group]));
-			return Promise.all(urls.map(url => create(url)));
-		};
-
-		
-
-
-		// this.groups[group] = Object.assign({}, 
-		// 						this.groups[group],
-		// 						{ valid: true, errorMessages: [] }, //reset validity and errorMessagesa
-		// 						this.groups[group].validators.reduce(validationReducer(this.groups[group]), true));
-		
-		
-		// 	return this.groups[group].valid;
-
-
-		
+		//reset validity and errorMessages
+		this.groups[group] = Object.assign({}, this.groups[group],{ valid: true, errorMessages: [] });
+		return Promise.all(this.groups[group].validators.map(validator => {
+			return new Promise(resolve => {
+				if(validator.type !== 'remote'){
+					if(validate(this.groups[group], validator)) resolve(true);
+					else {
+						//mutation and side effect...
+						this.groups[group].valid = false;
+						this.groups[group].errorMessages.push(extractErrorMessage(validator, group));
+						resolve(false);
+					}
+				}
+				else validate(this.groups[group], validator)
+						.then(res => {
+							if(res) resolve(true);
+							else {
+								//mutation, side effect, and in-DRY...
+								this.groups[group].valid = false;
+								this.groups[group].errorMessages.push(extractErrorMessage(validator, group));
+								resolve(false);
+							}
+						});
+			});
+		}));
 	},
 	setValidityState(){
-		let numErrors = 0;
-		for(let group in this.groups){
-			this.setGroupValidityState(group);
-			!this.groups[group].valid && ++numErrors;
-		}
-		return numErrors === 0;
+		let groupValidators = [];
+		for(let group in this.groups) groupValidators.push(this.setGroupValidityState(group));
+
+		//Object.keys(this.groups).map(this.setGroupValidityState)
+		return Promise.all(groupValidators);
 	},
 	clearErrors(){
 		for(let group in this.groups){

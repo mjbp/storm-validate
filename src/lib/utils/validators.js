@@ -70,15 +70,17 @@ export const normaliseValidators = input => {
     return validators;
 };
 
-export const validationReducer = group => (acc, validator) => {
-    if(methods[validator.type](group, validator.params && validator.params.length > 0 ? validator.params : null)) return acc;
-    return {
-        valid: false,
-        errorMessages: acc.errorMessages 
-                        ? [...acc.errorMessages, extractErrorMessage(validator, group)] 
-                        : [extractErrorMessage(validator, group)]
-    };;
-};
+// export const validationReducer = group => (acc, validator) => {
+//     if(methods[validator.type](group, validator.params && validator.params.length > 0 ? validator.params : null)) return acc;
+//     return {
+//         valid: false,
+//         errorMessages: acc.errorMessages 
+//                         ? [...acc.errorMessages, extractErrorMessage(validator, group)] 
+//                         : [extractErrorMessage(validator, group)]
+//     };;
+// };
+
+export const validate = (group, validator) => methods[validator.type](group, validator.params && validator.params.length > 0 ? validator.params : null);
 
 export const assembleValidationGroup = (acc, input) => {
     if(!acc[input.getAttribute('name')]) {

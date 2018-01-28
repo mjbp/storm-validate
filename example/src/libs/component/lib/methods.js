@@ -33,21 +33,19 @@ export default {
     range: curryParamMethod('range', params => (acc, input) => (acc = (+input.value >= +params[0] && +input.value <= +params[1]), acc)),
     remote: (group, params) => {
         let [ url, type] = params;
-        fetch(url, {
-            method: type.toUpperCase(),
-            // body: JSON.stringify(data), 
-            headers: new Headers({
-              'Content-Type': 'application/json'
+        
+        return new Promise((resolve, reject) => {
+            fetch(url, {
+                method: type.toUpperCase(),
+                //body: JSON.stringify(extractValueFromGroup(group).length ?), 
+                headers: new Headers({
+                  'Content-Type': 'application/json'
+                })
             })
-        })
-        .then(res => res.json())
-        .then(data => {
-            console.log(data);
-            return true;
-        })
-
-        //async so are we returning pending state...
-        // return true;
+            .then(res => res.json())
+            .then(data => { resolve(data); })
+            .catch(res => { resolve(true); });//what to do if endpoint validation fails?
+        });
     }
     
     // rangelength
