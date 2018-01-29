@@ -116,7 +116,7 @@ export default {
 		this.groups[group].fields.forEach(field => { field.setAttribute('aria-invalid', 'true'); });
 	},
 	addMethod(name, fn, message){
-		this.groups.validators.push(fn);
+		this.groups[name].validators.push(fn);
 		//extend messages
 	}
 };

@@ -8,19 +8,14 @@ export const isRequired = group => group.validators.filter(validator => validato
 
 export const getName = group => group.fields[0].getAttribute('name');
 
-const unfold = (acc, curr, i, arr) => {
-    if(arr.length < 2) return acc;
-    return arr;
-};
+const unfold = value => value === false ? '' : value;
 
 const requestBodyReducer = (acc, curr) => {
-    acc[curr.substr(2)] = [].slice.call(document.querySelectorAll(`[name=${curr.substr(2)}]`)).reduce(groupValueReducer, []).reduce(unfold, '');
+    acc[curr.substr(2)] = unfold([].slice.call(document.querySelectorAll(`[name=${curr.substr(2)}]`)).reduce(groupValueReducer, ''));
     return acc;
 };
 
-export const composeRequestBody = (group, additionalfields) => {
-    return additionalfields.split(',').reduce(requestBodyReducer, {});
-};
+export const composeRequestBody = (group, additionalfields) => additionalfields.split(',').reduce(requestBodyReducer, {});
 
 const getURLReducer = (acc, curr) => `${acc}&${curr.substr(2)}=${[].slice.call(document.querySelectorAll(`[name=${curr.substr(2)}]`)).reduce(groupValueReducer, []).join(',')}`;
 
