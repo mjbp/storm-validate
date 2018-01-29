@@ -54,6 +54,8 @@ export default {
 		this.groups[group] = Object.assign({}, this.groups[group],{ valid: true, errorMessages: [] });
 		return Promise.all(this.groups[group].validators.map(validator => {
 			return new Promise(resolve => {
+				//only perform the remote validation if all else passes?
+				
 				//refactor, extract this whole fn...
 				if(validator.type !== 'remote'){
 					if(validate(this.groups[group], validator)) resolve(true);

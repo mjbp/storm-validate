@@ -1,4 +1,4 @@
-import { isSelect, isCheckable, isRequired, getName, extractValueFromGroup, composeRequestBody } from './utils';
+import { isSelect, isCheckable, isRequired, getName, extractValueFromGroup, composeRequestBody, composeGetURL } from './utils';
 import { EMAIL_REGEX, URL_REGEX, DATE_ISO_REGEX, NUMBER_REGEX, DIGITS_REGEX } from './constants';
 
 const isOptional = group => !isRequired(group) && extractValueFromGroup(group) === '';
@@ -33,12 +33,11 @@ export default {
     range: curryParamMethod('range', params => (acc, input) => (acc = (+input.value >= +params[0] && +input.value <= +params[1]), acc)),
     remote: (group, params) => {
         let [ url, additionalfields, type = 'get'] = params;
-
-        //compose URL and body differently if GET/POST
+        
         return new Promise((resolve, reject) => {
-            fetch(`${url}?${getName(group)}=${extractValueFromGroup(group)}`, {
+            fetch((type !== 'get' ? url : composeGetURL(url, group, additionalfields)), {
                 method: type.toUpperCase(),
-                // body: JSON.stringify(composeRequestBody(group, additionalfields)), 
+                body: type === 'get' ? null : JSON.stringify(composeRequestBody(group, additionalfields)), 
                 headers: new Headers({
                   'Content-Type': 'application/json'
                 })

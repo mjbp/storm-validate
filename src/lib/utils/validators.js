@@ -14,12 +14,12 @@ const extractDataValValidators = input => DOTNET_ADAPTORS
                                                             DOTNET_PARAMS[adaptor] && 
                                                             { 
                                                                 params: DOTNET_PARAMS[adaptor]
-                                                                    .reduce((acc, param) => {
-                                                                        input.hasAttribute(`data-val-${param}`) 
-                                                                        && acc.push(input.getAttribute(`data-val-${param}`))
-                                                                        return acc;
-                                                                    }, []) 
-                                                            })
+                                                                            .reduce((acc, param) => {
+                                                                                input.hasAttribute(`data-val-${param}`) 
+                                                                                && acc.push(input.getAttribute(`data-val-${param}`))
+                                                                                return acc;
+                                                                            }, []) 
+                                                                    })
                                                     ],
                                                 []);
 

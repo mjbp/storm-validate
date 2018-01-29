@@ -12,8 +12,8 @@ export default {
     max(props){ return `Please enter a value less than or equal to ${[props]}.`; },
     min(props){ return `Please enter a value greater than or equal to ${props}.`},
     equalTo() { return 'Please enter the same value again.'; },
+    remote() { return 'Please fix this field.'; },
     //rangelength(props) { return `Please enter a value between ${props.min} and ${props.max} characters long.`; },
     //range(props){ return `Please enter a value between ${props.min} and ${props.max}.`; },
-    //remote() { return 'Please fix this field.'; },
     //step(props){ return `Please enter a multiple of ${props}.`; }
 };

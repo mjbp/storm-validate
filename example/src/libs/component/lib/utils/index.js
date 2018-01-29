@@ -8,14 +8,24 @@ export const isRequired = group => group.validators.filter(validator => validato
 
 export const getName = group => group.fields[0].getAttribute('name');
 
-const extractAdditionalFieldData = sel => {
-    sel.split(',').map(selector => {
-        //document.querySelectorAll('name');
-    });
+const unfold = (acc, curr, i, arr) => {
+    if(arr.length < 2) return acc;
+    return arr;
 };
 
-export const composeRequestBody = (group, additionalFields) => Object.assign({}, {[getName(group)]:extractValueFromGroup(group)}, additionalFields ? {} : {});
+const requestBodyReducer = (acc, curr) => {
+    acc[curr.substr(2)] = [].slice.call(document.querySelectorAll(`[name=${curr.substr(2)}]`)).reduce(groupValueReducer, []).reduce(unfold, '');
+    return acc;
+};
 
+export const composeRequestBody = (group, additionalfields) => {
+    return additionalfields.split(',').reduce(requestBodyReducer, {});
+};
+
+const getURLReducer = (acc, curr) => `${acc}&${curr.substr(2)}=${[].slice.call(document.querySelectorAll(`[name=${curr.substr(2)}]`)).reduce(groupValueReducer, []).join(',')}`;
+
+export const composeGetURL = (baseURL, group, additionalfields) => additionalfields.split(',').reduce(getURLReducer, `${baseURL}?`);
+    
 const hasValue = input => (input.value !== undefined && input.value !== null && input.value.length > 0);
 
 const groupValueReducer = (acc, input) => {

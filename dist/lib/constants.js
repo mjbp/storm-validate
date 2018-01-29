@@ -29,10 +29,8 @@ export const DOTNET_PARAMS = {
 };
 
 export const DOTNET_ADAPTORS = [
-    //'regex', -> same as pattern, how is it applied to an element? pattern attribute? data-val-regex?
     'required',
     'stringlength',
-    // 'date',
     'regex',
     // 'digits',
     'email',
@@ -41,6 +39,6 @@ export const DOTNET_ADAPTORS = [
     'length',
     'range',
     'equalto',
-    'remote',
+    'remote',//should be last
     // 'password' //-> maps to min, nonalphamain, and regex methods
 ];
