@@ -1,8 +1,20 @@
- export const isSelect = field => field.nodeName.toLowerCase() === 'select';
+export const isSelect = field => field.nodeName.toLowerCase() === 'select';
 
 export const isCheckable = field => (/radio|checkbox/i).test(field.type);
 
+export const isFile = field => field.getAttribute('type') === 'file';
+
 export const isRequired = group => group.validators.filter(validator => validator.type === 'required').length > 0;
+
+export const getName = group => group.fields[0].getAttribute('name');
+
+const extractAdditionalFieldData = sel => {
+    sel.split(',').map(selector => {
+        //document.querySelectorAll('name');
+    });
+};
+
+export const composeRequestBody = (group, additionalFields) => Object.assign({}, {[getName(group)]:extractValueFromGroup(group)}, additionalFields ? {} : {});
 
 const hasValue = input => (input.value !== undefined && input.value !== null && input.value.length > 0);
 
@@ -15,9 +27,9 @@ const groupValueReducer = (acc, input) => {
     return acc;
 }
 
-export const extractValueFromGroup = group => group.fields.reduce(groupValueReducer, false);
+export const extractValueFromGroup = group => group.fields.reduce(groupValueReducer, '');
 
-export const chooseRealTimeEvent = input => ['input', 'change'][Number(isCheckable(input) || isSelect(input))];
+export const chooseRealTimeEvent = input => ['input', 'change'][Number(isCheckable(input) || isSelect(input) || isFile(input))];
 
 
 // const composer = (f, g) => (...args) => f(g(...args));

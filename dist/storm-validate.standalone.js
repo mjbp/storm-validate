@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.1.0: Sun, 28 Jan 2018 19:14:04 GMT
+ * @version 0.1.0: Mon, 29 Jan 2018 11:55:07 GMT
  * @author stormid
  * @license MIT
  */
@@ -43,10 +43,18 @@ var isCheckable = function isCheckable(field) {
   );
 };
 
+var isFile = function isFile(field) {
+  return field.getAttribute('type') === 'file';
+};
+
 var isRequired = function isRequired(group) {
   return group.validators.filter(function (validator) {
     return validator.type === 'required';
   }).length > 0;
+};
+
+var getName = function getName(group) {
+  return group.fields[0].getAttribute('name');
 };
 
 var hasValue = function hasValue(input) {
@@ -62,11 +70,11 @@ var groupValueReducer = function groupValueReducer(acc, input) {
 };
 
 var extractValueFromGroup = function extractValueFromGroup(group) {
-  return group.fields.reduce(groupValueReducer, false);
+  return group.fields.reduce(groupValueReducer, '');
 };
 
 var chooseRealTimeEvent = function chooseRealTimeEvent(input) {
-  return ['input', 'change'][Number(isCheckable(input) || isSelect(input))];
+  return ['input', 'change'][Number(isCheckable(input) || isSelect(input) || isFile(input))];
 };
 
 // const composer = (f, g) => (...args) => f(g(...args));
@@ -89,7 +97,7 @@ var DOTNET_ERROR_SPAN_DATA_ATTRIBUTE = 'data-valmsg-for';
 
 /* Can these two be folded into the same variable? */
 var DOTNET_PARAMS = {
-  length: ['min', 'max'],
+  length: ['length-min', 'length-max'],
   stringlength: ['length-max'],
   range: ['range-min', 'range-max'],
   // min: ['min'],?
@@ -98,7 +106,7 @@ var DOTNET_PARAMS = {
   maxlength: ['maxlength-max'],
   regex: ['regex-pattern'],
   equalTo: ['equalto-other'],
-  remote: ['remote-url', 'remote-type', 'remote-additionalfields'] //??
+  remote: ['remote-url', 'remote-additionalfields', 'remote-type'] //??
 };
 
 var DOTNET_ADAPTORS = [
@@ -110,7 +118,7 @@ var DOTNET_ADAPTORS = [
 'email', 'number', 'url', 'length', 'range', 'equalto', 'remote'];
 
 var isOptional = function isOptional(group) {
-  return !isRequired(group) && extractValueFromGroup(group) === false;
+  return !isRequired(group) && extractValueFromGroup(group) === '';
 };
 
 var extractValidationParams = function extractValidationParams(group, type) {
@@ -135,7 +143,7 @@ var curryParamMethod = function curryParamMethod(type, reducer) {
 
 var methods = {
   required: function required(group) {
-    return extractValueFromGroup(group) !== false;
+    return extractValueFromGroup(group) !== '';
   },
   email: curryRegexMethod(EMAIL_REGEX),
   url: curryRegexMethod(URL_REGEX),
@@ -204,14 +212,19 @@ var methods = {
     };
   }),
   remote: function remote(group, params) {
-    var _params = _slicedToArray(params, 2),
+    var _params = _slicedToArray(params, 3),
         url = _params[0],
-        type = _params[1];
+        additionalfields = _params[1],
+        _params$ = _params[2],
+        type = _params$ === undefined ? 'get' : _params$;
+
+    //compose URL and body differently if GET/POST
+
 
     return new Promise(function (resolve, reject) {
-      fetch(url, {
+      fetch(url + '?' + getName(group) + '=' + extractValueFromGroup(group), {
         method: type.toUpperCase(),
-        //body: JSON.stringify(extractValueFromGroup(group).length ?), 
+        // body: JSON.stringify(composeRequestBody(group, additionalfields)), 
         headers: new Headers({
           'Content-Type': 'application/json'
         })
@@ -229,7 +242,6 @@ var methods = {
   // https://jqueryvalidation.org/rangelength-method/
   // https://github.com/jquery-validation/jquery-validation/blob/master/src/core.js#L1420
 
-
   // range
   // https://jqueryvalidation.org/range-method/
   // 
@@ -240,15 +252,6 @@ var methods = {
   // equalTo
   // https://jqueryvalidation.org/equalTo-method/
   // https://github.com/jquery-validation/jquery-validation/blob/master/src/core.js#L1479
-
-  // remote
-  // https://jqueryvalidation.org/remote-method/
-  // https://github.com/jquery-validation/jquery-validation/blob/master/src/core.js#L1492
-  // data-val-remote="&amp;#39;UserName&amp;#39; is invalid." data-val-remote-additionalfields="*.UserName" data-val-remote-url="/Validation/IsUID_Available"
-
-  // regex
-  // data-val-regex="White space is not allowed." 
-  // data-val-regex-pattern="(\S)+" 
 
 
   /* 
@@ -467,6 +470,7 @@ var componentPrototype = {
     this.groups[group] = Object.assign({}, this.groups[group], { valid: true, errorMessages: [] });
     return Promise.all(this.groups[group].validators.map(function (validator) {
       return new Promise(function (resolve) {
+        //refactor, extract this whole fn...
         if (validator.type !== 'remote') {
           if (validate(_this3.groups[group], validator)) resolve(true);else {
             //mutation and side effect...
@@ -476,7 +480,7 @@ var componentPrototype = {
           }
         } else validate(_this3.groups[group], validator).then(function (res) {
           if (res) resolve(true);else {
-            //mutation, side effect, and in-DRY...
+            //mutation, side effect, and un-DRY...
             _this3.groups[group].valid = false;
             _this3.groups[group].errorMessages.push(extractErrorMessage(validator, group));
             resolve(false);

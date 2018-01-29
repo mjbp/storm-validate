@@ -16,7 +16,7 @@ export const DOTNET_ERROR_SPAN_DATA_ATTRIBUTE = 'data-valmsg-for';
 
 /* Can these two be folded into the same variable? */
 export const DOTNET_PARAMS = {
-    length: ['min', 'max'],
+    length: ['length-min', 'length-max'],
     stringlength: ['length-max'],
     range: ['range-min', 'range-max'],
     // min: ['min'],?
@@ -25,7 +25,7 @@ export const DOTNET_PARAMS = {
     maxlength: ['maxlength-max'],
     regex: ['regex-pattern'],
     equalTo: ['equalto-other'],
-    remote: ['remote-url', 'remote-type', 'remote-additionalfields']//??
+    remote: ['remote-url', 'remote-additionalfields', 'remote-type']//??
 };
 
 export const DOTNET_ADAPTORS = [

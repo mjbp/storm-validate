@@ -2,7 +2,6 @@
 import { chooseRealTimeEvent } from './utils';
 import {
 	validate,
-	validationReducer,
 	extractErrorMessage,
 	assembleValidationGroup,
 	normaliseValidators,
@@ -43,7 +42,7 @@ export default {
 						if(res.includes(false)) this.renderError(group);
 					});
 			}.bind(this);
-
+		
 		for(let group in this.groups){
 			this.groups[group].fields.forEach(input => {
 				input.addEventListener(chooseRealTimeEvent(input), handler);
@@ -55,6 +54,7 @@ export default {
 		this.groups[group] = Object.assign({}, this.groups[group],{ valid: true, errorMessages: [] });
 		return Promise.all(this.groups[group].validators.map(validator => {
 			return new Promise(resolve => {
+				//refactor, extract this whole fn...
 				if(validator.type !== 'remote'){
 					if(validate(this.groups[group], validator)) resolve(true);
 					else {
@@ -68,7 +68,7 @@ export default {
 						.then(res => {
 							if(res) resolve(true);
 							else {
-								//mutation, side effect, and in-DRY...
+								//mutation, side effect, and un-DRY...
 								this.groups[group].valid = false;
 								this.groups[group].errorMessages.push(extractErrorMessage(validator, group));
 								resolve(false);

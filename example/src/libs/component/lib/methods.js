@@ -1,7 +1,7 @@
-import { isSelect, isCheckable, isRequired, extractValueFromGroup } from './utils';
+import { isSelect, isCheckable, isRequired, getName, extractValueFromGroup, composeRequestBody } from './utils';
 import { EMAIL_REGEX, URL_REGEX, DATE_ISO_REGEX, NUMBER_REGEX, DIGITS_REGEX } from './constants';
 
-const isOptional = group => !isRequired(group) && extractValueFromGroup(group) === false;
+const isOptional = group => !isRequired(group) && extractValueFromGroup(group) === '';
 
 const extractValidationParams = (group, type) => group.validators.filter(validator => validator.type === type)[0].params;
 
@@ -10,7 +10,7 @@ const curryRegexMethod = regex => group => isOptional(group)|| group.fields.redu
 const curryParamMethod = (type, reducer) => group => isOptional(group) || group.fields.reduce(reducer(extractValidationParams(group, type)), false);
 
 export default {
-    required: group => extractValueFromGroup(group) !== false,
+    required: group => extractValueFromGroup(group) !== '',
     email: curryRegexMethod(EMAIL_REGEX),
     url: curryRegexMethod(URL_REGEX),
     date: group => isOptional(group)|| group.fields.reduce((acc, input) => (acc = !/Invalid|NaN/.test(new Date(input.value).toString()), acc), false),
@@ -32,12 +32,13 @@ export default {
     length: curryParamMethod('length', params => (acc, input) => (acc = (+input.value.length >= +params[0] && (params[1] === undefined || +input.value.length <= +params[1])), acc)),
     range: curryParamMethod('range', params => (acc, input) => (acc = (+input.value >= +params[0] && +input.value <= +params[1]), acc)),
     remote: (group, params) => {
-        let [ url, type] = params;
-        
+        let [ url, additionalfields, type = 'get'] = params;
+
+        //compose URL and body differently if GET/POST
         return new Promise((resolve, reject) => {
-            fetch(url, {
+            fetch(`${url}?${getName(group)}=${extractValueFromGroup(group)}`, {
                 method: type.toUpperCase(),
-                //body: JSON.stringify(extractValueFromGroup(group).length ?), 
+                // body: JSON.stringify(composeRequestBody(group, additionalfields)), 
                 headers: new Headers({
                   'Content-Type': 'application/json'
                 })
@@ -52,7 +53,6 @@ export default {
     // https://jqueryvalidation.org/rangelength-method/
     // https://github.com/jquery-validation/jquery-validation/blob/master/src/core.js#L1420
 
-
     // range
     // https://jqueryvalidation.org/range-method/
     // 
@@ -63,16 +63,6 @@ export default {
     // equalTo
     // https://jqueryvalidation.org/equalTo-method/
     // https://github.com/jquery-validation/jquery-validation/blob/master/src/core.js#L1479
-
-    // remote
-    // https://jqueryvalidation.org/remote-method/
-    // https://github.com/jquery-validation/jquery-validation/blob/master/src/core.js#L1492
-    // data-val-remote="&amp;#39;UserName&amp;#39; is invalid." data-val-remote-additionalfields="*.UserName" data-val-remote-url="/Validation/IsUID_Available"
-
-    // regex
-    // data-val-regex="White space is not allowed." 
-    // data-val-regex-pattern="(\S)+" 
-
 
 
     /* 
