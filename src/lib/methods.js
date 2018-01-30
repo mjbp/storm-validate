@@ -25,6 +25,7 @@ export default {
         'maxlength', 
         param => (acc, input) => (acc = Array.isArray(input.value) ? input.value.length <= +param : +input.value.length <= +param, acc)
     ),
+    equalto: curryParamMethod('equalto', params => (acc, input) => (acc = input.value === document.querySelector(`[name=${params[0].substr(2)}]`).value, acc)),
     pattern: curryParamMethod('pattern', (...regexStr) => (acc, input) => (acc = RegExp(regexStr).test(input.value), acc)),
     regex: curryParamMethod('regex', (...regexStr) => (acc, input) => (acc = RegExp(regexStr).test(input.value), acc)),
     min: curryParamMethod('min', (...min) => (acc, input) => (acc = +input.value >= +min, acc)),

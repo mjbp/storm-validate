@@ -33,8 +33,8 @@ export default {
 		this.form.addEventListener('reset', e => { this.clearErrors(); });
 	},
 	initRealTimeValidation(){
-		let handler = function(e) {
-				let group = e.target.getAttribute('name');
+		let handler = function(group) {
+				// let group = e.target.getAttribute('name');
 				if(this.groups[group].errorDOM) this.removeError(group);
 				// if(!this.setGroupValidityState(group)) this.renderError(group);
 				this.setGroupValidityState(group)
@@ -45,8 +45,11 @@ export default {
 		
 		for(let group in this.groups){
 			this.groups[group].fields.forEach(input => {
-				input.addEventListener(chooseRealTimeEvent(input), handler);
+				input.addEventListener(chooseRealTimeEvent(input), handler.bind(this, group));
 			});
+			let equalToValidator = this.groups[group].validators.filter(validator => validator.type === 'equalto');
+			
+			if(equalToValidator.length > 0) document.querySelector(`[name=${equalToValidator[0].params[0].substr(2)}]`).addEventListener('blur', handler.bind(this, group))
 		}
 	},
 	setGroupValidityState(group){

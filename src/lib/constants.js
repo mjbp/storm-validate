@@ -24,7 +24,7 @@ export const DOTNET_PARAMS = {
     minlength: ['minlength-min'],
     maxlength: ['maxlength-max'],
     regex: ['regex-pattern'],
-    equalTo: ['equalto-other'],
+    equalto: ['equalto-other'],
     remote: ['remote-url', 'remote-additionalfields', 'remote-type']//??
 };
 

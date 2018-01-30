@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.1.0: Mon, 29 Jan 2018 20:22:55 GMT
+ * @version 0.1.0: Tue, 30 Jan 2018 22:14:13 GMT
  * @author stormid
  * @license MIT
  */
@@ -122,7 +122,7 @@ var DOTNET_PARAMS = {
   minlength: ['minlength-min'],
   maxlength: ['maxlength-max'],
   regex: ['regex-pattern'],
-  equalTo: ['equalto-other'],
+  equalto: ['equalto-other'],
   remote: ['remote-url', 'remote-additionalfields', 'remote-type'] //??
 };
 
@@ -176,6 +176,11 @@ var methods = {
   maxlength: curryParamMethod('maxlength', function (param) {
     return function (acc, input) {
       return acc = Array.isArray(input.value) ? input.value.length <= +param : +input.value.length <= +param, acc;
+    };
+  }),
+  equalto: curryParamMethod('equalto', function (params) {
+    return function (acc, input) {
+      return acc = input.value === document.querySelector('[name=' + params[0].substr(2) + ']').value, acc;
     };
   }),
   pattern: curryParamMethod('pattern', function () {
@@ -319,6 +324,11 @@ var messages = {
   }
 };
 
+/*
+const resolveParam = param => param === 'equalto-other' || 
+//->params that are field names can be resolved to the fields themselves to 
+//avoid having to perform ODM look ups every time it validates
+*/
 //Sorry...
 var extractDataValValidators = function extractDataValValidators(input) {
   return DOTNET_ADAPTORS.reduce(function (validators, adaptor) {
@@ -326,6 +336,9 @@ var extractDataValValidators = function extractDataValValidators(input) {
       type: adaptor,
       message: input.getAttribute('data-val-' + adaptor) }, DOTNET_PARAMS[adaptor] && {
       params: DOTNET_PARAMS[adaptor].reduce(function (acc, param) {
+        //to do: resolveParam
+        //for remote and equalto validation
+        //^ see above
         input.hasAttribute('data-val-' + param) && acc.push(input.getAttribute('data-val-' + param));
         return acc;
       }, [])
@@ -459,10 +472,12 @@ var componentPrototype = {
     });
   },
   initRealTimeValidation: function initRealTimeValidation() {
-    var handler = function (e) {
+    var _this3 = this;
+
+    var handler = function (group) {
       var _this2 = this;
 
-      var group = e.target.getAttribute('name');
+      // let group = e.target.getAttribute('name');
       if (this.groups[group].errorDOM) this.removeError(group);
       // if(!this.setGroupValidityState(group)) this.renderError(group);
       this.setGroupValidityState(group).then(function (res) {
@@ -470,14 +485,23 @@ var componentPrototype = {
       });
     }.bind(this);
 
-    for (var group in this.groups) {
-      this.groups[group].fields.forEach(function (input) {
-        input.addEventListener(chooseRealTimeEvent(input), handler);
+    var _loop = function _loop(group) {
+      _this3.groups[group].fields.forEach(function (input) {
+        input.addEventListener(chooseRealTimeEvent(input), handler.bind(_this3, group));
       });
+      var equalToValidator = _this3.groups[group].validators.filter(function (validator) {
+        return validator.type === 'equalto';
+      });
+
+      if (equalToValidator.length > 0) document.querySelector('[name=' + equalToValidator[0].params[0].substr(2) + ']').addEventListener('blur', handler.bind(_this3, group));
+    };
+
+    for (var group in this.groups) {
+      _loop(group);
     }
   },
   setGroupValidityState: function setGroupValidityState(group) {
-    var _this3 = this;
+    var _this4 = this;
 
     //reset validity and errorMessages
     this.groups[group] = Object.assign({}, this.groups[group], { valid: true, errorMessages: [] });
@@ -487,17 +511,17 @@ var componentPrototype = {
 
         //refactor, extract this whole fn...
         if (validator.type !== 'remote') {
-          if (validate(_this3.groups[group], validator)) resolve(true);else {
+          if (validate(_this4.groups[group], validator)) resolve(true);else {
             //mutation and side effect...
-            _this3.groups[group].valid = false;
-            _this3.groups[group].errorMessages.push(extractErrorMessage(validator, group));
+            _this4.groups[group].valid = false;
+            _this4.groups[group].errorMessages.push(extractErrorMessage(validator, group));
             resolve(false);
           }
-        } else validate(_this3.groups[group], validator).then(function (res) {
+        } else validate(_this4.groups[group], validator).then(function (res) {
           if (res) resolve(true);else {
             //mutation, side effect, and un-DRY...
-            _this3.groups[group].valid = false;
-            _this3.groups[group].errorMessages.push(extractErrorMessage(validator, group));
+            _this4.groups[group].valid = false;
+            _this4.groups[group].errorMessages.push(extractErrorMessage(validator, group));
             resolve(false);
           }
         });
