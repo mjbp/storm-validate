@@ -48,9 +48,15 @@ export default {
 			this.groups[group].fields.forEach(input => {
 				input.addEventListener(chooseRealTimeEvent(input), handler.bind(this, group));
 			});
+
+			//pls, refactor me ;_;
 			let equalToValidator = this.groups[group].validators.filter(validator => validator.type === 'equalto');
 			
-			if(equalToValidator.length > 0) document.querySelector(`[name=${equalToValidator[0].params[0].substr(2)}]`).addEventListener('blur', handler.bind(this, group))
+			if(equalToValidator.length > 0) {
+				equalToValidator[0].params[0].forEach(subgroup => {
+					subgroup.forEach(item => { item.addEventListener('blur', handler.bind(this, group))});
+				});
+			}
 		}
 	},
 	setGroupValidityState(group){
@@ -101,8 +107,8 @@ export default {
 		}
 	},
 	removeError(group){
-		// this.groups[group].errorDOM.parentNode.removeChild(this.groups[group].errorDOM);
-		this.groups[group].errorDOM.parentNode.innerHTML = '';
+		this.groups[group].errorDOM.parentNode.removeChild(this.groups[group].errorDOM);
+		//this.groups[group].errorDOM.parentNode.innerHTML = '';
 		this.groups[group].serverErrorNode && this.groups[group].serverErrorNode.classList.remove('error');
 		this.groups[group].fields.forEach(field => { field.removeAttribute('aria-invalid'); });//or should i set this to false if field passes validation?
 		delete this.groups[group].errorDOM;

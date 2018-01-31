@@ -1,13 +1,11 @@
 import methods from '../methods';
 import messages from '../messages';
+import { DOMNodesFromCommaList } from './';
 import { DOTNET_ADAPTORS, DOTNET_PARAMS, DOTNET_ERROR_SPAN_DATA_ATTRIBUTE, DOM_SELECTOR_PARAMS } from '../constants';
 
-/*
-const resolveParam = param => param === 'equalto-other' || 
-//->params that are field names can be resolved to the fields themselves to 
-//avoid having to perform DOM look ups every time it validates
-*/
-const resolveParam = param => !!~DOM_SELECTOR_PARAMS.indexOf(param) ? [].slice.call(document.querySelectorAll(`[name$=${params[0].substr(2)}]`)) : param;
+const resolveParam = (param, value) => !!~DOM_SELECTOR_PARAMS.indexOf(param) 
+                                        ? DOMNodesFromCommaList(value)
+                                        : value;
 
 //Sorry...
 const extractDataValValidators = input => DOTNET_ADAPTORS
@@ -20,16 +18,15 @@ const extractDataValValidators = input => DOTNET_ADAPTORS
                                                             message: input.getAttribute(`data-val-${adaptor}`)}, 
                                                             DOTNET_PARAMS[adaptor] && 
                                                             { 
-                                                                params: DOTNET_PARAMS[adaptor]
-                                                                            .reduce((acc, param) => {
-                                                                                //to do: resolveParam
-                                                                                //for remote and equalto validation
-                                                                                //^ see above
-                                                                                input.hasAttribute(`data-val-${param}`)
-                                                                                && acc.push(input.getAttribute(`data-val-${param}`));
-                                                                                return acc;
-                                                                            }, []) 
-                                                                    })
+                                                                params: 
+                                                                    DOTNET_PARAMS[adaptor]
+                                                                        .reduce((acc, param) => {
+                                                                            input.hasAttribute(`data-val-${param}`)
+                                                                            && acc.push(resolveParam(param, input.getAttribute(`data-val-${param}`)));
+                                                                            return acc;
+                                                                        }, []) 
+                                                            }
+                                                        )
                                                     ],
                                                 []);
 
@@ -110,7 +107,7 @@ export const extractErrorMessage = (validator, group) => validator.message || me
 export const removeUnvalidatableGroups = groups => {
     let validationGroups = {};
 
-    for(let group in groups) 
+    for(let group in groups)
         if(groups[group].validators.length > 0)
             validationGroups[group] = groups[group];
 

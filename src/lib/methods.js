@@ -1,4 +1,4 @@
-import { isSelect, isCheckable, isRequired, getName, extractValueFromGroup, composeRequestBody, composeGetURL } from './utils';
+import { isSelect, isCheckable, isRequired, getName, extractValueFromGroup, composeRequestBody, composeGetURL, groupValueReducer } from './utils';
 import { EMAIL_REGEX, URL_REGEX, DATE_ISO_REGEX, NUMBER_REGEX, DIGITS_REGEX } from './constants';
 
 const isOptional = group => !isRequired(group) && extractValueFromGroup(group) === '';
@@ -25,7 +25,17 @@ export default {
         'maxlength', 
         param => (acc, input) => (acc = Array.isArray(input.value) ? input.value.length <= +param : +input.value.length <= +param, acc)
     ),
-    equalto: curryParamMethod('equalto', params => (acc, input) => (acc = input.value === document.querySelector(`[name=${params[0].substr(2)}]`).value, acc)),
+    equalto: curryParamMethod('equalto', params => (acc, input) => {
+        //the value needs to be the same in every group...
+
+        // console.log(params[0]);
+        return acc = params[0].reduce((subgroupAcc, subgroup) => {
+            if(extractValueFromGroup({fields: subgroup}) !== input.value) subgroupAcc = false;
+            return subgroupAcc;
+        }, true), acc;
+
+        // return (acc = input.value === extractValueFromGroup(params[0].name), acc);
+    }),
     pattern: curryParamMethod('pattern', (...regexStr) => (acc, input) => (acc = RegExp(regexStr).test(input.value), acc)),
     regex: curryParamMethod('regex', (...regexStr) => (acc, input) => (acc = RegExp(regexStr).test(input.value), acc)),
     min: curryParamMethod('min', (...min) => (acc, input) => (acc = +input.value >= +min, acc)),

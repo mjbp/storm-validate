@@ -19,15 +19,24 @@ export const composeRequestBody = (group, additionalfields) => additionalfields.
 
 
 const getURLReducer = (acc, curr, i) => {
+    console.log(curr);
     // console.log([].slice.call(document.querySelectorAll(`[name=${curr.substr(2)}]`)).reduce(groupValueReducer, []));
-    return `${i === 0 ? acc : `${acc}&`}${encodeURIComponent(curr.substr(2))}=${[].slice.call(document.querySelectorAll(`[name=${curr.substr(2)}]`)).reduce(groupValueReducer, [])}`;
+    return `${i === 0 ? acc : `${acc}&`}${encodeURIComponent(curr.getAttribute('name'))}=${curr.reduce(groupValueReducer, [])}`;
 }
 
-export const composeGetURL = (baseURL, group, additionalfields) => additionalfields.split(',').reduce(getURLReducer, `${baseURL}`);
+export const composeGetURL = (baseURL, group, additionalfields) => {
+    return additionalfields.reduce(getURLReducer, `${baseURL}`);
+};
+
+export const DOMNodesFromCommaList = list => {
+    return list.split(',').map(item => {
+        return [].slice.call(document.querySelectorAll(`[name=${item.substr(2)}]`));
+    });
+}
 
 const hasValue = input => (input.value !== undefined && input.value !== null && input.value.length > 0);
 
-const groupValueReducer = (acc, input) => {
+export const groupValueReducer = (acc, input) => {
     if(!isCheckable(input) && hasValue(input)) acc = input.value;
     if(isCheckable(input) && input.checked) {
         if(Array.isArray(acc)) acc.push(input.value)
