@@ -17,10 +17,14 @@ const requestBodyReducer = (acc, curr) => {
 
 export const composeRequestBody = (group, additionalfields) => additionalfields.split(',').reduce(requestBodyReducer, {});
 
-const getURLReducer = (acc, curr) => `${acc}&${curr.substr(2)}=${[].slice.call(document.querySelectorAll(`[name=${curr.substr(2)}]`)).reduce(groupValueReducer, []).join(',')}`;
 
-export const composeGetURL = (baseURL, group, additionalfields) => additionalfields.split(',').reduce(getURLReducer, `${baseURL}?`);
-    
+const getURLReducer = (acc, curr, i) => {
+    // console.log([].slice.call(document.querySelectorAll(`[name=${curr.substr(2)}]`)).reduce(groupValueReducer, []));
+    return `${i === 0 ? acc : `${acc}&`}${encodeURIComponent(curr.substr(2))}=${[].slice.call(document.querySelectorAll(`[name=${curr.substr(2)}]`)).reduce(groupValueReducer, [])}`;
+}
+
+export const composeGetURL = (baseURL, group, additionalfields) => additionalfields.split(',').reduce(getURLReducer, `${baseURL}`);
+
 const hasValue = input => (input.value !== undefined && input.value !== null && input.value.length > 0);
 
 const groupValueReducer = (acc, input) => {

@@ -71,7 +71,14 @@ export default {
 				}
 				else validate(this.groups[group], validator)
 						.then(res => {
-							if(res) resolve(true);
+							if(res) {
+								if(typeof res === 'string') {
+									this.groups[group].valid = false;
+									this.groups[group].errorMessages.push(res);
+									resolve(false);
+								}
+								else resolve(true);
+							}
 							else {
 								//mutation, side effect, and un-DRY...
 								this.groups[group].valid = false;

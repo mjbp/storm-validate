@@ -34,13 +34,13 @@ export default {
     range: curryParamMethod('range', params => (acc, input) => (acc = (+input.value >= +params[0] && +input.value <= +params[1]), acc)),
     remote: (group, params) => {
         let [ url, additionalfields, type = 'get'] = params;
-        
         return new Promise((resolve, reject) => {
-            fetch((type !== 'get' ? url : composeGetURL(url, group, additionalfields)), {
+            fetch((type !== 'get' ? url : composeGetURL(`${url}?`, group, additionalfields)), {
                 method: type.toUpperCase(),
-                body: type === 'get' ? null : JSON.stringify(composeRequestBody(group, additionalfields)), 
+                // body: type === 'get' ? null : JSON.stringify(composeRequestBody(group, additionalfields)), 
+                body: type === 'get' ? null : composeGetURL('', group, additionalfields),
                 headers: new Headers({
-                  'Content-Type': 'application/json'
+                  'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
                 })
             })
             .then(res => res.json())

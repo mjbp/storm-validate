@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.1.0: Tue, 30 Jan 2018 22:14:00 GMT
+ * @version 0.1.0: Wed, 31 Jan 2018 10:20:41 GMT
  * @author stormid
  * @license MIT
  */
@@ -14,7 +14,7 @@
        module.exports = mod.exports.default
    } else {
        factory(mod.exports);
-       root.gulpWrapUmd = mod.exports.default
+       root.StormValidate = mod.exports.default
    }
 
 }(this, function(exports) {
@@ -53,25 +53,13 @@ var isRequired = function isRequired(group) {
   }).length > 0;
 };
 
-var unfold = function unfold(value) {
-  return value === false ? '' : value;
-};
-
-var requestBodyReducer = function requestBodyReducer(acc, curr) {
-  acc[curr.substr(2)] = unfold([].slice.call(document.querySelectorAll('[name=' + curr.substr(2) + ']')).reduce(groupValueReducer, ''));
-  return acc;
-};
-
-var composeRequestBody = function composeRequestBody(group, additionalfields) {
-  return additionalfields.split(',').reduce(requestBodyReducer, {});
-};
-
-var getURLReducer = function getURLReducer(acc, curr) {
-  return acc + '&' + curr.substr(2) + '=' + [].slice.call(document.querySelectorAll('[name=' + curr.substr(2) + ']')).reduce(groupValueReducer, []).join(',');
+var getURLReducer = function getURLReducer(acc, curr, i) {
+  // console.log([].slice.call(document.querySelectorAll(`[name=${curr.substr(2)}]`)).reduce(groupValueReducer, []));
+  return '' + (i === 0 ? acc : acc + '&') + encodeURIComponent(curr.substr(2)) + '=' + [].slice.call(document.querySelectorAll('[name=' + curr.substr(2) + ']')).reduce(groupValueReducer, []);
 };
 
 var composeGetURL = function composeGetURL(baseURL, group, additionalfields) {
-  return additionalfields.split(',').reduce(getURLReducer, baseURL + '?');
+  return additionalfields.split(',').reduce(getURLReducer, '' + baseURL);
 };
 
 var hasValue = function hasValue(input) {
@@ -237,11 +225,12 @@ var methods = {
         type = _params$ === undefined ? 'get' : _params$;
 
     return new Promise(function (resolve, reject) {
-      fetch(type !== 'get' ? url : composeGetURL(url, group, additionalfields), {
+      fetch(type !== 'get' ? url : composeGetURL(url + '?', group, additionalfields), {
         method: type.toUpperCase(),
-        body: type === 'get' ? null : JSON.stringify(composeRequestBody(group, additionalfields)),
+        // body: type === 'get' ? null : JSON.stringify(composeRequestBody(group, additionalfields)), 
+        body: type === 'get' ? null : composeGetURL('', group, additionalfields),
         headers: new Headers({
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
         })
       }).then(function (res) {
         return res.json();
@@ -518,7 +507,13 @@ var componentPrototype = {
             resolve(false);
           }
         } else validate(_this4.groups[group], validator).then(function (res) {
-          if (res) resolve(true);else {
+          if (res) {
+            if (typeof res === 'string') {
+              _this4.groups[group].valid = false;
+              _this4.groups[group].errorMessages.push(res);
+              resolve(false);
+            } else resolve(true);
+          } else {
             //mutation, side effect, and un-DRY...
             _this4.groups[group].valid = false;
             _this4.groups[group].errorMessages.push(extractErrorMessage(validator, group));
