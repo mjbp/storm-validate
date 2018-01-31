@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.1.0: Wed, 31 Jan 2018 16:43:01 GMT
+ * @version 0.2.1: Wed, 31 Jan 2018 17:48:11 GMT
  * @author stormid
  * @license MIT
  */
@@ -313,11 +313,6 @@ var messages = {
   }
 };
 
-/*
-const resolveParam = param => param === 'equalto-other' || 
-//->params that are field names can be resolved to the fields themselves to 
-//avoid having to perform ODM look ups every time it validates
-*/
 //Sorry...
 var extractDataValValidators = function extractDataValValidators(input) {
   return DOTNET_ADAPTORS.reduce(function (validators, adaptor) {
@@ -435,7 +430,6 @@ var createErrorTextNode = function createErrorTextNode(group) {
 // import inputPrototype from './input-prototype';
 var componentPrototype = {
   init: function init() {
-    //prevent browser validation
     this.form.setAttribute('novalidate', 'novalidate');
     this.groups = removeUnvalidatableGroups([].slice.call(this.form.querySelectorAll('input:not([type=submit]), textarea, select')).reduce(assembleValidationGroup, {}));
     this.initListeners();
@@ -471,7 +465,7 @@ var componentPrototype = {
       // if(!this.setGroupValidityState(group)) this.renderError(group);
       this.setGroupValidityState(group).then(function (res) {
         //in case last async validation took longer and we've re-rendered
-        if (_this2.groups[group].errorDOM) _this2.removeError(group);
+        // if(this.groups[group].errorDOM) this.removeError(group);
         if (res.includes(false)) _this2.renderError(group);
       });
     }.bind(this);
@@ -529,8 +523,7 @@ var componentPrototype = {
     var groupValidators = [];
     for (var group in this.groups) {
       groupValidators.push(this.setGroupValidityState(group));
-    } //Object.keys(this.groups).map(this.setGroupValidityState)
-    return Promise.all(groupValidators);
+    }return Promise.all(groupValidators);
   },
   clearErrors: function clearErrors() {
     for (var group in this.groups) {
@@ -538,7 +531,8 @@ var componentPrototype = {
     }
   },
   removeError: function removeError(group) {
-    this.groups[group].errorDOM.parentNode.removeChild(this.groups[group].errorDOM);
+    // this.groups[group].errorDOM.parentNode.removeChild(this.groups[group].errorDOM);
+    this.groups[group].errorDOM.parentNode.innerHTML = '';
     this.groups[group].serverErrorNode && this.groups[group].serverErrorNode.classList.remove('error');
     this.groups[group].fields.forEach(function (field) {
       field.removeAttribute('aria-invalid');
@@ -552,6 +546,7 @@ var componentPrototype = {
     }
   },
   renderError: function renderError(group) {
+    if (this.groups[group].errorDOM) this.removeError(group);
     this.groups[group].errorDOM = this.groups[group].serverErrorNode ? createErrorTextNode(this.groups[group]) : this.groups[group].fields[this.groups[group].fields.length - 1].parentNode.appendChild(h('div', { class: 'error' }, this.groups[group].errorMessages[0]));
 
     //set aria-invalid on invalid inputs

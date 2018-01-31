@@ -1,12 +1,14 @@
 import methods from '../methods';
 import messages from '../messages';
-import { DOTNET_ADAPTORS, DOTNET_PARAMS, DOTNET_ERROR_SPAN_DATA_ATTRIBUTE } from '../constants';
+import { DOTNET_ADAPTORS, DOTNET_PARAMS, DOTNET_ERROR_SPAN_DATA_ATTRIBUTE, DOM_SELECTOR_PARAMS } from '../constants';
 
 /*
 const resolveParam = param => param === 'equalto-other' || 
 //->params that are field names can be resolved to the fields themselves to 
-//avoid having to perform ODM look ups every time it validates
+//avoid having to perform DOM look ups every time it validates
 */
+const resolveParam = param => !!~DOM_SELECTOR_PARAMS.indexOf(param) ? [].slice.call(document.querySelectorAll(`[name$=${params[0].substr(2)}]`)) : param;
+
 //Sorry...
 const extractDataValValidators = input => DOTNET_ADAPTORS
                                             .reduce((validators, adaptor) => 
@@ -23,8 +25,8 @@ const extractDataValValidators = input => DOTNET_ADAPTORS
                                                                                 //to do: resolveParam
                                                                                 //for remote and equalto validation
                                                                                 //^ see above
-                                                                                input.hasAttribute(`data-val-${param}`) 
-                                                                                && acc.push(input.getAttribute(`data-val-${param}`))
+                                                                                input.hasAttribute(`data-val-${param}`)
+                                                                                && acc.push(input.getAttribute(`data-val-${param}`));
                                                                                 return acc;
                                                                             }, []) 
                                                                     })

@@ -14,6 +14,8 @@ export const DIGITS_REGEX = /^\d+$/;
 
 export const DOTNET_ERROR_SPAN_DATA_ATTRIBUTE = 'data-valmsg-for';
 
+export const DOM_SELECTOR_PARAMS = ['remote-additionalfields', 'equalto-other'];
+
 /* Can these two be folded into the same variable? */
 export const DOTNET_PARAMS = {
     length: ['length-min', 'length-max'],

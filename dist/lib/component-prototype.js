@@ -11,7 +11,6 @@ import { h, createErrorTextNode } from './utils/dom';
 
 export default {
 	init() {
-		//prevent browser validation
 		this.form.setAttribute('novalidate', 'novalidate');
 		this.groups = removeUnvalidatableGroups([].slice.call(this.form.querySelectorAll('input:not([type=submit]), textarea, select')).reduce(assembleValidationGroup, {}));
 		this.initListeners();
@@ -40,7 +39,7 @@ export default {
 				this.setGroupValidityState(group)
 					.then(res => {
 						//in case last async validation took longer and we've re-rendered
-						if(this.groups[group].errorDOM) this.removeError(group);
+						// if(this.groups[group].errorDOM) this.removeError(group);
 						if(res.includes(false)) this.renderError(group);
 					});
 			}.bind(this);
@@ -94,8 +93,6 @@ export default {
 	setValidityState(){
 		let groupValidators = [];
 		for(let group in this.groups) groupValidators.push(this.setGroupValidityState(group));
-
-		//Object.keys(this.groups).map(this.setGroupValidityState)
 		return Promise.all(groupValidators);
 	},
 	clearErrors(){
@@ -104,7 +101,8 @@ export default {
 		}
 	},
 	removeError(group){
-		this.groups[group].errorDOM.parentNode.removeChild(this.groups[group].errorDOM);
+		// this.groups[group].errorDOM.parentNode.removeChild(this.groups[group].errorDOM);
+		this.groups[group].errorDOM.parentNode.innerHTML = '';
 		this.groups[group].serverErrorNode && this.groups[group].serverErrorNode.classList.remove('error');
 		this.groups[group].fields.forEach(field => { field.removeAttribute('aria-invalid'); });//or should i set this to false if field passes validation?
 		delete this.groups[group].errorDOM;
@@ -116,6 +114,7 @@ export default {
 		}
 	},
 	renderError(group){
+		if(this.groups[group].errorDOM) this.removeError(group);
 		this.groups[group].errorDOM = 
 			this.groups[group].serverErrorNode ? 
 				createErrorTextNode(this.groups[group]) : 
