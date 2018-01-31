@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.1.0: Wed, 31 Jan 2018 10:20:41 GMT
+ * @version 0.1.0: Wed, 31 Jan 2018 16:43:01 GMT
  * @author stormid
  * @license MIT
  */
@@ -470,6 +470,8 @@ var componentPrototype = {
       if (this.groups[group].errorDOM) this.removeError(group);
       // if(!this.setGroupValidityState(group)) this.renderError(group);
       this.setGroupValidityState(group).then(function (res) {
+        //in case last async validation took longer and we've re-rendered
+        if (_this2.groups[group].errorDOM) _this2.removeError(group);
         if (res.includes(false)) _this2.renderError(group);
       });
     }.bind(this);

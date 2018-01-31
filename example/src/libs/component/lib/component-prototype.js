@@ -39,6 +39,8 @@ export default {
 				// if(!this.setGroupValidityState(group)) this.renderError(group);
 				this.setGroupValidityState(group)
 					.then(res => {
+						//in case last async validation took longer and we've re-rendered
+						if(this.groups[group].errorDOM) this.removeError(group);
 						if(res.includes(false)) this.renderError(group);
 					});
 			}.bind(this);
