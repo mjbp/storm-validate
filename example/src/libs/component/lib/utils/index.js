@@ -32,8 +32,25 @@ export const extractValueFromGroup = group => group.hasOwnProperty('fields')
 
 export const chooseRealTimeEvent = input => ['input', 'change'][Number(isCheckable(input) || isSelect(input) || isFile(input))];
 
-// const composer = (f, g) => (...args) => f(g(...args));
-// export const compose = (...fns) => fns.reduce(composer);
-// export const pipe = (...fns) => fns.reduceRight(composer);
-
 export const pipe = (...fns) => fns.reduce((acc, fn) => fn(acc));
+
+export const fetch = (url, props) => {
+    return new Promise((resolve, reject) => {
+        let xhr = new XMLHttpRequest();
+        xhr.open(props.method || 'GET', url);
+        if (props.headers) {
+            Object.keys(props.headers).forEach(key => {
+                xhr.setRequestHeader(key, props.headers[key]);
+            });
+        }
+        xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                resolve(xhr.response);
+            } else {
+                reject(xhr.statusText);
+            }
+        };
+        xhr.onerror = () => reject(xhr.statusText);
+        xhr.send(props.body);
+    });
+};

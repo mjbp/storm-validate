@@ -25,8 +25,8 @@ const extractDataValValidators = input => DOTNET_ADAPTORS.reduce((validators, ad
                                                             ],
                                                         []);
 
-
-const extractAttrValidators = input => pipe(email(input),
+const extractAttrValidators = input => pipe(
+                                            email(input),
                                             url(input),
                                             number(input),
                                             minlength(input),
@@ -34,7 +34,8 @@ const extractAttrValidators = input => pipe(email(input),
                                             min(input),
                                             max(input),
                                             pattern(input),
-                                            required(input));
+                                            required(input)
+                                        );
 
 //un-DRY
 const required = input => (validators = [])  => input.hasAttribute('required') && input.getAttribute('required') !== 'false' ? [...validators, {type: 'required'}] : validators;

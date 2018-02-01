@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.2.1: Thu, 01 Feb 2018 15:08:14 GMT
+ * @version 0.2.1: Thu, 01 Feb 2018 20:10:19 GMT
  * @author stormid
  * @license MIT
  */
@@ -85,10 +85,6 @@ var chooseRealTimeEvent = function chooseRealTimeEvent(input) {
   return ['input', 'change'][Number(isCheckable(input) || isSelect(input) || isFile(input))];
 };
 
-// const composer = (f, g) => (...args) => f(g(...args));
-// export const compose = (...fns) => fns.reduce(composer);
-// export const pipe = (...fns) => fns.reduceRight(composer);
-
 var pipe = function pipe() {
   for (var _len = arguments.length, fns = Array(_len), _key = 0; _key < _len; _key++) {
     fns[_key] = arguments[_key];
@@ -96,6 +92,29 @@ var pipe = function pipe() {
 
   return fns.reduce(function (acc, fn) {
     return fn(acc);
+  });
+};
+
+var fetch = function fetch(url, props) {
+  return new Promise(function (resolve, reject) {
+    var xhr = new XMLHttpRequest();
+    xhr.open(props.method || 'GET', url);
+    if (props.headers) {
+      Object.keys(props.headers).forEach(function (key) {
+        xhr.setRequestHeader(key, props.headers[key]);
+      });
+    }
+    xhr.onload = function () {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(xhr.response);
+      } else {
+        reject(xhr.statusText);
+      }
+    };
+    xhr.onerror = function () {
+      return reject(xhr.statusText);
+    };
+    xhr.send(props.body);
   });
 };
 
