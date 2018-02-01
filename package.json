@@ -19,7 +19,10 @@
     "component",
     "validation",
     "unobtrustive",
-    "constraint"
+    "constraint",
+    "dotnetcore",
+    ".NETMVC",
+    "HTML5"
   ],
   "scripts": {
     "build": "node_modules/.bin/gulp build",

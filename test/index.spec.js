@@ -1,6 +1,6 @@
 import should from 'should';
-import Validate from '../dist/storm-validate.standalone';
 import 'jsdom-global/register';
+import Validate from '../dist/storm-validate.standalone';
 
 const html = `<form method="post" action="" autocomplete="off">
 <fieldset>
@@ -69,33 +69,38 @@ const html = `<form method="post" action="" autocomplete="off">
 
 document.body.innerHTML = html;
   
-// let components = Boilerplate.init('.js-boilerplate'),
-//     componentsTwo = Boilerplate.init.call(Boilerplate, '.js-boilerplate-two', {
-//       callback(){
-//         this.node.classList.toggle('callback-test');
-//       }
-//     });
+let validators = Validate.init('form');
 
 
-// describe('Initialisation', () => {
+describe('Initialisation', () => {
 
-//   it('should return array of length 2', () => {
+  it('should return array of length 1', () => {
 
-//     should(components)
-//       .Array()
-//       .and.have.lengthOf(2);
+    should(validators)
+      .Array()
+      .and.have.lengthOf(1);
 
-//   });
+  });
 
-//   it('each array item should be an object with DOMElement, settings, init, and  handleClick properties', () => {
+  it('each array item should be an object with DOMElement, settings, init, and  handleClick properties', () => {
 
-//     components[0].should.be.an.instanceOf(Object).and.not.empty();
-//     components[0].should.have.property('node');
-//     components[0].should.have.property('settings').Object();
-//     components[0].should.have.property('init').Function()
-//     components[0].should.have.property('handleClick').Function();
+    validators[0].should.be.an.instanceOf(Object).and.not.empty();
+    validators[0].should.have.property('form');
+    validators[0].should.have.property('settings').Object();
+    validators[0].should.have.property('init').Function()
+    validators[0].should.have.property('groups').Object();
+    validators[0].should.have.property('groups').Object();
+    validators[0].should.have.property('initListeners').Function();
+    validators[0].should.have.property('initRealTimeValidation').Function();
+    validators[0].should.have.property('setGroupValidityState').Function();
+    validators[0].should.have.property('setValidityState').Function();
+    validators[0].should.have.property('clearErrors').Function();
+    validators[0].should.have.property('removeError').Function();
+    validators[0].should.have.property('renderErrors').Function();
+    validators[0].should.have.property('renderError').Function();
+    validators[0].should.have.property('addMethod').Function();
 
-//   });
+  });
 
 
 //   it('should attach the handleClick eventListener to DOMElement click event to toggle className', () => {
@@ -147,4 +152,4 @@ document.body.innerHTML = html;
 
 //    });
 
-// });
+});
