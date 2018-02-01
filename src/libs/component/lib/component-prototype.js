@@ -1,7 +1,8 @@
 // import inputPrototype from './input-prototype';
 import { chooseRealTimeEvent } from './utils';
-import { 
-	validationReducer,
+import {
+	validate,
+	extractErrorMessage,
 	assembleValidationGroup,
 	normaliseValidators,
 	removeUnvalidatableGroups
@@ -10,9 +11,8 @@ import { h, createErrorTextNode } from './utils/dom';
 
 export default {
 	init() {
-		//prevent browser validation
 		this.form.setAttribute('novalidate', 'novalidate');
-		this.groups = removeUnvalidatableGroups(Array.from(this.form.querySelectorAll('input:not([type=submit]), textarea, select')).reduce(assembleValidationGroup, {}));
+		this.groups = removeUnvalidatableGroups([].slice.call(this.form.querySelectorAll('input:not([type=submit]), textarea, select')).reduce(assembleValidationGroup, {}));
 		this.initListeners();
 
 		console.log(this.groups);
@@ -22,39 +22,76 @@ export default {
 		this.form.addEventListener('submit', e => {
 			e.preventDefault();
 			this.clearErrors();
-			if(this.setValidityState()) this.form.submit();
-			else this.renderErrors(), this.initRealTimeValidation();
+			this.setValidityState()
+					.then(res => {
+						if(![].concat(...res).includes(false)) this.form.submit();
+						else this.renderErrors(), this.initRealTimeValidation();
+					});
 		});
 
 		this.form.addEventListener('reset', e => { this.clearErrors(); });
 	},
 	initRealTimeValidation(){
-		let handler = function(e) {
-				let group = e.target.getAttribute('name');
-				if(this.groups[group].errorDOM) this.removeError(group);
-				if(!this.setGroupValidityState(group)) this.renderError(group);
+		let handler = function(group) {
+				this.setGroupValidityState(group)
+					.then(res => {
+						if(this.groups[group].errorDOM) this.removeError(group);
+						if(res.includes(false)) this.renderError(group);
+					});
 			}.bind(this);
-
+		
 		for(let group in this.groups){
 			this.groups[group].fields.forEach(input => {
-				input.addEventListener(chooseRealTimeEvent(input), handler);
+				input.addEventListener(chooseRealTimeEvent(input), handler.bind(this, group));
 			});
+
+			//pls, refactor me ;_;
+			let equalToValidator = this.groups[group].validators.filter(validator => validator.type === 'equalto');
+			
+			if(equalToValidator.length > 0) {
+				equalToValidator[0].params[0].forEach(subgroup => {
+					subgroup.forEach(item => { item.addEventListener('blur', handler.bind(this, group))});
+				});
+			}
 		}
 	},
 	setGroupValidityState(group){
-		this.groups[group] = Object.assign({}, 
-								this.groups[group],
-								{ valid: true, errorMessages: [] }, //reset validity and errorMessagesa
-								this.groups[group].validators.reduce(validationReducer(this.groups[group]), true));
-		return this.groups[group].valid;
+		//reset validity and errorMessages
+		this.groups[group] = Object.assign({}, this.groups[group],{ valid: true, errorMessages: [] });
+		return Promise.all(this.groups[group].validators.map(validator => {
+			return new Promise(resolve => {
+				//to do?
+				//only perform the remote validation if all else passes
+				
+				//refactor, extract this whole fn...
+				if(validator.type !== 'remote'){
+					if(validate(this.groups[group], validator)) resolve(true);
+					else {
+						//mutation and side effect...
+						this.groups[group].valid = false;
+						this.groups[group].errorMessages.push(extractErrorMessage(validator, group));
+						resolve(false);
+					}
+				}
+				else validate(this.groups[group], validator)
+						.then(res => {
+							if(res && res === true) resolve(true);								
+							else {
+								//mutation, side effect, and un-DRY...
+								this.groups[group].valid = false;
+								this.groups[group].errorMessages.push(typeof res === 'boolean' 
+																		? extractErrorMessage(validator, group)
+																		: `Server error: ${res}`);
+								resolve(false);
+							}
+						});
+			});
+		}));
 	},
 	setValidityState(){
-		let numErrors = 0;
-		for(let group in this.groups){
-			this.setGroupValidityState(group);
-			!this.groups[group].valid && ++numErrors;
-		}
-		return numErrors === 0;
+		let groupValidators = [];
+		for(let group in this.groups) groupValidators.push(this.setGroupValidityState(group));
+		return Promise.all(groupValidators);
 	},
 	clearErrors(){
 		for(let group in this.groups){
@@ -74,6 +111,7 @@ export default {
 		}
 	},
 	renderError(group){
+		if(this.groups[group].errorDOM) this.removeError(group);
 		this.groups[group].errorDOM = 
 			this.groups[group].serverErrorNode ? 
 				createErrorTextNode(this.groups[group]) : 
@@ -85,8 +123,8 @@ export default {
 		//set aria-invalid on invalid inputs
 		this.groups[group].fields.forEach(field => { field.setAttribute('aria-invalid', 'true'); });
 	},
-	addMethod(name, fn, message){
-		this.groups.validators.push(fn);
+	addMethod(name, method, message){
+		this.groups[name].validators.push({method, message});
 		//extend messages
 	}
 };

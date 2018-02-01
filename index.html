@@ -66,7 +66,7 @@
         }
         .error {
             background-color:darkred;
-            color:#fff;
+            color:#fff !important;
             font-size: .875rem;
             padding: 4px 12px;
             position: relative;
@@ -165,8 +165,123 @@
     <div class="container">
         <!-- <h1>Storm Validate</h1> -->
         <form method="post" action="" autocomplete="off">
+            <!--
+                <div class="validation-summary-errors" data-valmsg-summary="true">
+            <ul>
+                <li>The Email field is required.</li>
+                <li>The Password field is required.</li>
+            </ul>
+            </div>
+
+
+            <div class="validation-summary-valid" data-valmsg-summary="true">
+            <ul>
+                <li style="display: none;"></li>
+            </ul>
+            </div>
+
+            -->
             <fieldset>
-              <div class="form-group">
+                <div class="panel-heading">String Based</div>
+                <div class="form-group">
+                    <label for="RequiredString">Required String</label>
+                    <input class="form-control" type="text" data-val="true" data-val-required="The Required String field is required." id="RequiredString" name="RequiredString" value="" />
+                    <span style="color: red" class="field-validation-valid" data-valmsg-for="RequiredString" data-valmsg-replace="true" />
+                </div>
+                <div class="form-group">
+                    <label for="StringMinMaxLength">String with min and max length</label>
+                    <input class="form-control" type="text" data-val="true" data-val-length="The field String with min and max length must be a string with a minimum length of 5 and a maximum length of 10." data-val-length-max="10" data-val-length-min="5" id="StringMinMaxLength" name="StringMinMaxLength" value="" />
+                    <span style="color: red" class="field-validation-valid" data-valmsg-for="StringMinMaxLength" data-valmsg-replace="true" />
+                </div>
+
+                <div class="form-group">
+                    <label for="EmailAddress">Email address</label>
+                    <input class="form-control" type="email" data-val="true" data-val-email="The Email address field is not a valid e-mail address." id="EmailAddress" name="EmailAddress" value="" />
+                    <span style="color: red" class="field-validation-valid" data-valmsg-for="EmailAddress" data-valmsg-replace="true" />
+                </div>
+                <div class="form-group">
+                    <label for="RegularExpression">Regular Expression</label>
+                    <input class="form-control" type="text" data-val="true" data-val-regex="The field Regular Expression must match the regular expression &#x27;[a-z]&#x2B;&#x27;." data-val-regex-pattern="[a-z]&#x2B;" id="RegularExpression" name="RegularExpression" value="" />
+                    <span style="color: red" class="field-validation-valid" data-valmsg-for="RegularExpression" data-valmsg-replace="true" />
+                </div>
+                <div class="form-group">
+                    <label for="CreditCard">Credit card (I&#x27;ve never used this)</label>
+                    <input class="form-control" type="text" data-val="true" data-val-creditcard="The Credit card (I&#x27;ve never used this) field is not a valid credit card number." id="CreditCard" name="CreditCard" value="" />
+                    <span style="color: red" class="field-validation-valid" data-valmsg-for="CreditCard" data-valmsg-replace="true" />
+                </div>
+                <div class="form-group">
+                    <label for="Url">Url</label>
+                    <input class="form-control" type="url" data-val="true" data-val-url="The Url field is not a valid URL." id="Url" name="Url" value="" />
+                    <span style="color: red" class="field-validation-valid" data-valmsg-for="Url" data-valmsg-replace="true" />
+                </div>
+                <div class="form-group">
+                    <label for="Remote">Remote validation (type &quot;valid&quot; to pass</label>
+                    <input class="form-control" type="text" data-val="true" data-val-remote="&#x27;Remote validation (type &quot;valid&quot; to pass&#x27; is invalid." data-val-remote-additionalfields="*.Remote,*.EmailAddress" data-val-remote-type="post" data-val-remote-url="/Home/IsUnique" data-val-required="The Remote validation (type &quot;valid&quot; to pass field is required." id="Remote" name="Remote" value="" />
+                    <span style="color: red" class="field-validation-valid" data-valmsg-for="Remote" data-valmsg-replace="true" />
+                </div>
+        
+            </fieldset>
+            <fieldset>
+                <div class="panel-heading">Number Based</div>
+                <div class="form-group">
+                  <label for="cmin">HTML5 number optional, at least 2, recycling data-valmsg-for span for error messages</label>
+                  <input id="cmin" name="cmin" min="2" type="number">
+                  <span class="text-danger field-validation-valid" data-valmsg-for="cmin" data-valmsg-replace="true"></span>
+                </div>
+                <div class="panel-body">
+                <div class="form-group">
+                    <label for="OptionalRangeNumeric">Optional Range Numeric</label>
+                    <input class="form-control" type="number" data-val="true" data-val-range="The field Optional Range Numeric must be between 5 and 10." data-val-range-max="10" data-val-range-min="5" id="OptionalRangeNumeric" name="OptionalRangeNumeric" value="" />
+                    <span style="color: red" class="field-validation-valid" data-valmsg-for="OptionalRangeNumeric" data-valmsg-replace="true" />
+                </div>
+                <div class="form-group">
+                    <label for="RequiredNumeric">Required Numeric</label>
+                    <input class="form-control" type="number" data-val="true" data-val-required="The Required Numeric field is required." id="RequiredNumeric" name="RequiredNumeric" value="0" />
+                    <span style="color: red" class="field-validation-valid" data-valmsg-for="RequiredNumeric" data-valmsg-replace="true" />
+                </div>
+            </fieldset>
+            <fieldset>
+                    <div class="panel-heading">Date or Time Based</div>
+                    <div class="form-group">
+                        <label for="Date">Date Only</label>
+                        <input class="form-control" type="date" data-val="true" data-val-required="The Date Only field is required." id="Date" name="Date" value="0001-01-01" />
+                        <span style="color: red" class="field-validation-valid" data-valmsg-for="Date" data-valmsg-replace="true" />
+                    </div>
+                    <div class="form-group">
+                        <label for="DateTime">Date and Time</label>
+                        <input class="form-control" type="datetime-local" data-val="true" data-val-required="The Date and Time field is required." id="DateTime" name="DateTime" value="0001-01-01T00:00:00.000" />
+                        <span style="color: red" class="field-validation-valid" data-valmsg-for="DateTime" data-valmsg-replace="true" />
+                    </div>
+                    <div class="form-group">
+                        <label for="Time">Time Only</label>
+                        <input class="form-control" type="time" data-val="true" data-val-required="The Time Only field is required." id="Time" name="Time" value="00:00:00" />
+                        <span style="color: red" class="field-validation-valid" data-valmsg-for="Time" data-valmsg-replace="true" />
+                    </div>        
+                    <div class="form-group">
+                        <label for="Currency">Currency</label>
+                        <input class="form-control" type="text" data-val="true" data-val-number="The field Currency must be a number." data-val-required="The Currency field is required." id="Currency" name="Currency" value="0.00" />
+                        <span style="color: red" class="field-validation-valid" data-valmsg-for="Currency" data-valmsg-replace="true" />
+                    </div>        
+                </fieldset>
+                <fieldset>
+                    <div class="panel-heading">Others</div>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label for="Upload">Upload</label>
+                            <input class="form-control" type="file" data-val="true" data-val-required="The Upload field is required." id="Upload" name="Upload" />
+                            <span style="color: red" class="field-validation-valid" data-valmsg-for="Upload" data-valmsg-replace="true" />
+                        </div>
+                        <div class="form-group">
+                            <label for="Upload">Password</label>
+                            <input class="form-control" type="password" data-val="true" data-val-required="The Password field is required." name="Password" id="Password" />
+                        </div>
+                        <div class="form-group">
+                            <label for="ConfirmPassword">Confirm Password</label>
+                            <input class="form-control" type="password" data-val="true" data-val-equalto="Passwords must match"  data-val-equalto-other="*.Password" data-val-required="The Re-enter Password field is required."  name="ConfirmPassword" id="ConfirmPassword" />
+                        </div>
+                    </div>
+                        
+              <!-- <div class="form-group">
                 <label for="cn">Text required, at least 2 characters, recycling data-valmsg-for span for error messages</label>
                 <input id="cn" name="cn" data-val="true" data-val-length="Please enter at least 2 characters." data-val-min="2" type="text" data-val-required="Custom error message">
                 <span class="text-danger field-validation-valid" data-valmsg-for="cn" data-valmsg-replace="true"></span>
@@ -181,11 +296,6 @@
                 <input id="cmin" name="cmin" min="2" type="number">
                 <span class="text-danger field-validation-valid" data-valmsg-for="cmin" data-valmsg-replace="true"></span>
               </div>
-              <!-- <div class="form-group">
-                <label for="cmin2">data-val Number optional, at least 2, recycling data-valmsg-for span for error messages</label>
-                <input id="cmin2" name="cmin2" data-val="true" data-val-min="Please enter a value greater than 2" data-val-min="2" type="number">
-                <span class="text-danger field-validation-valid" data-valmsg-for="cmin2" data-valmsg-replace="true"></span>
-              </div> -->
               <div class="form-group">
                 <label for="pattern">HTML5 pattern (no leading (\S)+ whitespace), optional, recycling data-valmsg-for span for error messages</label>
                 <input id="pattern" name="pattern" pattern="(\S)+" type="text">
@@ -200,6 +310,11 @@
                 <label for="ignored">Ignored</label>
                 <input id="ignored" name="ignored" type="text">
                </div>
+               <div class="form-group">
+                 <label for="remote">Remote</label>
+                 <input id="remote" name="remote" type="text" data-val="true" data-val-remote="Remote validaiton failed" data-val-remote-url="http://localhost:3004/valid" data-val-remote-type="get" required>
+                 'remote-url', 'remote-type', 'remote-additionalfields'
+                </div>
             <div class="form-group">
                 <label for="cemail">HTML5 email required, creates error message node</label>
                 <input id="cemail" type="email" name="email" required>
@@ -228,7 +343,7 @@
                     <option value="2">Option 2</option>
                     <option value="3">Option 3</option>
                 </select>
-            </div>
+            </div>-->
             <div class="form-group">
                 <fieldset>
                     <legend>Checkbox group, creates error message node</legend>
@@ -254,7 +369,7 @@
                         <input type="radio" name="rb" id="rb-2" value="option 2" required>
                     </div>
                 </fieldset>
-            </div>
+            </div> 
             <input type="submit" value="Submit">
             <!-- <input type="reset" value="Reset"> -->
             </fieldset>

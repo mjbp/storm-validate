@@ -14,30 +14,33 @@ export const DIGITS_REGEX = /^\d+$/;
 
 export const DOTNET_ERROR_SPAN_DATA_ATTRIBUTE = 'data-valmsg-for';
 
+export const DOM_SELECTOR_PARAMS = ['remote-additionalfields', 'equalto-other'];
+
 /* Can these two be folded into the same variable? */
 export const DOTNET_PARAMS = {
-    length: ['min', 'max'],
-    range: ['min', 'max'],
+    length: ['length-min', 'length-max'],
+    stringlength: ['length-max'],
+    range: ['range-min', 'range-max'],
     // min: ['min'],?
     // max:  ['max'],?
-    minlength: ['min'],
-    maxlength: ['max'],
+    minlength: ['minlength-min'],
+    maxlength: ['maxlength-max'],
     regex: ['regex-pattern'],
-    remote: ['url', 'type', 'additionalfields']//??
+    equalto: ['equalto-other'],
+    remote: ['remote-url', 'remote-additionalfields', 'remote-type']//??
 };
 
 export const DOTNET_ADAPTORS = [
-    //'regex', -> same as pattern, how is it applied to an element? pattern attribute? data-val-regex?
     'required',
-    'date',
+    'stringlength',
     'regex',
-    'digits',
+    // 'digits',
     'email',
     'number',
     'url',
     'length',
     'range',
     'equalto',
-    'remote',
-    'password' //-> maps to min, nonalphamain, and regex methods
+    'remote',//should be last
+    // 'password' //-> maps to min, nonalphamain, and regex methods
 ];
