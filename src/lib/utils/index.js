@@ -8,35 +8,12 @@ export const isRequired = group => group.validators.filter(validator => validato
 
 export const getName = group => group.fields[0].getAttribute('name');
 
-// const unfold = value => value === false ? '' : value;
-
-// const requestBodyReducer = (acc, curr) => {
-//     acc[curr.substr(2)] = unfold([].slice.call(document.querySelectorAll(`[name=${curr.substr(2)}]`)).reduce(groupValueReducer, ''));
-//     return acc;
-// };
-
-export const composeRequestBody = (group, additionalfields) => additionalfields.split(',').reduce(requestBodyReducer, {});
-
-
-// const getURLReducer = (acc, curr, i) => {
-//     console.log(curr);
-//     // console.log([].slice.call(document.querySelectorAll(`[name=${curr.substr(2)}]`)).reduce(groupValueReducer, []));
-//     return `${i === 0 ? acc : `${acc}&`}${encodeURIComponent(curr.getAttribute('name'))}=${curr.reduce(groupValueReducer, [])}`;
-// }
-
 export const resolveGetParams = nodeArrays => nodeArrays.map((nodes) => {
     return `${nodes[0].getAttribute('name')}=${extractValueFromGroup(nodes)}`;
 }).join('&');
 
-// export const composeGetURL = (baseURL, group, additionalfields) => {
-//     return additionalfields.reduce(getURLReducer, `${baseURL}`);
-// };
-
-export const DOMNodesFromCommaList = list => {
-    return list.split(',').map(item => {
-        return [].slice.call(document.querySelectorAll(`[name=${item.substr(2)}]`));
-    });
-}
+export const DOMNodesFromCommaList = list => list.split(',')
+                                                .map(item => [].slice.call(document.querySelectorAll(`[name=${item.substr(2)}]`)));
 
 const hasValue = input => (input.value !== undefined && input.value !== null && input.value.length > 0);
 
@@ -55,10 +32,8 @@ export const extractValueFromGroup = group => group.hasOwnProperty('fields')
 
 export const chooseRealTimeEvent = input => ['input', 'change'][Number(isCheckable(input) || isSelect(input) || isFile(input))];
 
-
 // const composer = (f, g) => (...args) => f(g(...args));
 // export const compose = (...fns) => fns.reduce(composer);
 // export const pipe = (...fns) => fns.reduceRight(composer);
 
-export const compose = (...fns) => fns.reduce((f, g) => (...args) => f(g(...args)));
-export const pipe = (...fns) => compose.apply(compose, fns.reverse());
+export const pipe = (...fns) => fns.reduce((acc, fn) => fn(acc));

@@ -33,9 +33,9 @@ export default {
 	},
 	initRealTimeValidation(){
 		let handler = function(group) {
-				if(this.groups[group].errorDOM) this.removeError(group);
 				this.setGroupValidityState(group)
 					.then(res => {
+						if(this.groups[group].errorDOM) this.removeError(group);
 						if(res.includes(false)) this.renderError(group);
 					});
 			}.bind(this);
@@ -81,7 +81,7 @@ export default {
 								this.groups[group].valid = false;
 								this.groups[group].errorMessages.push(typeof res === 'boolean' 
 																		? extractErrorMessage(validator, group)
-																		: res);
+																		: `Server error: ${res}`);
 								resolve(false);
 							}
 						});
@@ -123,8 +123,8 @@ export default {
 		//set aria-invalid on invalid inputs
 		this.groups[group].fields.forEach(field => { field.setAttribute('aria-invalid', 'true'); });
 	},
-	addMethod(name, fn, message){
-		this.groups[name].validators.push(fn);
+	addMethod(name, method, message){
+		this.groups[name].validators.push({method, message});
 		//extend messages
 	}
 };
