@@ -47,45 +47,9 @@ const extractAttributeValidators = input => {
     return validators;
 };
 
-export const normaliseValidators = input => {
-    let validators = [];
-    
-    if(input.getAttribute('data-val') === 'true') validators = validators.concat(extractDataValValidators(input));
-    else validators = validators.concat(extractAttributeValidators(input));
-    /*
-    //date
-    //dateISO
-    //min
-    //max
-    //step
-
-    //equalTo
-        adapters.add("equalto", ["other"], function (options) {
-            var prefix = getModelPrefix(options.element.name),
-                other = options.params.other,
-                fullOtherName = appendModelPrefix(other, prefix),
-                element = $(options.form).find(":input").filter("[name='" + escapeAttributeValue(fullOtherName) + "']")[0];
-
-            setValidationValues(options, "equalTo", element);
-        });
-
-    //remote
-    //digits
-    //rangelength
-    */
-
-    return validators;
-};
-
-// export const validationReducer = group => (acc, validator) => {
-//     if(methods[validator.type](group, validator.params && validator.params.length > 0 ? validator.params : null)) return acc;
-//     return {
-//         valid: false,
-//         errorMessages: acc.errorMessages 
-//                         ? [...acc.errorMessages, extractErrorMessage(validator, group)] 
-//                         : [extractErrorMessage(validator, group)]
-//     };;
-// };
+export const normaliseValidators = input => input.getAttribute('data-val') === 'true' 
+                                            ? extractDataValValidators(input)
+                                            : extractAttributeValidators(input);
 
 export const validate = (group, validator) => methods[validator.type](group, validator.params && validator.params.length > 0 ? validator.params : null);
 

@@ -33,13 +33,9 @@ export default {
 	},
 	initRealTimeValidation(){
 		let handler = function(group) {
-				// let group = e.target.getAttribute('name');
 				if(this.groups[group].errorDOM) this.removeError(group);
-				// if(!this.setGroupValidityState(group)) this.renderError(group);
 				this.setGroupValidityState(group)
 					.then(res => {
-						//in case last async validation took longer and we've re-rendered
-						// if(this.groups[group].errorDOM) this.removeError(group);
 						if(res.includes(false)) this.renderError(group);
 					});
 			}.bind(this);
@@ -64,7 +60,8 @@ export default {
 		this.groups[group] = Object.assign({}, this.groups[group],{ valid: true, errorMessages: [] });
 		return Promise.all(this.groups[group].validators.map(validator => {
 			return new Promise(resolve => {
-				//only perform the remote validation if all else passes?
+				//to do?
+				//only perform the remote validation if all else passes
 				
 				//refactor, extract this whole fn...
 				if(validator.type !== 'remote'){
@@ -78,18 +75,13 @@ export default {
 				}
 				else validate(this.groups[group], validator)
 						.then(res => {
-							if(res) {
-								if(typeof res === 'string') {
-									this.groups[group].valid = false;
-									this.groups[group].errorMessages.push(res);
-									resolve(false);
-								}
-								else resolve(true);
-							}
+							if(res && res === true) resolve(true);								
 							else {
 								//mutation, side effect, and un-DRY...
 								this.groups[group].valid = false;
-								this.groups[group].errorMessages.push(extractErrorMessage(validator, group));
+								this.groups[group].errorMessages.push(typeof res === 'boolean' 
+																		? extractErrorMessage(validator, group)
+																		: res);
 								resolve(false);
 							}
 						});
@@ -108,7 +100,6 @@ export default {
 	},
 	removeError(group){
 		this.groups[group].errorDOM.parentNode.removeChild(this.groups[group].errorDOM);
-		//this.groups[group].errorDOM.parentNode.innerHTML = '';
 		this.groups[group].serverErrorNode && this.groups[group].serverErrorNode.classList.remove('error');
 		this.groups[group].fields.forEach(field => { field.removeAttribute('aria-invalid'); });//or should i set this to false if field passes validation?
 		delete this.groups[group].errorDOM;

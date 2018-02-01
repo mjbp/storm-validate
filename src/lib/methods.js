@@ -1,4 +1,4 @@
-import { isSelect, isCheckable, isRequired, getName, extractValueFromGroup, composeRequestBody, composeGetURL, groupValueReducer } from './utils';
+import { isSelect, isCheckable, isRequired, getName, extractValueFromGroup, resolveGetParams } from './utils';
 import { EMAIL_REGEX, URL_REGEX, DATE_ISO_REGEX, NUMBER_REGEX, DIGITS_REGEX } from './constants';
 
 const isOptional = group => !isRequired(group) && extractValueFromGroup(group) === '';
@@ -26,15 +26,10 @@ export default {
         param => (acc, input) => (acc = Array.isArray(input.value) ? input.value.length <= +param : +input.value.length <= +param, acc)
     ),
     equalto: curryParamMethod('equalto', params => (acc, input) => {
-        //the value needs to be the same in every group...
-
-        // console.log(params[0]);
         return acc = params[0].reduce((subgroupAcc, subgroup) => {
-            if(extractValueFromGroup({fields: subgroup}) !== input.value) subgroupAcc = false;
+            if(extractValueFromGroup(subgroup) !== input.value) subgroupAcc = false;
             return subgroupAcc;
         }, true), acc;
-
-        // return (acc = input.value === extractValueFromGroup(params[0].name), acc);
     }),
     pattern: curryParamMethod('pattern', (...regexStr) => (acc, input) => (acc = RegExp(regexStr).test(input.value), acc)),
     regex: curryParamMethod('regex', (...regexStr) => (acc, input) => (acc = RegExp(regexStr).test(input.value), acc)),
@@ -44,43 +39,22 @@ export default {
     range: curryParamMethod('range', params => (acc, input) => (acc = (+input.value >= +params[0] && +input.value <= +params[1]), acc)),
     remote: (group, params) => {
         let [ url, additionalfields, type = 'get'] = params;
+
         return new Promise((resolve, reject) => {
-            fetch((type !== 'get' ? url : composeGetURL(`${url}?`, group, additionalfields)), {
+            //to do?
+            //change this to XHR
+            fetch((type !== 'get' ? url : `${url}?${resolveGetParams(additionalfields)}`), {
                 method: type.toUpperCase(),
-                // body: type === 'get' ? null : JSON.stringify(composeRequestBody(group, additionalfields)), 
-                body: type === 'get' ? null : composeGetURL('', group, additionalfields),
+                body: type === 'get' ? null : resolveGetParams(additionalfields),
                 headers: new Headers({
                   'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
                 })
             })
             .then(res => res.json())
             .then(data => { resolve(data); })
-            .catch(res => { resolve(true); });//what to do if endpoint validation fails?
+            .catch(res => { 
+                resolve(res);
+            });//what to do if endpoint validation fails? returning error message as validation error
         });
     }
-    
-    // rangelength
-    // https://jqueryvalidation.org/rangelength-method/
-    // https://github.com/jquery-validation/jquery-validation/blob/master/src/core.js#L1420
-
-    // range
-    // https://jqueryvalidation.org/range-method/
-    // 
-    // step
-    // https://jqueryvalidation.org/step-method/
-    // https://github.com/jquery-validation/jquery-validation/blob/master/src/core.js#L1441
-
-    // equalTo
-    // https://jqueryvalidation.org/equalTo-method/
-    // https://github.com/jquery-validation/jquery-validation/blob/master/src/core.js#L1479
-
-
-    /* 
-    Extensions
-        - password
-        - nonalphamin /\W/g
-        - regex/pattern
-        - bool
-        - fileextensions
-    */
 };
