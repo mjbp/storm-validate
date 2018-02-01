@@ -1,9 +1,3 @@
-/**
- * @name storm-validate: 
- * @version 0.2.1: Thu, 01 Feb 2018 09:35:24 GMT
- * @author stormid
- * @license MIT
- */
 import defaults from './lib/defaults';
 import componentPrototype from './lib/component-prototype';
 

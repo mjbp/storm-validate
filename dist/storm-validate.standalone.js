@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.2.1: Thu, 01 Feb 2018 09:35:24 GMT
+ * @version 0.2.1: Thu, 01 Feb 2018 20:10:19 GMT
  * @author stormid
  * @license MIT
  */
@@ -53,29 +53,11 @@ var isRequired = function isRequired(group) {
   }).length > 0;
 };
 
-// const unfold = value => value === false ? '' : value;
-
-// const requestBodyReducer = (acc, curr) => {
-//     acc[curr.substr(2)] = unfold([].slice.call(document.querySelectorAll(`[name=${curr.substr(2)}]`)).reduce(groupValueReducer, ''));
-//     return acc;
-// };
-
-
-// const getURLReducer = (acc, curr, i) => {
-//     console.log(curr);
-//     // console.log([].slice.call(document.querySelectorAll(`[name=${curr.substr(2)}]`)).reduce(groupValueReducer, []));
-//     return `${i === 0 ? acc : `${acc}&`}${encodeURIComponent(curr.getAttribute('name'))}=${curr.reduce(groupValueReducer, [])}`;
-// }
-
 var resolveGetParams = function resolveGetParams(nodeArrays) {
   return nodeArrays.map(function (nodes) {
     return nodes[0].getAttribute('name') + '=' + extractValueFromGroup(nodes);
   }).join('&');
 };
-
-// export const composeGetURL = (baseURL, group, additionalfields) => {
-//     return additionalfields.reduce(getURLReducer, `${baseURL}`);
-// };
 
 var DOMNodesFromCommaList = function DOMNodesFromCommaList(list) {
   return list.split(',').map(function (item) {
@@ -103,9 +85,38 @@ var chooseRealTimeEvent = function chooseRealTimeEvent(input) {
   return ['input', 'change'][Number(isCheckable(input) || isSelect(input) || isFile(input))];
 };
 
-// const composer = (f, g) => (...args) => f(g(...args));
-// export const compose = (...fns) => fns.reduce(composer);
-// export const pipe = (...fns) => fns.reduceRight(composer);
+var pipe = function pipe() {
+  for (var _len = arguments.length, fns = Array(_len), _key = 0; _key < _len; _key++) {
+    fns[_key] = arguments[_key];
+  }
+
+  return fns.reduce(function (acc, fn) {
+    return fn(acc);
+  });
+};
+
+var fetch = function fetch(url, props) {
+  return new Promise(function (resolve, reject) {
+    var xhr = new XMLHttpRequest();
+    xhr.open(props.method || 'GET', url);
+    if (props.headers) {
+      Object.keys(props.headers).forEach(function (key) {
+        xhr.setRequestHeader(key, props.headers[key]);
+      });
+    }
+    xhr.onload = function () {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(xhr.response);
+      } else {
+        reject(xhr.statusText);
+      }
+    };
+    xhr.onerror = function () {
+      return reject(xhr.statusText);
+    };
+    xhr.send(props.body);
+  });
+};
 
 //https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address
 var EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
@@ -198,15 +209,6 @@ var methods = {
     };
   }),
   pattern: curryParamMethod('pattern', function () {
-    for (var _len = arguments.length, regexStr = Array(_len), _key = 0; _key < _len; _key++) {
-      regexStr[_key] = arguments[_key];
-    }
-
-    return function (acc, input) {
-      return acc = RegExp(regexStr).test(input.value), acc;
-    };
-  }),
-  regex: curryParamMethod('regex', function () {
     for (var _len2 = arguments.length, regexStr = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
       regexStr[_key2] = arguments[_key2];
     }
@@ -215,9 +217,18 @@ var methods = {
       return acc = RegExp(regexStr).test(input.value), acc;
     };
   }),
+  regex: curryParamMethod('regex', function () {
+    for (var _len3 = arguments.length, regexStr = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+      regexStr[_key3] = arguments[_key3];
+    }
+
+    return function (acc, input) {
+      return acc = RegExp(regexStr).test(input.value), acc;
+    };
+  }),
   min: curryParamMethod('min', function () {
-    for (var _len3 = arguments.length, min = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-      min[_key3] = arguments[_key3];
+    for (var _len4 = arguments.length, min = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+      min[_key4] = arguments[_key4];
     }
 
     return function (acc, input) {
@@ -225,8 +236,8 @@ var methods = {
     };
   }),
   max: curryParamMethod('max', function () {
-    for (var _len4 = arguments.length, max = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-      max[_key4] = arguments[_key4];
+    for (var _len5 = arguments.length, max = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+      max[_key5] = arguments[_key5];
     }
 
     return function (acc, input) {
@@ -319,55 +330,98 @@ var resolveParam = function resolveParam(param, value) {
   return !!~DOM_SELECTOR_PARAMS.indexOf(param) ? DOMNodesFromCommaList(value) : value;
 };
 
-//Sorry...
+var extractParams = function extractParams(input, adaptor) {
+  return DOTNET_PARAMS[adaptor] ? {
+    params: DOTNET_PARAMS[adaptor].reduce(function (acc, param) {
+      return [].concat(_toConsumableArray(acc), [input.hasAttribute('data-val-' + param) ? resolveParam(param, input.getAttribute('data-val-' + param)) : []]);
+    }, [])
+  } : false;
+};
+
 var extractDataValValidators = function extractDataValValidators(input) {
   return DOTNET_ADAPTORS.reduce(function (validators, adaptor) {
     return !input.getAttribute('data-val-' + adaptor) ? validators : [].concat(_toConsumableArray(validators), [Object.assign({
       type: adaptor,
-      message: input.getAttribute('data-val-' + adaptor) }, DOTNET_PARAMS[adaptor] && {
-      params: DOTNET_PARAMS[adaptor].reduce(function (acc, param) {
-        input.hasAttribute('data-val-' + param) && acc.push(resolveParam(param, input.getAttribute('data-val-' + param)));
-        return acc;
-      }, [])
-    })]);
+      message: input.getAttribute('data-val-' + adaptor) }, extractParams(input, adaptor))]);
   }, []);
 };
 
-//for data-rule-* support
-//const hasDataAttributePart = (node, part) => [].slice.call(node.dataset).filter(attribute => !!~attribute.indexOf(part)).length > 0;
+var extractAttrValidators = function extractAttrValidators(input) {
+  return pipe(email(input), url(input), number(input), minlength(input), maxlength(input), min(input), max(input), pattern(input), required(input));
+};
 
-var extractAttributeValidators = function extractAttributeValidators(input) {
-  var validators = [];
-  if (input.hasAttribute('required') && input.getAttribute('required') !== 'false') validators.push({ type: 'required' });
-  if (input.getAttribute('type') === 'email') validators.push({ type: 'email' });
-  if (input.getAttribute('type') === 'url') validators.push({ type: 'url' });
-  if (input.getAttribute('type') === 'number') validators.push({ type: 'number' });
-  if (input.getAttribute('minlength') && input.getAttribute('minlength') !== 'false') validators.push({ type: 'minlength', params: [input.getAttribute('minlength')] });
-  if (input.getAttribute('maxlength') && input.getAttribute('maxlength') !== 'false') validators.push({ type: 'maxlength', params: [input.getAttribute('maxlength')] });
-  if (input.getAttribute('min') && input.getAttribute('min') !== 'false') validators.push({ type: 'min', params: [input.getAttribute('min')] });
-  if (input.getAttribute('max') && input.getAttribute('max') !== 'false') validators.push({ type: 'max', params: [input.getAttribute('max')] });
-  if (input.getAttribute('pattern') && input.getAttribute('pattern') !== 'false') validators.push({ type: 'pattern', params: [input.getAttribute('pattern')] });
-  return validators;
+//un-DRY
+var required = function required(input) {
+  return function () {
+    var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+    return input.hasAttribute('required') && input.getAttribute('required') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'required' }]) : validators;
+  };
+};
+var email = function email(input) {
+  return function () {
+    var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+    return input.getAttribute('type') === 'email' ? [].concat(_toConsumableArray(validators), [{ type: 'email' }]) : validators;
+  };
+};
+var url = function url(input) {
+  return function () {
+    var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+    return input.getAttribute('type') === 'url' ? [].concat(_toConsumableArray(validators), [{ type: 'url' }]) : validators;
+  };
+};
+var number = function number(input) {
+  return function () {
+    var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+    return input.getAttribute('type') === 'number' ? [].concat(_toConsumableArray(validators), [{ type: 'number' }]) : validators;
+  };
+};
+var minlength = function minlength(input) {
+  return function () {
+    var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+    return input.getAttribute('minlength') && input.getAttribute('minlength') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'minlength', params: [input.getAttribute('minlength')] }]) : validators;
+  };
+};
+var maxlength = function maxlength(input) {
+  return function () {
+    var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+    return input.getAttribute('maxlength') && input.getAttribute('maxlength') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'maxlength', params: [input.getAttribute('maxlength')] }]) : validators;
+  };
+};
+var min = function min(input) {
+  return function () {
+    var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+    return input.getAttribute('min') && input.getAttribute('min') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'min', params: [input.getAttribute('min')] }]) : validators;
+  };
+};
+var max = function max(input) {
+  return function () {
+    var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+    return input.getAttribute('max') && input.getAttribute('max') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'max', params: [input.getAttribute('max')] }]) : validators;
+  };
+};
+var pattern = function pattern(input) {
+  return function () {
+    var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+    return input.getAttribute('pattern') && input.getAttribute('pattern') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'pattern', params: [input.getAttribute('pattern')] }]) : validators;
+  };
 };
 
 var normaliseValidators = function normaliseValidators(input) {
-  return input.getAttribute('data-val') === 'true' ? extractDataValValidators(input) : extractAttributeValidators(input);
+  return input.getAttribute('data-val') === 'true' ? extractDataValValidators(input) : extractAttrValidators(input);
 };
 
 var validate = function validate(group, validator) {
-  return methods[validator.type](group, validator.params && validator.params.length > 0 ? validator.params : null);
+  return validator.method ? validator.method(extractValueFromGroup(group), group.fields, validator.params) : methods[validator.type](group, validator.params && validator.params.length > 0 ? validator.params : null);
 };
 
 var assembleValidationGroup = function assembleValidationGroup(acc, input) {
-  if (!acc[input.getAttribute('name')]) {
-    acc[input.getAttribute('name')] = {
-      valid: false,
-      validators: normaliseValidators(input),
-      fields: [input],
-      serverErrorNode: document.querySelector('[' + DOTNET_ERROR_SPAN_DATA_ATTRIBUTE + '=' + input.getAttribute('name') + ']') || false
-    };
-  } else acc[input.getAttribute('name')].fields.push(input);
-  return acc;
+  var name = input.getAttribute('name');
+  return acc[name] = acc[name] ? Object.assign(acc[name], { fields: [].concat(_toConsumableArray(acc[name].fields), [input]) }) : {
+    valid: false,
+    validators: normaliseValidators(input),
+    fields: [input],
+    serverErrorNode: document.querySelector('[' + DOTNET_ERROR_SPAN_DATA_ATTRIBUTE + '=' + input.getAttribute('name') + ']') || false
+  }, acc;
 };
 
 var extractErrorMessage = function extractErrorMessage(validator, group) {
@@ -431,8 +485,8 @@ var componentPrototype = {
     var handler = function (group) {
       var _this2 = this;
 
-      if (this.groups[group].errorDOM) this.removeError(group);
       this.setGroupValidityState(group).then(function (res) {
+        if (_this2.groups[group].errorDOM) _this2.removeError(group);
         if (res.includes(false)) _this2.renderError(group);
       });
     }.bind(this);
@@ -482,7 +536,7 @@ var componentPrototype = {
           if (res && res === true) resolve(true);else {
             //mutation, side effect, and un-DRY...
             _this4.groups[group].valid = false;
-            _this4.groups[group].errorMessages.push(typeof res === 'boolean' ? extractErrorMessage(validator, group) : res);
+            _this4.groups[group].errorMessages.push(typeof res === 'boolean' ? extractErrorMessage(validator, group) : 'Server error: ' + res);
             resolve(false);
           }
         });
@@ -523,8 +577,8 @@ var componentPrototype = {
       field.setAttribute('aria-invalid', 'true');
     });
   },
-  addMethod: function addMethod(name, fn, message) {
-    this.groups[name].validators.push(fn);
+  addMethod: function addMethod(name, method, message) {
+    this.groups[name].validators.push({ method: method, message: message });
     //extend messages
   }
 };

@@ -1,69 +1,70 @@
 import methods from '../methods';
 import messages from '../messages';
-import { DOMNodesFromCommaList } from './';
+import { pipe, DOMNodesFromCommaList, extractValueFromGroup } from './';
 import { DOTNET_ADAPTORS, DOTNET_PARAMS, DOTNET_ERROR_SPAN_DATA_ATTRIBUTE, DOM_SELECTOR_PARAMS } from '../constants';
 
 const resolveParam = (param, value) => !!~DOM_SELECTOR_PARAMS.indexOf(param) 
                                         ? DOMNodesFromCommaList(value)
                                         : value;
 
-//Sorry...
-const extractDataValValidators = input => DOTNET_ADAPTORS
-                                            .reduce((validators, adaptor) => 
-                                                !input.getAttribute(`data-val-${adaptor}`) 
-                                                ? validators 
-                                                : [...validators, 
-                                                        Object.assign({
-                                                            type: adaptor,
-                                                            message: input.getAttribute(`data-val-${adaptor}`)}, 
-                                                            DOTNET_PARAMS[adaptor] && 
-                                                            { 
-                                                                params: 
-                                                                    DOTNET_PARAMS[adaptor]
-                                                                        .reduce((acc, param) => {
-                                                                            input.hasAttribute(`data-val-${param}`)
-                                                                            && acc.push(resolveParam(param, input.getAttribute(`data-val-${param}`)));
-                                                                            return acc;
-                                                                        }, []) 
-                                                            }
-                                                        )
-                                                    ],
-                                                []);
+const extractParams = (input, adaptor) => DOTNET_PARAMS[adaptor]
+                                          ? { 
+                                              params: DOTNET_PARAMS[adaptor].reduce((acc, param) => [...acc, input.hasAttribute(`data-val-${param}`) ? resolveParam(param, input.getAttribute(`data-val-${param}`)) : []], [])
+                                            }
+                                          : false;
+          
+const extractDataValValidators = input => DOTNET_ADAPTORS.reduce((validators, adaptor) => 
+                                                            !input.getAttribute(`data-val-${adaptor}`) 
+                                                            ? validators 
+                                                            : [...validators, 
+                                                                Object.assign({
+                                                                    type: adaptor,
+                                                                    message: input.getAttribute(`data-val-${adaptor}`)}, 
+                                                                    extractParams(input, adaptor)
+                                                                )
+                                                            ],
+                                                        []);
 
-//for data-rule-* support
-//const hasDataAttributePart = (node, part) => [].slice.call(node.dataset).filter(attribute => !!~attribute.indexOf(part)).length > 0;
+const extractAttrValidators = input => pipe(
+                                            email(input),
+                                            url(input),
+                                            number(input),
+                                            minlength(input),
+                                            maxlength(input),
+                                            min(input),
+                                            max(input),
+                                            pattern(input),
+                                            required(input)
+                                        );
 
-const extractAttributeValidators = input => {
-    let validators = [];
-    if(input.hasAttribute('required') && input.getAttribute('required') !== 'false') validators.push({type: 'required'});
-    if(input.getAttribute('type') === 'email') validators.push({type: 'email'});
-    if(input.getAttribute('type') === 'url') validators.push({type: 'url'});
-    if(input.getAttribute('type') === 'number') validators.push({type: 'number'});
-    if(input.getAttribute('minlength') && input.getAttribute('minlength') !== 'false') validators.push({type: 'minlength', params: [input.getAttribute('minlength')]});
-    if(input.getAttribute('maxlength') && input.getAttribute('maxlength') !== 'false') validators.push({type: 'maxlength', params: [input.getAttribute('maxlength')]});
-    if(input.getAttribute('min') && input.getAttribute('min') !== 'false') validators.push({type: 'min', params: [input.getAttribute('min')]});
-    if(input.getAttribute('max') && input.getAttribute('max') !== 'false') validators.push({type: 'max', params: [input.getAttribute('max')]});
-    if(input.getAttribute('pattern') && input.getAttribute('pattern') !== 'false') validators.push({type: 'pattern', params: [input.getAttribute('pattern')]});
-    return validators;
-};
+//un-DRY
+const required = input => (validators = [])  => input.hasAttribute('required') && input.getAttribute('required') !== 'false' ? [...validators, {type: 'required'}] : validators;
+const email = input => (validators = [])  => input.getAttribute('type') === 'email' ? [...validators, {type: 'email'}] : validators;
+const url = input => (validators = [])  => input.getAttribute('type') === 'url' ? [...validators, {type: 'url'}] : validators;
+const number = input => (validators = [])  => input.getAttribute('type') === 'number' ? [...validators, {type: 'number'}] : validators;
+const minlength = input => (validators = [])  => (input.getAttribute('minlength') && input.getAttribute('minlength') !== 'false') ? [...validators, {type: 'minlength', params: [input.getAttribute('minlength')]}] : validators;
+const maxlength = input => (validators = [])  => (input.getAttribute('maxlength') && input.getAttribute('maxlength') !== 'false') ? [...validators, {type: 'maxlength', params: [input.getAttribute('maxlength')]}] : validators;
+const min = input => (validators = [])  => (input.getAttribute('min') && input.getAttribute('min') !== 'false') ? [...validators, {type: 'min', params: [input.getAttribute('min')]}] : validators;
+const max = input => (validators = [])  => (input.getAttribute('max') && input.getAttribute('max') !== 'false') ? [...validators, {type: 'max', params: [input.getAttribute('max')]}] : validators;
+const pattern = input => (validators = [])  => (input.getAttribute('pattern') && input.getAttribute('pattern') !== 'false') ? [...validators, {type: 'pattern', params: [input.getAttribute('pattern')]}] : validators;
 
 export const normaliseValidators = input => input.getAttribute('data-val') === 'true' 
                                             ? extractDataValValidators(input)
-                                            : extractAttributeValidators(input);
+                                            : extractAttrValidators(input);
 
-export const validate = (group, validator) => methods[validator.type](group, validator.params && validator.params.length > 0 ? validator.params : null);
+export const validate = (group, validator) => validator.method 
+                                              ? validator.method(extractValueFromGroup(group), group.fields, validator.params)
+                                              : methods[validator.type](group, validator.params && validator.params.length > 0 ? validator.params : null);
 
 export const assembleValidationGroup = (acc, input) => {
-    if(!acc[input.getAttribute('name')]) {
-        acc[input.getAttribute('name')] = {
-            valid:  false,
-            validators: normaliseValidators(input),
-            fields: [input],
-            serverErrorNode: document.querySelector(`[${DOTNET_ERROR_SPAN_DATA_ATTRIBUTE}=${input.getAttribute('name')}]`) || false
-        };
-    }
-    else acc[input.getAttribute('name')].fields.push(input);
-    return acc;
+    let name = input.getAttribute('name');
+    return acc[name] = acc[name] ? Object.assign(acc[name], { fields: [...acc[name].fields, input]})
+                                 : {
+                                        valid:  false,
+                                        validators: normaliseValidators(input),
+                                        fields: [input],
+                                        serverErrorNode: document.querySelector(`[${DOTNET_ERROR_SPAN_DATA_ATTRIBUTE}=${input.getAttribute('name')}]`) || false
+                                    }, acc;
 };
 
 export const extractErrorMessage = (validator, group) => validator.message || messages[validator.type](validator.params !== undefined ? validator.params : null);

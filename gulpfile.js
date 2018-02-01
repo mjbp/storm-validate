@@ -112,7 +112,6 @@ gulp.task('js:es5-rollup', function() {
 gulp.task('js:es6', function() {
     gulp.src('src/*.js')
         .pipe(plumber({errorHandler: onError}))
-        .pipe(header(banner, {pkg : pkg}))
 		.pipe(gulp.dest('dist/'));
 
     return gulp.src('./src/lib/*.js')
