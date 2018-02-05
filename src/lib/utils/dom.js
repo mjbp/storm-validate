@@ -12,3 +12,7 @@ export const createErrorTextNode = group => {
     group.serverErrorNode.classList.add('error');
     return group.serverErrorNode.appendChild(node);
 };
+
+export const renderErrors = groups => {
+
+};

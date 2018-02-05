@@ -1,5 +1,6 @@
 import defaults from './lib/defaults';
-import componentPrototype from './lib/component-prototype';
+// import componentPrototype from './lib/component-prototype';
+import factory from './lib';
 
 const init = (candidate, opts) => {
 	let els;
@@ -15,11 +16,8 @@ const init = (candidate, opts) => {
 	return window.__validators__ = 
 		Object.assign({}, window.__validators__, els.reduce((acc, el) => {
 			if(el.getAttribute('novalidate')) return;
-			acc[el] = Object.assign(Object.create(componentPrototype), {
-						form: el,
-						settings: Object.assign({}, defaults, opts)
-					}).init();
-			return acc;
+			acc[el] = Object.assign(Object.create(factory(el, Object.assign({}, defaults, opts))));
+			return el.setAttribute('novalidate', 'novalidate'), acc;
 		}, {}));
 };
 
@@ -29,4 +27,4 @@ const init = (candidate, opts) => {
 		.forEach(form => { form.querySelector('[data-val=true]') && init(form); });
 }
 
-export default init;
+export default { init };

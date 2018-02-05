@@ -76,3 +76,8 @@ export const removeUnvalidatableGroups = groups => {
 
     return validationGroups;
 };
+
+export const getInitialState = form => ({
+    groups: removeUnvalidatableGroups([].slice.call(form.querySelectorAll('input:not([type=submit]), textarea, select'))
+                    .reduce(assembleValidationGroup, {}))
+});

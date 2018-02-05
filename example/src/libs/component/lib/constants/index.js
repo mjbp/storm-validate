@@ -1,3 +1,20 @@
+export const SELECTOR = {
+};
+
+export const DATA_ATTRIBUTES = {
+};
+
+export const TRIGGER_EVENTS = ['click', 'keydown'];
+
+export const KEY_CODES = {
+    ENTER: 13
+};
+
+export const ACTIONS = {
+    SET_INITIAL_STATE: 'SET_INITIAL_STATE',
+    CLEAR_ERRORS: 'CLEAR_ERRORS'
+};
+
 export const CLASSNAMES = {};
 
 //https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address
