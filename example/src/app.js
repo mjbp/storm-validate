@@ -1,7 +1,17 @@
 import Validate from './libs/component';
 
 const onDOMContentLoadedTasks = [() => {
-    // Validate.init('form');
+    let validator = Validate('form');
+
+    validator.addMethod(
+        'test',
+        'RequiredString',
+        (value, fields, params) => {
+            return value === 'test';
+        },
+        'Value must equal "test"'
+    );
+
 }];
 
 { onDOMContentLoadedTasks.forEach((fn) => fn()); }

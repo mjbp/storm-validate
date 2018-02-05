@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.3.1: Mon, 05 Feb 2018 13:13:11 GMT
+ * @version 0.3.1: Mon, 05 Feb 2018 14:19:51 GMT
  * @author stormid
  * @license MIT
  */
@@ -307,12 +307,9 @@ var resolveParam = function resolveParam(param, value) {
 };
 
 var extractParams = function extractParams(input, adaptor) {
-  return DOTNET_PARAMS[adaptor] ? {
-    params: DOTNET_PARAMS[adaptor].reduce(function (acc, param) {
+  return DOTNET_PARAMS[adaptor] ? { params: DOTNET_PARAMS[adaptor].reduce(function (acc, param) {
       return input.hasAttribute('data-val-' + param) ? Object.assign(acc, resolveParam(param, input.getAttribute('data-val-' + param))) : acc;
-    }, {})
-    //params: DOTNET_PARAMS[adaptor].reduce((acc, param) => [...acc, input.hasAttribute(`data-val-${param}`) ? resolveParam(param, input.getAttribute(`data-val-${param}`)) : []], {})
-  } : false;
+    }, {}) } : false;
 };
 
 var extractDataValValidators = function extractDataValValidators(input) {
@@ -388,7 +385,7 @@ var normaliseValidators = function normaliseValidators(input) {
 };
 
 var validate = function validate(group, validator) {
-  return validator.method ? validator.method(extractValueFromGroup(group), group.fields, validator.params) : methods[validator.type](group, validator.params);
+  return validator.method ? validator.method(extractValueFromGroup(group), group.fields) : methods[validator.type](group, validator.params);
 };
 
 var assembleValidationGroup = function assembleValidationGroup(acc, input) {
@@ -552,8 +549,9 @@ var componentPrototype = {
       field.setAttribute('aria-invalid', 'true');
     });
   },
-  addMethod: function addMethod(name, method, message) {
-    this.groups[name].validators.push({ method: method, message: message });
+  addMethod: function addMethod(type, groupName, method, message) {
+    if (type === undefined || groupName === undefined || method === undefined || message === undefined) return console.warn('Custom validation method cannot be added.');
+    this.groups[groupName].validators.push({ type: type, method: method, message: message });
     //extend messages
   }
 };
@@ -561,7 +559,7 @@ var componentPrototype = {
 /*
 API
 {
-	groups: {},
+	validate(){},
 	addMethod(){}
 }
 */
@@ -569,17 +567,20 @@ API
 var init = function init(candidate, opts) {
   var els = void 0;
 
-  //assume it's a dom node
   if (typeof candidate !== 'string' && candidate.nodeName && candidate.nodeName === 'FORM') els = [candidate];else els = [].slice.call(document.querySelectorAll(candidate));
 
-  return els.reduce(function (acc, el) {
+  if (els.length === 1 && window.__validators__ && window.__validators__[els[0]]) return window.__validators__[els[0]];
+
+  //attached to window.__validators__
+  //so we can both init, auto-initialise and refer back to an instance attached to a form to add additional validators
+  return window.__validators__ = Object.assign({}, window.__validators__, els.reduce(function (acc, el) {
     if (el.getAttribute('novalidate')) return;
-    acc.push(Object.assign(Object.create(componentPrototype), {
+    acc[el] = Object.assign(Object.create(componentPrototype), {
       form: el,
       settings: Object.assign({}, defaults, opts)
-    }).init());
+    }).init();
     return acc;
-  }, []);
+  }, {}));
 };
 
 //Auto-initialise
@@ -589,7 +590,5 @@ var init = function init(candidate, opts) {
   });
 }
 
-var index = { init: init };
-
-exports.default = index;;
+exports.default = init;;
 }));

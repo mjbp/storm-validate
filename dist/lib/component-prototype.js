@@ -122,8 +122,9 @@ export default {
 		//set aria-invalid on invalid inputs
 		this.groups[group].fields.forEach(field => { field.setAttribute('aria-invalid', 'true'); });
 	},
-	addMethod(name, method, message){
-		this.groups[name].validators.push({method, message});
+	addMethod(type, groupName, method, message){
+		if(type === undefined || groupName === undefined || method === undefined || message === undefined) return console.warn('Custom validation method cannot be added.');
+		this.groups[groupName].validators.push({type, method, message});
 		//extend messages
 	}
 };
@@ -131,7 +132,7 @@ export default {
 /*
 API
 {
-	groups: {},
+	validate(){},
 	addMethod(){}
 }
 */

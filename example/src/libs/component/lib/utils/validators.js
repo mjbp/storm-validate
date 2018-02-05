@@ -8,10 +8,7 @@ const resolveParam = (param, value) => ({[param.split('-')[1]]: !!~DOM_SELECTOR_
                                                     : value });
 
 const extractParams = (input, adaptor) => DOTNET_PARAMS[adaptor]
-                                          ? { 
-                                            params: DOTNET_PARAMS[adaptor].reduce((acc, param) => input.hasAttribute(`data-val-${param}`) ? Object.assign(acc, resolveParam(param, input.getAttribute(`data-val-${param}`))) : acc, {})
-                                              //params: DOTNET_PARAMS[adaptor].reduce((acc, param) => [...acc, input.hasAttribute(`data-val-${param}`) ? resolveParam(param, input.getAttribute(`data-val-${param}`)) : []], {})
-                                            }
+                                          ? { params: DOTNET_PARAMS[adaptor].reduce((acc, param) => input.hasAttribute(`data-val-${param}`) ? Object.assign(acc, resolveParam(param, input.getAttribute(`data-val-${param}`))) : acc, {})}
                                           : false;
           
 const extractDataValValidators = input => DOTNET_ADAPTORS.reduce((validators, adaptor) => 
@@ -54,7 +51,7 @@ export const normaliseValidators = input => input.getAttribute('data-val') === '
                                             : extractAttrValidators(input);
 
 export const validate = (group, validator) => validator.method 
-                                              ? validator.method(extractValueFromGroup(group), group.fields, validator.params)
+                                              ? validator.method(extractValueFromGroup(group), group.fields)
                                               : methods[validator.type](group, validator.params);
 
 export const assembleValidationGroup = (acc, input) => {

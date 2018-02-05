@@ -10,10 +10,25 @@ npm i -S storm-validate
 ```
 import Validate from 'storm-validate';
 
-Validate.init('form');
+Validate('form');
 ```
 
-or include dist/storm-validate.standalone.js in a script tag.
+or include dist/storm-validate.standalone.js in a script tag for unobstrusive auto-validation.
+
+To add a custom validation method:
+```
+let validator = Validate('form');
+
+validator.addMethod(
+    'test', //validator name
+    'RequiredString', //input/input group name
+    (value, fields, params) => { //validation method
+        return value === 'test';
+    },
+    'Value must equal "test"' //error message on validation failure
+);
+
+```
 
 ## Browser support
 This is module has both es6 and es5 distributions. The es6 version should be used in a workflow that transpiles.
