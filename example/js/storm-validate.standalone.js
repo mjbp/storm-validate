@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.2.1: Thu, 01 Feb 2018 20:10:19 GMT
+ * @version 0.3.1: Mon, 05 Feb 2018 13:13:11 GMT
  * @author stormid
  * @license MIT
  */
@@ -24,9 +24,9 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 var defaults = {
   errorsInline: true,
@@ -190,83 +190,59 @@ var methods = {
   dateISO: curryRegexMethod(DATE_ISO_REGEX),
   number: curryRegexMethod(NUMBER_REGEX),
   digits: curryRegexMethod(DIGITS_REGEX),
-  minlength: curryParamMethod('minlength', function (param) {
+  minlength: curryParamMethod('minlength', function (params) {
     return function (acc, input) {
-      return acc = Array.isArray(input.value) ? input.value.length >= +param : +input.value.length >= +param, acc;
+      return acc = Array.isArray(input.value) ? input.value.length >= +params.min : +input.value.length >= +params.min, acc;
     };
   }),
-  maxlength: curryParamMethod('maxlength', function (param) {
+  maxlength: curryParamMethod('maxlength', function (params) {
     return function (acc, input) {
-      return acc = Array.isArray(input.value) ? input.value.length <= +param : +input.value.length <= +param, acc;
+      return acc = Array.isArray(input.value) ? input.value.length <= +params.max : +input.value.length <= +params.max, acc;
     };
   }),
   equalto: curryParamMethod('equalto', function (params) {
     return function (acc, input) {
-      return acc = params[0].reduce(function (subgroupAcc, subgroup) {
+      return acc = params.other.reduce(function (subgroupAcc, subgroup) {
         if (extractValueFromGroup(subgroup) !== input.value) subgroupAcc = false;
         return subgroupAcc;
       }, true), acc;
     };
   }),
-  pattern: curryParamMethod('pattern', function () {
-    for (var _len2 = arguments.length, regexStr = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-      regexStr[_key2] = arguments[_key2];
-    }
-
+  pattern: curryParamMethod('pattern', function (params) {
     return function (acc, input) {
-      return acc = RegExp(regexStr).test(input.value), acc;
+      return acc = RegExp(params.regex).test(input.value), acc;
     };
   }),
-  regex: curryParamMethod('regex', function () {
-    for (var _len3 = arguments.length, regexStr = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-      regexStr[_key3] = arguments[_key3];
-    }
-
+  regex: curryParamMethod('regex', function (params) {
     return function (acc, input) {
-      return acc = RegExp(regexStr).test(input.value), acc;
+      return acc = RegExp(params.regex).test(input.value), acc;
     };
   }),
-  min: curryParamMethod('min', function () {
-    for (var _len4 = arguments.length, min = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-      min[_key4] = arguments[_key4];
-    }
-
+  min: curryParamMethod('min', function (params) {
     return function (acc, input) {
-      return acc = +input.value >= +min, acc;
+      return acc = +input.value >= +params.min, acc;
     };
   }),
-  max: curryParamMethod('max', function () {
-    for (var _len5 = arguments.length, max = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-      max[_key5] = arguments[_key5];
-    }
-
+  max: curryParamMethod('max', function (params) {
     return function (acc, input) {
-      return acc = +input.value <= +max, acc;
+      return acc = +input.value <= +params.max, acc;
     };
   }),
   length: curryParamMethod('length', function (params) {
     return function (acc, input) {
-      return acc = +input.value.length >= +params[0] && (params[1] === undefined || +input.value.length <= +params[1]), acc;
+      return acc = +input.value.length >= +params.min && (params.max === undefined || +input.value.length <= +params.max), acc;
     };
   }),
   range: curryParamMethod('range', function (params) {
     return function (acc, input) {
-      return acc = +input.value >= +params[0] && +input.value <= +params[1], acc;
+      return acc = +input.value >= +params.min && +input.value <= +params.max, acc;
     };
   }),
   remote: function remote(group, params) {
-    var _params = _slicedToArray(params, 3),
-        url = _params[0],
-        additionalfields = _params[1],
-        _params$ = _params[2],
-        type = _params$ === undefined ? 'get' : _params$;
-
     return new Promise(function (resolve, reject) {
-      //to do?
-      //change this to XHR
-      fetch(type !== 'get' ? url : url + '?' + resolveGetParams(additionalfields), {
-        method: type.toUpperCase(),
-        body: type === 'get' ? null : resolveGetParams(additionalfields),
+      fetch(params.type !== 'get' ? params.url : params.url + '?' + resolveGetParams(params.additionalfields), {
+        method: params.type.toUpperCase(),
+        body: params.type === 'get' ? null : resolveGetParams(params.additionalfields),
         headers: new Headers({
           'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
         })
@@ -276,7 +252,7 @@ var methods = {
         resolve(data);
       }).catch(function (res) {
         resolve(res);
-      }); //what to do if endpoint validation fails? returning error message as validation error
+      });
     });
   }
 };
@@ -327,14 +303,15 @@ var messages = {
 };
 
 var resolveParam = function resolveParam(param, value) {
-  return !!~DOM_SELECTOR_PARAMS.indexOf(param) ? DOMNodesFromCommaList(value) : value;
+  return _defineProperty({}, param.split('-')[1], !!~DOM_SELECTOR_PARAMS.indexOf(param) ? DOMNodesFromCommaList(value) : value);
 };
 
 var extractParams = function extractParams(input, adaptor) {
   return DOTNET_PARAMS[adaptor] ? {
     params: DOTNET_PARAMS[adaptor].reduce(function (acc, param) {
-      return [].concat(_toConsumableArray(acc), [input.hasAttribute('data-val-' + param) ? resolveParam(param, input.getAttribute('data-val-' + param)) : []]);
-    }, [])
+      return input.hasAttribute('data-val-' + param) ? Object.assign(acc, resolveParam(param, input.getAttribute('data-val-' + param))) : acc;
+    }, {})
+    //params: DOTNET_PARAMS[adaptor].reduce((acc, param) => [...acc, input.hasAttribute(`data-val-${param}`) ? resolveParam(param, input.getAttribute(`data-val-${param}`)) : []], {})
   } : false;
 };
 
@@ -350,7 +327,7 @@ var extractAttrValidators = function extractAttrValidators(input) {
   return pipe(email(input), url(input), number(input), minlength(input), maxlength(input), min(input), max(input), pattern(input), required(input));
 };
 
-//un-DRY
+//un-DRY... and unreadable
 var required = function required(input) {
   return function () {
     var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
@@ -378,31 +355,31 @@ var number = function number(input) {
 var minlength = function minlength(input) {
   return function () {
     var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    return input.getAttribute('minlength') && input.getAttribute('minlength') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'minlength', params: [input.getAttribute('minlength')] }]) : validators;
+    return input.getAttribute('minlength') && input.getAttribute('minlength') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'minlength', params: { min: input.getAttribute('minlength') } }]) : validators;
   };
 };
 var maxlength = function maxlength(input) {
   return function () {
     var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    return input.getAttribute('maxlength') && input.getAttribute('maxlength') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'maxlength', params: [input.getAttribute('maxlength')] }]) : validators;
+    return input.getAttribute('maxlength') && input.getAttribute('maxlength') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'maxlength', params: { max: input.getAttribute('maxlength') } }]) : validators;
   };
 };
 var min = function min(input) {
   return function () {
     var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    return input.getAttribute('min') && input.getAttribute('min') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'min', params: [input.getAttribute('min')] }]) : validators;
+    return input.getAttribute('min') && input.getAttribute('min') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'min', params: { min: input.getAttribute('min') } }]) : validators;
   };
 };
 var max = function max(input) {
   return function () {
     var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    return input.getAttribute('max') && input.getAttribute('max') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'max', params: [input.getAttribute('max')] }]) : validators;
+    return input.getAttribute('max') && input.getAttribute('max') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'max', params: { max: input.getAttribute('max') } }]) : validators;
   };
 };
 var pattern = function pattern(input) {
   return function () {
     var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    return input.getAttribute('pattern') && input.getAttribute('pattern') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'pattern', params: [input.getAttribute('pattern')] }]) : validators;
+    return input.getAttribute('pattern') && input.getAttribute('pattern') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'pattern', params: { regex: input.getAttribute('pattern') } }]) : validators;
   };
 };
 
@@ -411,7 +388,7 @@ var normaliseValidators = function normaliseValidators(input) {
 };
 
 var validate = function validate(group, validator) {
-  return validator.method ? validator.method(extractValueFromGroup(group), group.fields, validator.params) : methods[validator.type](group, validator.params && validator.params.length > 0 ? validator.params : null);
+  return validator.method ? validator.method(extractValueFromGroup(group), group.fields, validator.params) : methods[validator.type](group, validator.params);
 };
 
 var assembleValidationGroup = function assembleValidationGroup(acc, input) {
@@ -469,9 +446,9 @@ var componentPrototype = {
       e.preventDefault();
       _this.clearErrors();
       _this.setValidityState().then(function (res) {
-        var _ref;
+        var _ref2;
 
-        if (!(_ref = []).concat.apply(_ref, _toConsumableArray(res)).includes(false)) _this.form.submit();else _this.renderErrors(), _this.initRealTimeValidation();
+        if (!(_ref2 = []).concat.apply(_ref2, _toConsumableArray(res)).includes(false)) _this.form.submit();else _this.renderErrors(), _this.initRealTimeValidation();
       });
     });
 
@@ -501,13 +478,11 @@ var componentPrototype = {
         return validator.type === 'equalto';
       });
 
-      if (equalToValidator.length > 0) {
-        equalToValidator[0].params[0].forEach(function (subgroup) {
-          subgroup.forEach(function (item) {
-            item.addEventListener('blur', handler.bind(_this3, group));
-          });
+      equalToValidator.length > 0 && equalToValidator[0].params.other.forEach(function (subgroup) {
+        subgroup.forEach(function (item) {
+          item.addEventListener('blur', handler.bind(_this3, group));
         });
-      }
+      });
     };
 
     for (var group in this.groups) {
@@ -582,6 +557,14 @@ var componentPrototype = {
     //extend messages
   }
 };
+
+/*
+API
+{
+	groups: {},
+	addMethod(){}
+}
+*/
 
 var init = function init(candidate, opts) {
   var els = void 0;

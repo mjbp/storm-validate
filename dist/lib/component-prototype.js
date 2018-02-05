@@ -23,10 +23,10 @@ export default {
 			e.preventDefault();
 			this.clearErrors();
 			this.setValidityState()
-					.then(res => {
-						if(![].concat(...res).includes(false)) this.form.submit();
-						else this.renderErrors(), this.initRealTimeValidation();
-					});
+				.then(res => {
+					if(![].concat(...res).includes(false)) this.form.submit();
+					else this.renderErrors(), this.initRealTimeValidation();
+				});
 		});
 
 		this.form.addEventListener('reset', e => { this.clearErrors(); });
@@ -48,11 +48,10 @@ export default {
 			//pls, refactor me ;_;
 			let equalToValidator = this.groups[group].validators.filter(validator => validator.type === 'equalto');
 			
-			if(equalToValidator.length > 0) {
-				equalToValidator[0].params[0].forEach(subgroup => {
+			equalToValidator.length > 0 
+				&& equalToValidator[0].params.other.forEach(subgroup => {
 					subgroup.forEach(item => { item.addEventListener('blur', handler.bind(this, group))});
 				});
-			}
 		}
 	},
 	setGroupValidityState(group){
@@ -128,3 +127,11 @@ export default {
 		//extend messages
 	}
 };
+
+/*
+API
+{
+	groups: {},
+	addMethod(){}
+}
+*/
