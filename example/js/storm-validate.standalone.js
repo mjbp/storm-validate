@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.4.2: Tue, 06 Feb 2018 12:09:06 GMT
+ * @version 0.4.3: Tue, 06 Feb 2018 14:18:52 GMT
  * @author stormid
  * @license MIT
  */
@@ -59,12 +59,6 @@ var resolveGetParams = function resolveGetParams(nodeArrays) {
   }).join('&');
 };
 
-var DOMNodesFromCommaList = function DOMNodesFromCommaList(list) {
-  return list.split(',').map(function (item) {
-    return [].slice.call(document.querySelectorAll('[name=' + item.substr(2) + ']'));
-  });
-};
-
 var hasValue = function hasValue(input) {
   return input.value !== undefined && input.value !== null && input.value.length > 0;
 };
@@ -116,6 +110,26 @@ var fetch = function fetch(url, props) {
     };
     xhr.send(props.body);
   });
+};
+
+var DOMNodesFromCommaList = function DOMNodesFromCommaList(list, input) {
+  return list.split(',').map(function (item) {
+    var resolvedSelector = escapeAttributeValue(appendModelPrefix(item, getModelPrefix(input.getAttribute('name'))));
+    return [].slice.call(document.querySelectorAll('[name=' + resolvedSelector + ']'));
+  });
+};
+
+var escapeAttributeValue = function escapeAttributeValue(value) {
+  return value.replace(/([!"#$%&'()*+,./:;<=>?@\[\\\]^`{|}~])/g, "\\$1");
+};
+
+var getModelPrefix = function getModelPrefix(fieldName) {
+  return fieldName.substr(0, fieldName.lastIndexOf('.') + 1);
+};
+
+var appendModelPrefix = function appendModelPrefix(value, prefix) {
+  if (value.indexOf("*.") === 0) value = value.replace("*.", prefix);
+  return value;
 };
 
 //https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address
@@ -302,13 +316,14 @@ var messages = {
   }
 };
 
-var resolveParam = function resolveParam(param, value) {
-  return _defineProperty({}, param.split('-')[1], !!~DOM_SELECTOR_PARAMS.indexOf(param) ? DOMNodesFromCommaList(value) : value);
+var resolveParam = function resolveParam(param, input) {
+  var value = input.getAttribute('data-val-' + param);
+  return _defineProperty({}, param.split('-')[1], !!~DOM_SELECTOR_PARAMS.indexOf(param) ? DOMNodesFromCommaList(value, input) : value);
 };
 
 var extractParams = function extractParams(input, adaptor) {
   return DOTNET_PARAMS[adaptor] ? { params: DOTNET_PARAMS[adaptor].reduce(function (acc, param) {
-      return input.hasAttribute('data-val-' + param) ? Object.assign(acc, resolveParam(param, input.getAttribute('data-val-' + param))) : acc;
+      return input.hasAttribute('data-val-' + param) ? Object.assign(acc, resolveParam(param, input)) : acc;
     }, {}) } : false;
 };
 
