@@ -280,6 +280,11 @@
                             <label for="ConfirmPassword">Confirm Password</label>
                             <input class="form-control" type="password" data-val="true" data-val-equalto="Passwords must match"  data-val-equalto-other="*.Password" data-val-required="The Re-enter Password field is required."  name="ConfirmPassword" id="ConfirmPassword" />
                         </div>
+                        <div class="form-row form-row--condensed">
+                            <label class="form-control-label" for="Password2">Password</label>
+                            <input class="form-control" type="password2" data-val="true" data-val-minlength="The length of &#x27;Password&#x27; must be at least 12 characters." data-val-minlength-min="12" data-val-required="&#x27;Password&#x27; should not be empty." id="Password2" name="Password2">
+                            <span class="field-validation-valid" data-valmsg-for="Password2" data-valmsg-replace="true"></span>
+                        </div>
                     </div>
                         
               <!-- <div class="form-group">

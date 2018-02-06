@@ -39,6 +39,7 @@ export const DOTNET_ADAPTORS = [
     'number',
     'url',
     'length',
+    'minlength',
     'range',
     'equalto',
     'remote',//should be last

@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.3.1: Tue, 06 Feb 2018 09:08:36 GMT
+ * @version 0.4.2: Tue, 06 Feb 2018 12:09:06 GMT
  * @author stormid
  * @license MIT
  */
@@ -150,7 +150,7 @@ var DOTNET_PARAMS = {
 
 var DOTNET_ADAPTORS = ['required', 'stringlength', 'regex',
 // 'digits',
-'email', 'number', 'url', 'length', 'range', 'equalto', 'remote'];
+'email', 'number', 'url', 'length', 'minlength', 'range', 'equalto', 'remote'];
 
 var isOptional = function isOptional(group) {
   return !isRequired(group) && extractValueFromGroup(group) === '';
