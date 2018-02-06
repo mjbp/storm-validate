@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.4.3: Tue, 06 Feb 2018 14:18:52 GMT
+ * @version 0.4.4: Tue, 06 Feb 2018 15:04:49 GMT
  * @author stormid
  * @license MIT
  */
@@ -253,6 +253,7 @@ var methods = {
     };
   }),
   remote: function remote(group, params) {
+    console.log('Remote validation');
     return new Promise(function (resolve, reject) {
       fetch(params.type !== 'get' ? params.url : params.url + '?' + resolveGetParams(params.additionalfields), {
         method: params.type.toUpperCase(),
@@ -508,8 +509,6 @@ var componentPrototype = {
     this.groups[group] = Object.assign({}, this.groups[group], { valid: true, errorMessages: [] });
     return Promise.all(this.groups[group].validators.map(function (validator) {
       return new Promise(function (resolve) {
-        //to do?
-        //only perform the remote validation if all else passes
 
         //refactor, extract this whole fn...
         if (validator.type !== 'remote') {
@@ -519,14 +518,16 @@ var componentPrototype = {
             _this4.groups[group].errorMessages.push(extractErrorMessage(validator, group));
             resolve(false);
           }
-        } else validate(_this4.groups[group], validator).then(function (res) {
-          if (res && res === true) resolve(true);else {
-            //mutation, side effect, and un-DRY...
-            _this4.groups[group].valid = false;
-            _this4.groups[group].errorMessages.push(typeof res === 'boolean' ? extractErrorMessage(validator, group) : 'Server error: ' + res);
-            resolve(false);
-          }
-        });
+        } else if (_this4.groups[group].valid === true) {
+          validate(_this4.groups[group], validator).then(function (res) {
+            if (res && res === true) resolve(true);else {
+              //mutation, side effect, and un-DRY...
+              _this4.groups[group].valid = false;
+              _this4.groups[group].errorMessages.push(typeof res === 'boolean' ? extractErrorMessage(validator, group) : 'Server error: ' + res);
+              resolve(false);
+            }
+          });
+        } else resolve(true);
       });
     }));
   },

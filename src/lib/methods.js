@@ -38,6 +38,7 @@ export default {
     length: curryParamMethod('length', params => (acc, input) => (acc = (+input.value.length >= +params.min && (params.max === undefined || +input.value.length <= +params.max)), acc)),
     range: curryParamMethod('range', params => (acc, input) => (acc = (+input.value >= +params.min && +input.value <= +params.max), acc)),
     remote: (group, params) => {
+        console.log('Remote validation');
         return new Promise((resolve, reject) => {
             fetch((params.type !== 'get' ? params.url : `${params.url}?${resolveGetParams(params.additionalfields)}`), {
                 method: params.type.toUpperCase(),
