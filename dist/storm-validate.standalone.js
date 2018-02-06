@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.3.1: Mon, 05 Feb 2018 14:19:51 GMT
+ * @version 0.3.1: Tue, 06 Feb 2018 09:08:36 GMT
  * @author stormid
  * @license MIT
  */
@@ -590,5 +590,7 @@ var init = function init(candidate, opts) {
   });
 }
 
-exports.default = init;;
+var index = { init: init };
+
+exports.default = index;;
 }));

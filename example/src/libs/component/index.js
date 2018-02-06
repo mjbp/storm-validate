@@ -29,4 +29,4 @@ const init = (candidate, opts) => {
 		.forEach(form => { form.querySelector('[data-val=true]') && init(form); });
 }
 
-export default init;
+export default { init };
