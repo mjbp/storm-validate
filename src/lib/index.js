@@ -1,10 +1,9 @@
 import ACTIONS from './actions';
 // import { TRIGGER_EVENTS, KEY_CODES, DATA_ATTRIBUTES } from  './constants';
 import Store from './store';
+import { getInitialState, getValidityState } from './utils/validators';
 
-import { getInitialState } from './utils/validators';
 // import { clear, render } from './manage-errors';
-// import { validateForm } from './validate';
 
 const validate = () => {};
 
@@ -20,22 +19,23 @@ export default (form, settings) => {
     form.addEventListener('submit', e => {
         e.preventDefault();
         
-        //dispatch clear
-        // clear(state.groups);
-        Store.dispatch(ACTIONS.CLEAR_ERRORS(), ['errors']);
+        //pass subscribed side-effects in action..?
+        Store.dispatch(ACTIONS.START_VALIDATION(), ['clearErrors']);
 
         //dispatch valdate
-        validateForm()
-            .then(res => {
+        getValidityState(Store.getState().groups)
+            .then(validityState => {
+                console.log([].concat(...validityState));
+                // Store.dispatch(ACTIONS.START_VALIDATION(), ['clearErrors']);
                 //submit
-                if(![].concat(...res).includes(false)) form.submit();
-                else {
-                    //dispatch errors
-                    render(state.group);
-                    //dispatch init real-time validation
+                // if(![].concat(...res).includes(false)) form.submit();
+                // else {
+                //     //dispatch errors
+                //     render(state.group);
+                //     //dispatch init real-time validation
 
-                    // initRealTimeValidation();
-                }
+                //     // initRealTimeValidation();
+                // }
             });
     });
 

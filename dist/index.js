@@ -1,5 +1,4 @@
 import defaults from './lib/defaults';
-// import componentPrototype from './lib/component-prototype';
 import factory from './lib';
 
 const init = (candidate, opts) => {
