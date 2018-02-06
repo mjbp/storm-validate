@@ -1,3 +1,5 @@
+import { DOTNET_CLASSNAMES } from '../constants';
+
 export const h = (nodeName, attributes, text) => {
     let node = document.createElement(nodeName);
 
@@ -9,6 +11,9 @@ export const h = (nodeName, attributes, text) => {
 
 export const createErrorTextNode = group => {
     let node = document.createTextNode(group.errorMessages[0]);
-    group.serverErrorNode.classList.add('error');
+
+    group.serverErrorNode.classList.remove(DOTNET_CLASSNAMES.VALID);
+    group.serverErrorNode.classList.add(DOTNET_CLASSNAMES.ERROR);
+    
     return group.serverErrorNode.appendChild(node);
 };

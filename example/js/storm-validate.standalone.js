@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.4.4: Tue, 06 Feb 2018 15:04:49 GMT
+ * @version 0.4.4: Tue, 06 Feb 2018 15:25:43 GMT
  * @author stormid
  * @license MIT
  */
@@ -166,6 +166,11 @@ var DOTNET_ADAPTORS = ['required', 'stringlength', 'regex',
 // 'digits',
 'email', 'number', 'url', 'length', 'minlength', 'range', 'equalto', 'remote'];
 
+var DOTNET_CLASSNAMES = {
+  VALID: 'field-validation-valid',
+  ERROR: 'field-validation-error'
+};
+
 var isOptional = function isOptional(group) {
   return !isRequired(group) && extractValueFromGroup(group) === '';
 };
@@ -253,7 +258,6 @@ var methods = {
     };
   }),
   remote: function remote(group, params) {
-    console.log('Remote validation');
     return new Promise(function (resolve, reject) {
       fetch(params.type !== 'get' ? params.url : params.url + '?' + resolveGetParams(params.additionalfields), {
         method: params.type.toUpperCase(),
@@ -438,7 +442,10 @@ var h = function h(nodeName, attributes, text) {
 
 var createErrorTextNode = function createErrorTextNode(group) {
   var node = document.createTextNode(group.errorMessages[0]);
-  group.serverErrorNode.classList.add('error');
+
+  group.serverErrorNode.classList.remove(DOTNET_CLASSNAMES.VALID);
+  group.serverErrorNode.classList.add(DOTNET_CLASSNAMES.ERROR);
+
   return group.serverErrorNode.appendChild(node);
 };
 
@@ -544,7 +551,10 @@ var componentPrototype = {
   },
   removeError: function removeError(group) {
     this.groups[group].errorDOM.parentNode.removeChild(this.groups[group].errorDOM);
-    this.groups[group].serverErrorNode && this.groups[group].serverErrorNode.classList.remove('error');
+    if (this.groups[group].serverErrorNode) {
+      this.groups[group].serverErrorNode.classList.remove(DOTNET_CLASSNAMES.ERROR);
+      this.groups[group].serverErrorNode.classList.add(DOTNET_CLASSNAMES.VALID);
+    }
     this.groups[group].fields.forEach(function (field) {
       field.removeAttribute('aria-invalid');
     }); //or should i set this to false if field passes validation?
@@ -558,7 +568,7 @@ var componentPrototype = {
   },
   renderError: function renderError(group) {
     if (this.groups[group].errorDOM) this.removeError(group);
-    this.groups[group].errorDOM = this.groups[group].serverErrorNode ? createErrorTextNode(this.groups[group]) : this.groups[group].fields[this.groups[group].fields.length - 1].parentNode.appendChild(h('div', { class: 'error' }, this.groups[group].errorMessages[0]));
+    this.groups[group].errorDOM = this.groups[group].serverErrorNode ? createErrorTextNode(this.groups[group]) : this.groups[group].fields[this.groups[group].fields.length - 1].parentNode.appendChild(h('div', { class: 'field-validation-valid' }, this.groups[group].errorMessages[0]));
 
     //set aria-invalid on invalid inputs
     this.groups[group].fields.forEach(function (field) {
