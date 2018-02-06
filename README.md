@@ -9,15 +9,13 @@ npm i -S storm-validate
 ```
 ```
 import Validate from 'storm-validate';
-
-Validate('form');
 ```
 
 or include dist/storm-validate.standalone.js in a script tag for unobstrusive auto-validation.
 
 To add a custom validation method:
 ```
-let validator = Validate('form');
+let validator = Validate.init('form');
 
 validator.addMethod(
     'test', //validator name

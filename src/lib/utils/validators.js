@@ -3,12 +3,15 @@ import messages from '../messages';
 import { pipe, DOMNodesFromCommaList, extractValueFromGroup } from './';
 import { DOTNET_ADAPTORS, DOTNET_PARAMS, DOTNET_ERROR_SPAN_DATA_ATTRIBUTE, DOM_SELECTOR_PARAMS } from '../constants';
 
-const resolveParam = (param, value) => ({[param.split('-')[1]]: !!~DOM_SELECTOR_PARAMS.indexOf(param) 
-                                                    ? DOMNodesFromCommaList(value)
-                                                    : value });
+const resolveParam = (param, input) => {
+    let value = input.getAttribute(`data-val-${param}`);
+    return ({[param.split('-')[1]]: !!~DOM_SELECTOR_PARAMS.indexOf(param) 
+                                                    ? DOMNodesFromCommaList(value, input)
+                                                    : value })
+};
 
 const extractParams = (input, adaptor) => DOTNET_PARAMS[adaptor]
-                                          ? { params: DOTNET_PARAMS[adaptor].reduce((acc, param) => input.hasAttribute(`data-val-${param}`) ? Object.assign(acc, resolveParam(param, input.getAttribute(`data-val-${param}`))) : acc, {})}
+                                          ? { params: DOTNET_PARAMS[adaptor].reduce((acc, param) => input.hasAttribute(`data-val-${param}`) ? Object.assign(acc, resolveParam(param, input)) : acc, {})}
                                           : false;
           
 const extractDataValValidators = input => DOTNET_ADAPTORS.reduce((validators, adaptor) => 

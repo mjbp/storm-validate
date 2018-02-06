@@ -56,8 +56,14 @@ export const DOTNET_ADAPTORS = [
     'number',
     'url',
     'length',
+    'minlength',
     'range',
     'equalto',
     'remote',//should be last
     // 'password' //-> maps to min, nonalphamain, and regex methods
 ];
+
+export const DOTNET_CLASSNAMES = {
+    VALID: 'field-validation-valid',
+    ERROR: 'field-validation-error'
+};

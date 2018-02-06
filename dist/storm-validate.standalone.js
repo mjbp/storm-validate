@@ -1,6 +1,10 @@
 /**
  * @name storm-validate: 
+<<<<<<< HEAD
  * @version 0.3.1: Mon, 05 Feb 2018 21:41:20 GMT
+=======
+ * @version 0.4.4: Tue, 06 Feb 2018 15:25:43 GMT
+>>>>>>> master
  * @author stormid
  * @license MIT
  */
@@ -31,14 +35,95 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 var defaults = {
+<<<<<<< HEAD
     errorsInline: true,
     errorSummary: false
     // callback: null
+=======
+  errorsInline: true,
+  errorSummary: false
+  // callback: null
+};
+
+var isSelect = function isSelect(field) {
+  return field.nodeName.toLowerCase() === 'select';
+};
+
+var isCheckable = function isCheckable(field) {
+  return (/radio|checkbox/i.test(field.type)
+  );
+};
+
+var isFile = function isFile(field) {
+  return field.getAttribute('type') === 'file';
+};
+
+var isRequired = function isRequired(group) {
+  return group.validators.filter(function (validator) {
+    return validator.type === 'required';
+  }).length > 0;
+};
+
+var resolveGetParams = function resolveGetParams(nodeArrays) {
+  return nodeArrays.map(function (nodes) {
+    return nodes[0].getAttribute('name') + '=' + extractValueFromGroup(nodes);
+  }).join('&');
+};
+
+var hasValue = function hasValue(input) {
+  return input.value !== undefined && input.value !== null && input.value.length > 0;
+};
+
+var groupValueReducer = function groupValueReducer(acc, input) {
+  if (!isCheckable(input) && hasValue(input)) acc = input.value;
+  if (isCheckable(input) && input.checked) {
+    if (Array.isArray(acc)) acc.push(input.value);else acc = [input.value];
+  }
+  return acc;
+};
+
+var extractValueFromGroup = function extractValueFromGroup(group) {
+  return group.hasOwnProperty('fields') ? group.fields.reduce(groupValueReducer, '') : group.reduce(groupValueReducer, '');
+};
+
+var chooseRealTimeEvent = function chooseRealTimeEvent(input) {
+  return ['input', 'change'][Number(isCheckable(input) || isSelect(input) || isFile(input))];
+};
+
+var pipe = function pipe() {
+  for (var _len = arguments.length, fns = Array(_len), _key = 0; _key < _len; _key++) {
+    fns[_key] = arguments[_key];
+  }
+
+  return fns.reduce(function (acc, fn) {
+    return fn(acc);
+  });
+>>>>>>> master
 };
 
 var ACTIONS = {
     SET_INITIAL_STATE: 'SET_INITIAL_STATE',
     CLEAR_ERRORS: 'CLEAR_ERRORS'
+};
+
+var DOMNodesFromCommaList = function DOMNodesFromCommaList(list, input) {
+  return list.split(',').map(function (item) {
+    var resolvedSelector = escapeAttributeValue(appendModelPrefix(item, getModelPrefix(input.getAttribute('name'))));
+    return [].slice.call(document.querySelectorAll('[name=' + resolvedSelector + ']'));
+  });
+};
+
+var escapeAttributeValue = function escapeAttributeValue(value) {
+  return value.replace(/([!"#$%&'()*+,./:;<=>?@\[\\\]^`{|}~])/g, "\\$1");
+};
+
+var getModelPrefix = function getModelPrefix(fieldName) {
+  return fieldName.substr(0, fieldName.lastIndexOf('.') + 1);
+};
+
+var appendModelPrefix = function appendModelPrefix(value, prefix) {
+  if (value.indexOf("*.") === 0) value = value.replace("*.", prefix);
+  return value;
 };
 
 //https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address
@@ -67,7 +152,12 @@ var DOTNET_PARAMS = {
 
 var DOTNET_ADAPTORS = ['required', 'stringlength', 'regex',
 // 'digits',
-'email', 'number', 'url', 'length', 'range', 'equalto', 'remote'];
+'email', 'number', 'url', 'length', 'minlength', 'range', 'equalto', 'remote'];
+
+var DOTNET_CLASSNAMES = {
+  VALID: 'field-validation-valid',
+  ERROR: 'field-validation-error'
+};
 
 var ACTIONS$1 = (_ACTIONS$ = {}, _defineProperty(_ACTIONS$, ACTIONS.SET_INITIAL_STATE, function (data) {
     return {
@@ -142,6 +232,7 @@ var Store = {
     getState: getState
 };
 
+<<<<<<< HEAD
 var resolveParam = function resolveParam(param, value) {
     return _defineProperty({}, param.split('-')[1], !!~DOM_SELECTOR_PARAMS.indexOf(param) ? DOMNodesFromCommaList(value) : value);
 };
@@ -150,6 +241,17 @@ var extractParams = function extractParams(input, adaptor) {
     return DOTNET_PARAMS[adaptor] ? { params: DOTNET_PARAMS[adaptor].reduce(function (acc, param) {
             return input.hasAttribute('data-val-' + param) ? Object.assign(acc, resolveParam(param, input.getAttribute('data-val-' + param))) : acc;
         }, {}) } : false;
+=======
+var resolveParam = function resolveParam(param, input) {
+  var value = input.getAttribute('data-val-' + param);
+  return _defineProperty({}, param.split('-')[1], !!~DOM_SELECTOR_PARAMS.indexOf(param) ? DOMNodesFromCommaList(value, input) : value);
+};
+
+var extractParams = function extractParams(input, adaptor) {
+  return DOTNET_PARAMS[adaptor] ? { params: DOTNET_PARAMS[adaptor].reduce(function (acc, param) {
+      return input.hasAttribute('data-val-' + param) ? Object.assign(acc, resolveParam(param, input)) : acc;
+    }, {}) } : false;
+>>>>>>> master
 };
 
 var extractDataValValidators = function extractDataValValidators(input) {
@@ -254,9 +356,19 @@ var getInitialState = function getInitialState(form) {
 
 var validate$1 = function validate$1() {};
 
+<<<<<<< HEAD
 var addMethod = function addMethod(type, groupName, method, message) {
     if (type === undefined || groupName === undefined || method === undefined || message === undefined) return console.warn('Custom validation method cannot be added.');
     state.groups[groupName].validators.push({ type: type, method: method, message: message });
+=======
+var createErrorTextNode = function createErrorTextNode(group) {
+  var node = document.createTextNode(group.errorMessages[0]);
+
+  group.serverErrorNode.classList.remove(DOTNET_CLASSNAMES.VALID);
+  group.serverErrorNode.classList.add(DOTNET_CLASSNAMES.ERROR);
+
+  return group.serverErrorNode.appendChild(node);
+>>>>>>> master
 };
 
 var factory = function factory(form, settings) {
@@ -265,6 +377,7 @@ var factory = function factory(form, settings) {
     form.addEventListener('submit', function (e) {
         e.preventDefault();
 
+<<<<<<< HEAD
         //dispatch clear
         // clear(state.groups);
         Store.dispatch(ACTIONS$1.CLEAR_ERRORS(), ['errors']);
@@ -282,6 +395,76 @@ var factory = function factory(form, settings) {
                 // initRealTimeValidation();
             }
         });
+=======
+    for (var group in this.groups) {
+      _loop(group);
+    }
+  },
+  setGroupValidityState: function setGroupValidityState(group) {
+    var _this4 = this;
+
+    //reset validity and errorMessages
+    this.groups[group] = Object.assign({}, this.groups[group], { valid: true, errorMessages: [] });
+    return Promise.all(this.groups[group].validators.map(function (validator) {
+      return new Promise(function (resolve) {
+
+        //refactor, extract this whole fn...
+        if (validator.type !== 'remote') {
+          if (validate(_this4.groups[group], validator)) resolve(true);else {
+            //mutation and side effect...
+            _this4.groups[group].valid = false;
+            _this4.groups[group].errorMessages.push(extractErrorMessage(validator, group));
+            resolve(false);
+          }
+        } else if (_this4.groups[group].valid === true) {
+          validate(_this4.groups[group], validator).then(function (res) {
+            if (res && res === true) resolve(true);else {
+              //mutation, side effect, and un-DRY...
+              _this4.groups[group].valid = false;
+              _this4.groups[group].errorMessages.push(typeof res === 'boolean' ? extractErrorMessage(validator, group) : 'Server error: ' + res);
+              resolve(false);
+            }
+          });
+        } else resolve(true);
+      });
+    }));
+  },
+  setValidityState: function setValidityState() {
+    var groupValidators = [];
+    for (var group in this.groups) {
+      groupValidators.push(this.setGroupValidityState(group));
+    }return Promise.all(groupValidators);
+  },
+  clearErrors: function clearErrors() {
+    for (var group in this.groups) {
+      if (this.groups[group].errorDOM) this.removeError(group);
+    }
+  },
+  removeError: function removeError(group) {
+    this.groups[group].errorDOM.parentNode.removeChild(this.groups[group].errorDOM);
+    if (this.groups[group].serverErrorNode) {
+      this.groups[group].serverErrorNode.classList.remove(DOTNET_CLASSNAMES.ERROR);
+      this.groups[group].serverErrorNode.classList.add(DOTNET_CLASSNAMES.VALID);
+    }
+    this.groups[group].fields.forEach(function (field) {
+      field.removeAttribute('aria-invalid');
+    }); //or should i set this to false if field passes validation?
+    delete this.groups[group].errorDOM;
+  },
+  renderErrors: function renderErrors() {
+    //support for inline and error list?
+    for (var group in this.groups) {
+      if (!this.groups[group].valid) this.renderError(group);
+    }
+  },
+  renderError: function renderError(group) {
+    if (this.groups[group].errorDOM) this.removeError(group);
+    this.groups[group].errorDOM = this.groups[group].serverErrorNode ? createErrorTextNode(this.groups[group]) : this.groups[group].fields[this.groups[group].fields.length - 1].parentNode.appendChild(h('div', { class: 'field-validation-valid' }, this.groups[group].errorMessages[0]));
+
+    //set aria-invalid on invalid inputs
+    this.groups[group].fields.forEach(function (field) {
+      field.setAttribute('aria-invalid', 'true');
+>>>>>>> master
     });
 
     // form.addEventListener('reset', clear);

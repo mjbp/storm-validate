@@ -37,18 +37,16 @@ export default {
     max: curryParamMethod('max', params => (acc, input) => (acc = +input.value <= +params.max, acc)),
     length: curryParamMethod('length', params => (acc, input) => (acc = (+input.value.length >= +params.min && (params.max === undefined || +input.value.length <= +params.max)), acc)),
     range: curryParamMethod('range', params => (acc, input) => (acc = (+input.value >= +params.min && +input.value <= +params.max), acc)),
-    remote: (group, params) => {
-        return new Promise((resolve, reject) => {
-            fetch((params.type !== 'get' ? params.url : `${params.url}?${resolveGetParams(params.additionalfields)}`), {
-                method: params.type.toUpperCase(),
-                body: params.type === 'get' ? null : resolveGetParams(params.additionalfields),
-                headers: new Headers({
-                  'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-                })
+    remote: (group, params) => new Promise((resolve, reject) => {
+        fetch((params.type !== 'get' ? params.url : `${params.url}?${resolveGetParams(params.additionalfields)}`), {
+            method: params.type.toUpperCase(),
+            body: params.type === 'get' ? null : resolveGetParams(params.additionalfields),
+            headers: new Headers({
+                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
             })
-            .then(res => res.json())
-            .then(data => { resolve(data); })
-            .catch(res => { resolve(res); });
-        });
-    }
+        })
+        .then(res => res.json())
+        .then(data => { resolve(data); })
+        .catch(res => { resolve(res); });
+    })
 };

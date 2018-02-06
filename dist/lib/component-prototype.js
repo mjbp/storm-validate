@@ -8,6 +8,7 @@ import {
 	removeUnvalidatableGroups
 } from './utils/validators';
 import { h, createErrorTextNode } from './utils/dom';
+import { DOTNET_CLASSNAMES } from './constants';
 
 export default {
 	init() {
@@ -59,8 +60,6 @@ export default {
 		this.groups[group] = Object.assign({}, this.groups[group],{ valid: true, errorMessages: [] });
 		return Promise.all(this.groups[group].validators.map(validator => {
 			return new Promise(resolve => {
-				//to do?
-				//only perform the remote validation if all else passes
 				
 				//refactor, extract this whole fn...
 				if(validator.type !== 'remote'){
@@ -72,7 +71,8 @@ export default {
 						resolve(false);
 					}
 				}
-				else validate(this.groups[group], validator)
+				else if(this.groups[group].valid === true) {
+					validate(this.groups[group], validator)
 						.then(res => {
 							if(res && res === true) resolve(true);								
 							else {
@@ -84,6 +84,7 @@ export default {
 								resolve(false);
 							}
 						});
+					} else resolve(true);
 			});
 		}));
 	},
@@ -99,7 +100,10 @@ export default {
 	},
 	removeError(group){
 		this.groups[group].errorDOM.parentNode.removeChild(this.groups[group].errorDOM);
-		this.groups[group].serverErrorNode && this.groups[group].serverErrorNode.classList.remove('error');
+		if(this.groups[group].serverErrorNode) {
+			this.groups[group].serverErrorNode.classList.remove(DOTNET_CLASSNAMES.ERROR);
+			this.groups[group].serverErrorNode.classList.add(DOTNET_CLASSNAMES.VALID);
+		}
 		this.groups[group].fields.forEach(field => { field.removeAttribute('aria-invalid'); });//or should i set this to false if field passes validation?
 		delete this.groups[group].errorDOM;
 	},
@@ -117,8 +121,8 @@ export default {
 					this.groups[group]
 						.fields[this.groups[group].fields.length-1]
 						.parentNode
-						.appendChild(h('div', { class: 'error' }, this.groups[group].errorMessages[0]));
-		
+						.appendChild(h('div', { class: 'field-validation-valid' }, this.groups[group].errorMessages[0]));
+						
 		//set aria-invalid on invalid inputs
 		this.groups[group].fields.forEach(field => { field.setAttribute('aria-invalid', 'true'); });
 	},
