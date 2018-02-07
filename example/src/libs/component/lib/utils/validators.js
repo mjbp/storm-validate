@@ -68,7 +68,7 @@ export const assembleValidationGroup = (acc, input) => {
                                     }, acc;
 };
 
-export const extractErrorMessage = (validator, group) => validator.message || messages[validator.type](validator.params !== undefined ? validator.params : null);
+export const extractErrorMessage = validator => validator.message || messages[validator.type](validator.params !== undefined ? validator.params : null);
 
 export const removeUnvalidatableGroups = groups => {
     let validationGroups = {};
@@ -85,64 +85,36 @@ export const getInitialState = form => ({
                     .reduce(assembleValidationGroup, {}))
 });
 
-export const getValidityState = groups => Promise.all(
-    Object.keys(groups)
-        .map(group => ({[group]: getGroupValidityState(groups[group])}))
-);
+export const reduceGroupValidityState = (acc, curr) => {
+    if(curr !== true) acc = false;
+    return acc; 
+};
+
+
+export const getValidityState = groups => {
+    // let groupValidators = [];
+    // for(let group in groups) groupValidators.push(getGroupValidityState(groups[group]));
+    // return Promise.all(groupValidators);
+    return Promise.all(
+        Object.keys(groups)
+            .map(group => getGroupValidityState(groups[group]))
+        );
+};
 
 const getGroupValidityState = group => {
     let hasError = false;
 	return Promise.all(group.validators.map(validator => {
         return new Promise(resolve => {
-                /*
-                    @return 
-                         {
-                            valid: bool,
-                            errorMessages: []//just first?
-                        }
-                */
-                if(validator.type !== 'remote'){
-                    if(validate(group, validator)) resolve({valid: true});
-                    else {
-                        hasError = true;
-                        resolve({valid: false, errorMessages: [extractErrorMessage(validator, group)]});
-                    }
-                } else 
-                    if(hasError) resolve({valid: false}) 
-                    else validate(group, validator)
-                            .then(res => {
-                                if(res && res === true) resolve({valid: true});	
-                                else resolve({
-                                            valid: false,
-                                            errorMessages: [typeof res === 'boolean' 
-                                                            ? extractErrorMessage(validator, group)
-                                                            : `Server error: ${res}`]});
-                            });
-                //to do?
-				//only perform the remote validation if all else passes
-				
-				//refactor, extract this whole fn...
-				// if(validator.type !== 'remote'){
-				// 	if(validate(group, validator)) resolve(true);
-				// 	else {
-				// 		//mutation and side effect...
-				// 		group.valid = false;
-				// 		group.errorMessages.push(extractErrorMessage(validator, group));
-				// 		resolve(false);
-				// 	}
-				// }
-				// else validate(group, validator)
-				// 		.then(res => {
-				// 			if(res && res === true) resolve(true);								
-				// 			else {
-				// 				//mutation, side effect, and un-DRY...
-				// 				group.valid = false;
-				// 				group.errorMessages.push(typeof res === 'boolean' 
-				// 														? extractErrorMessage(validator, group)
-				// 														: `Server error: ${res}`);
-				// 				resolve(false);
-				// 			}
-				// 		});
+            if(validator.type !== 'remote'){
+                if(validate(group, validator)) resolve(true);
+                else {
+                    hasError = true;
+                    resolve(false);
+                }
+            } else 
+                if(hasError) resolve(false) 
+                else validate(group, validator)
+                        .then(res => { resolve(res);});
 
         });
     }));

@@ -47,6 +47,6 @@ export default {
         })
         .then(res => res.json())
         .then(data => { resolve(data); })
-        .catch(res => { resolve(res); });
+        .catch(res => { resolve(`Server error: ${res}`); });
     })
 };

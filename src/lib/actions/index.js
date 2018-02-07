@@ -5,8 +5,12 @@ export default {
         type: ACTIONS.SET_INITIAL_STATE,
         data
     }),
-    [ACTIONS.START_VALIDATION]: data => ({
-        type: ACTIONS.START_VALIDATION
+    [ACTIONS.CLEAR_ERRORS]: data => ({
+        type: ACTIONS.CLEAR_ERRORS
+    }),
+    [ACTIONS.VALIDATION_ERRORS]: data => ({
+        type: ACTIONS.VALIDATION_ERRORS,
+        data
     }),
     
 };

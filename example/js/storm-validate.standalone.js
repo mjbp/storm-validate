@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.4.5: Tue, 06 Feb 2018 21:46:21 GMT
+ * @version 0.4.5: Wed, 07 Feb 2018 15:43:48 GMT
  * @author stormid
  * @license MIT
  */
@@ -38,7 +38,8 @@ var defaults = {
 
 var ACTIONS = {
     SET_INITIAL_STATE: 'SET_INITIAL_STATE',
-    START_VALIDATION: 'START_VALIDATION'
+    CLEAR_ERRORS: 'CLEAR_ERRORS',
+    VALIDATION_ERRORS: 'VALIDATION_ERRORS'
 };
 
 //https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address
@@ -75,14 +76,24 @@ var DOTNET_ADAPTORS = ['required', 'stringlength', 'regex',
 // 'digits',
 'email', 'number', 'url', 'length', 'minlength', 'range', 'equalto', 'remote'];
 
+var DOTNET_CLASSNAMES = {
+    VALID: 'field-validation-valid',
+    ERROR: 'field-validation-error'
+};
+
 var ACTIONS$1 = (_ACTIONS$ = {}, _defineProperty(_ACTIONS$, ACTIONS.SET_INITIAL_STATE, function (data) {
     return {
         type: ACTIONS.SET_INITIAL_STATE,
         data: data
     };
-}), _defineProperty(_ACTIONS$, ACTIONS.START_VALIDATION, function (data) {
+}), _defineProperty(_ACTIONS$, ACTIONS.CLEAR_ERRORS, function (data) {
     return {
-        type: ACTIONS.START_VALIDATION
+        type: ACTIONS.CLEAR_ERRORS
+    };
+}), _defineProperty(_ACTIONS$, ACTIONS.VALIDATION_ERRORS, function (data) {
+    return {
+        type: ACTIONS.VALIDATION_ERRORS,
+        data: data
     };
 }), _ACTIONS$);
 
@@ -183,38 +194,27 @@ var appendModelPrefix = function appendModelPrefix(value, prefix) {
 
 var actionHandlers = (_actionHandlers = {}, _defineProperty(_actionHandlers, ACTIONS.SET_INITIAL_STATE, function (state, action) {
     return Object.assign({}, state, action.data);
-}), _defineProperty(_actionHandlers, ACTIONS.START_VALIDATION, function (state) {
+}), _defineProperty(_actionHandlers, ACTIONS.CLEAR_ERRORS, function (state) {
     return Object.assign({}, state, {
         groups: Object.keys(state.groups).reduce(function (acc, group) {
             acc[group] = Object.assign({}, state.groups[group], {
-                errorDOM: false,
                 errorMessages: [],
                 valid: true
             });
             return acc;
         }, {})
     });
+}), _defineProperty(_actionHandlers, ACTIONS.VALIDATION_ERRORS, function (state, action) {
+    return Object.assign({}, state, {
+        groups: Object.keys(state.groups).reduce(function (acc, group) {
+            acc[group] = Object.assign({}, state.groups[group], action.data[group]);
+            return acc;
+        }, {})
+    });
 }), _actionHandlers);
 var reducers = createReducer({}, actionHandlers);
 
-var clearErrors = function clearErrors(state) {
-    for (var group in state.groups) {
-        if (state.groups[group].errorDOM) removeError(group);
-    }
-};
-var removeError = function removeError(group) {
-    group.errorDOM.parentNode.removeChild(group.errorDOM);
-    if (group.serverErrorNode) {
-        group.serverErrorNode.classList.remove(DOTNET_CLASSNAMES.ERROR);
-        group.serverErrorNode.classList.add(DOTNET_CLASSNAMES.VALID);
-    }
-    group.fields.forEach(function (field) {
-        field.removeAttribute('aria-invalid');
-    }); //or should i set this to false if field passes validation?
-    delete group.errorDOM; //??
-};
-
-var render = { clearErrors: clearErrors };
+// import render from '../renderer';
 
 var state$1 = {};
 
@@ -224,18 +224,20 @@ var getState = function getState() {
     return state$1;
 };
 
-var dispatch = function dispatch(action, renderers) {
+var dispatch = function dispatch(action, listeners) {
     state$1 = action ? reducers(state$1, action) : state$1;
     // window.STATE_HISTORY.push({[action.type]: state});
     console.log(_defineProperty({}, action.type, state$1));
-    if (!renderers) return;
-    renderers.forEach(function (renderer) {
-        render[renderer] ? render[renderer](state$1) : renderer(state$1);
+    if (!listeners) return;
+    listeners.forEach(function (listener) {
+        listener(state$1);
+        // render[renderer] ? render[renderer](state) : renderer(state);
     });
 };
 
 var Store = {
     dispatch: dispatch,
+
     getState: getState
 };
 
@@ -338,7 +340,7 @@ var methods = {
             }).then(function (data) {
                 resolve(data);
             }).catch(function (res) {
-                resolve(res);
+                resolve('Server error: ' + res);
             });
         });
     }
@@ -486,7 +488,7 @@ var assembleValidationGroup = function assembleValidationGroup(acc, input) {
     }, acc;
 };
 
-var extractErrorMessage = function extractErrorMessage(validator, group) {
+var extractErrorMessage = function extractErrorMessage(validator) {
     return validator.message || messages[validator.type](validator.params !== undefined ? validator.params : null);
 };
 
@@ -504,9 +506,17 @@ var getInitialState = function getInitialState(form) {
     };
 };
 
+var reduceGroupValidityState = function reduceGroupValidityState(acc, curr) {
+    if (curr !== true) acc = false;
+    return acc;
+};
+
 var getValidityState = function getValidityState(groups) {
+    // let groupValidators = [];
+    // for(let group in groups) groupValidators.push(getGroupValidityState(groups[group]));
+    // return Promise.all(groupValidators);
     return Promise.all(Object.keys(groups).map(function (group) {
-        return _defineProperty({}, group, getGroupValidityState(groups[group]));
+        return getGroupValidityState(groups[group]);
     }));
 };
 
@@ -514,50 +524,75 @@ var getGroupValidityState = function getGroupValidityState(group) {
     var hasError = false;
     return Promise.all(group.validators.map(function (validator) {
         return new Promise(function (resolve) {
-            /*
-                @return 
-                     {
-                        valid: bool,
-                        errorMessages: []//just first?
-                    }
-            */
             if (validator.type !== 'remote') {
-                if (validate(group, validator)) resolve({ valid: true });else {
+                if (validate(group, validator)) resolve(true);else {
                     hasError = true;
-                    resolve({ valid: false, errorMessages: [extractErrorMessage(validator, group)] });
+                    resolve(false);
                 }
-            } else if (hasError) resolve({ valid: false });else validate(group, validator).then(function (res) {
-                if (res && res === true) resolve({ valid: true });else resolve({
-                    valid: false,
-                    errorMessages: [typeof res === 'boolean' ? extractErrorMessage(validator, group) : 'Server error: ' + res] });
+            } else if (hasError) resolve(false);else validate(group, validator).then(function (res) {
+                resolve(res);
             });
-            //to do?
-            //only perform the remote validation if all else passes
-
-            //refactor, extract this whole fn...
-            // if(validator.type !== 'remote'){
-            // 	if(validate(group, validator)) resolve(true);
-            // 	else {
-            // 		//mutation and side effect...
-            // 		group.valid = false;
-            // 		group.errorMessages.push(extractErrorMessage(validator, group));
-            // 		resolve(false);
-            // 	}
-            // }
-            // else validate(group, validator)
-            // 		.then(res => {
-            // 			if(res && res === true) resolve(true);								
-            // 			else {
-            // 				//mutation, side effect, and un-DRY...
-            // 				group.valid = false;
-            // 				group.errorMessages.push(typeof res === 'boolean' 
-            // 														? extractErrorMessage(validator, group)
-            // 														: `Server error: ${res}`);
-            // 				resolve(false);
-            // 			}
-            // 		});
         });
     }));
+};
+
+//retain errorNodes in closure, not state
+var errorNodes = {};
+
+var h = function h(nodeName, attributes, text) {
+    var node = document.createElement(nodeName);
+
+    for (var prop in attributes) {
+        node.setAttribute(prop, attributes[prop]);
+    }if (text !== undefined && text.length) node.appendChild(document.createTextNode(text));
+
+    return node;
+};
+
+var createErrorTextNode = function createErrorTextNode(group, msg) {
+    var node = document.createTextNode(msg);
+
+    group.serverErrorNode.classList.remove(DOTNET_CLASSNAMES.VALID);
+    group.serverErrorNode.classList.add(DOTNET_CLASSNAMES.ERROR);
+
+    return group.serverErrorNode.appendChild(node);
+};
+
+var clearError = function clearError(groupName, state) {
+    errorNodes[groupName].parentNode.removeChild(errorNodes[groupName]);
+    if (state.groups[groupName].serverErrorNode) {
+        state.groups[groupName].serverErrorNode.classList.remove(DOTNET_CLASSNAMES.ERROR);
+        state.groups[groupName].serverErrorNode.classList.add(DOTNET_CLASSNAMES.VALID);
+    }
+    state.groups[groupName].fields.forEach(function (field) {
+        field.removeAttribute('aria-invalid');
+    });
+    delete errorNodes[groupName];
+};
+
+var clearErrors = function clearErrors(state) {
+    Object.keys(errorNodes).forEach(function (name) {
+        clearError(name, state);
+    });
+};
+
+var renderErrors = function renderErrors(state) {
+    Object.keys(state.groups).forEach(function (groupName) {
+        if (!state.groups[groupName].valid) renderError(groupName, state)();
+    });
+};
+
+var renderError = function renderError(groupName, state) {
+    return function () {
+        if (errorNodes[groupName]) clearError(groupName, state);
+
+        errorNodes[groupName] = state.groups[groupName].serverErrorNode ? createErrorTextNode(state.groups[groupName], state.groups[groupName].errorMessages[0]) : state.groups[groupName].fields[state.groups[groupName].fields.length - 1].parentNode.appendChild(h('div', { class: DOTNET_CLASSNAMES.ERROR }, state.groups[groupName].errorMessages[0]));
+
+        //set aria-invalid on invalid inputs
+        state.groups[groupName].fields.forEach(function (field) {
+            field.setAttribute('aria-invalid', 'true');
+        });
+    };
 };
 
 // import { TRIGGER_EVENTS, KEY_CODES, DATA_ATTRIBUTES } from  './constants';
@@ -577,23 +612,34 @@ var factory = function factory(form, settings) {
         e.preventDefault();
 
         //pass subscribed side-effects in action..?
-        Store.dispatch(ACTIONS$1.START_VALIDATION(), ['clearErrors']);
+        //or add subscribe fn to store?
+        Store.dispatch(ACTIONS$1.CLEAR_ERRORS(), [clearErrors]);
 
-        //dispatch valdate
         getValidityState(Store.getState().groups).then(function (validityState) {
-            var _ref3;
+            var _ref2;
 
-            console.log((_ref3 = []).concat.apply(_ref3, _toConsumableArray(validityState)));
-            // Store.dispatch(ACTIONS.START_VALIDATION(), ['clearErrors']);
-            //submit
-            // if(![].concat(...res).includes(false)) form.submit();
-            // else {
-            //     //dispatch errors
-            //     render(state.group);
-            //     //dispatch init real-time validation
+            //either have connected ValidtionContainer that dispatches updates to the store for group vaildation states
+            //requires adding subscribe function... which we might need anyway...
+            //or extract validity booleans and map onto validation groups in reducer?
+            //let's try the second one for now...
 
-            //     // initRealTimeValidation();
-            // }
+            //no errors (all true, no false or error Strings), just submit
+            if ((_ref2 = []).concat.apply(_ref2, _toConsumableArray(validityState)).reduce(reduceGroupValidityState, true)) return form.submit();
+
+            Store.dispatch(ACTIONS$1.VALIDATION_ERRORS(Object.keys(Store.getState().groups).reduce(function (acc, group, i) {
+                //reeeeeeeefactor pls ;_;
+                var groupValidityState = validityState[i].reduce(reduceGroupValidityState, true),
+                    errorMessages = validityState[i].reduce(function (acc, validity, j) {
+                    return validity === true ? acc : [].concat(_toConsumableArray(acc), [typeof validity === 'boolean' ? extractErrorMessage(Store.getState().groups[group].validators[j]) : validity]);
+                }, []);
+
+                return acc[group] = {
+                    valid: groupValidityState,
+                    errorMessages: errorMessages
+                }, acc;
+            }, {})), [renderErrors]);
+
+            // initRealTimeValidation();
         });
     });
 
