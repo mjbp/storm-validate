@@ -31,7 +31,7 @@ export const createErrorNode = (group, msg) => {
     return node;
 }
 
-const clearError = (groupName, state) => {
+export const clearError = groupName => state => {
     errorNodes[groupName].parentNode.removeChild(errorNodes[groupName]);
     if(state.groups[groupName].serverErrorNode) {
         state.groups[groupName].serverErrorNode.classList.remove(DOTNET_CLASSNAMES.ERROR);
@@ -43,17 +43,17 @@ const clearError = (groupName, state) => {
 
 export const clearErrors = state => {
     Object.keys(errorNodes).forEach(name => {
-        clearError(name, state);
+        clearError(name)(state);
     });
 };
 
 export const renderErrors = state => {
     Object.keys(state.groups).forEach(groupName => {
-        if(!state.groups[groupName].valid) renderError(groupName, state)();
+        if(!state.groups[groupName].valid) renderError(groupName)(state);
     })
 };
 
-export const renderError = (groupName, state) => () => {
+export const renderError = groupName => state => {
     if(errorNodes[groupName]) clearError(groupName, state);
     
     errorNodes[groupName] = 

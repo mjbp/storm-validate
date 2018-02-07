@@ -101,7 +101,7 @@ export const getValidityState = groups => {
         );
 };
 
-const getGroupValidityState = group => {
+export const getGroupValidityState = group => {
     let hasError = false;
 	return Promise.all(group.validators.map(validator => {
         return new Promise(resolve => {

@@ -12,6 +12,14 @@ const actionHandlers = {
             return acc;
         }, {})
     }),
+    [ACTIONS.CLEAR_ERROR]: (state, action) => Object.assign({}, state, {
+        groups: Object.assign({}, state.groups, {
+            [action.data]: Object.assign({}, state.groups[action.data], {
+                errorMessages: [],
+                valid: true
+            })
+        })
+    }),
     [ACTIONS.VALIDATION_ERRORS]: (state, action) => {
         return Object.assign({}, state, { 
             groups: Object.keys(state.groups).reduce((acc, group) => {
@@ -19,6 +27,16 @@ const actionHandlers = {
                 return acc;
             }, {})
         });
+    },
+    [ACTIONS.VALIDATION_ERROR]: (state, action) => {
+        return Object.assign({}, state, {
+            groups: Object.assign({}, state.groups, {
+                [action.data.group]: Object.assign({}, state.groups[action.data.group], {
+                    errorMessages: action.data.errorMessages,
+                    valid: false
+                })
+            })
+        })
     }
 };
 export default createReducer({}, actionHandlers);

@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.4.5: Wed, 07 Feb 2018 15:43:48 GMT
+ * @version 0.4.5: Wed, 07 Feb 2018 21:29:04 GMT
  * @author stormid
  * @license MIT
  */
@@ -39,7 +39,9 @@ var defaults = {
 var ACTIONS = {
     SET_INITIAL_STATE: 'SET_INITIAL_STATE',
     CLEAR_ERRORS: 'CLEAR_ERRORS',
-    VALIDATION_ERRORS: 'VALIDATION_ERRORS'
+    VALIDATION_ERRORS: 'VALIDATION_ERRORS',
+    VALIDATION_ERROR: 'VALIDATION_ERROR',
+    CLEAR_ERROR: 'CLEAR_ERROR'
 };
 
 //https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address
@@ -90,16 +92,34 @@ var ACTIONS$1 = (_ACTIONS$ = {}, _defineProperty(_ACTIONS$, ACTIONS.SET_INITIAL_
     return {
         type: ACTIONS.CLEAR_ERRORS
     };
+}), _defineProperty(_ACTIONS$, ACTIONS.CLEAR_ERROR, function (data) {
+    return {
+        type: ACTIONS.CLEAR_ERROR,
+        data: data
+    };
 }), _defineProperty(_ACTIONS$, ACTIONS.VALIDATION_ERRORS, function (data) {
     return {
         type: ACTIONS.VALIDATION_ERRORS,
         data: data
     };
+}), _defineProperty(_ACTIONS$, ACTIONS.VALIDATION_ERROR, function (data) {
+    return {
+        type: ACTIONS.VALIDATION_ERROR,
+        data: data
+    };
 }), _ACTIONS$);
+
+var isSelect = function isSelect(field) {
+    return field.nodeName.toLowerCase() === 'select';
+};
 
 var isCheckable = function isCheckable(field) {
     return (/radio|checkbox/i.test(field.type)
     );
+};
+
+var isFile = function isFile(field) {
+    return field.getAttribute('type') === 'file';
 };
 
 var isRequired = function isRequired(group) {
@@ -128,6 +148,10 @@ var groupValueReducer = function groupValueReducer(acc, input) {
 
 var extractValueFromGroup = function extractValueFromGroup(group) {
     return group.hasOwnProperty('fields') ? group.fields.reduce(groupValueReducer, '') : group.reduce(groupValueReducer, '');
+};
+
+var chooseRealTimeEvent = function chooseRealTimeEvent(input) {
+    return ['input', 'change'][Number(isCheckable(input) || isSelect(input) || isFile(input))];
 };
 
 var pipe = function pipe() {
@@ -204,12 +228,26 @@ var actionHandlers = (_actionHandlers = {}, _defineProperty(_actionHandlers, ACT
             return acc;
         }, {})
     });
+}), _defineProperty(_actionHandlers, ACTIONS.CLEAR_ERROR, function (state, action) {
+    return Object.assign({}, state, {
+        groups: Object.assign({}, state.groups, _defineProperty({}, action.data, Object.assign({}, state.groups[action.data], {
+            errorMessages: [],
+            valid: true
+        })))
+    });
 }), _defineProperty(_actionHandlers, ACTIONS.VALIDATION_ERRORS, function (state, action) {
     return Object.assign({}, state, {
         groups: Object.keys(state.groups).reduce(function (acc, group) {
             acc[group] = Object.assign({}, state.groups[group], action.data[group]);
             return acc;
         }, {})
+    });
+}), _defineProperty(_actionHandlers, ACTIONS.VALIDATION_ERROR, function (state, action) {
+    return Object.assign({}, state, {
+        groups: Object.assign({}, state.groups, _defineProperty({}, action.data.group, Object.assign({}, state.groups[action.data.group], {
+            errorMessages: action.data.errorMessages,
+            valid: false
+        })))
     });
 }), _actionHandlers);
 var reducers = createReducer({}, actionHandlers);
@@ -558,34 +596,34 @@ var createErrorTextNode = function createErrorTextNode(group, msg) {
     return group.serverErrorNode.appendChild(node);
 };
 
-var clearError = function clearError(groupName, state) {
-    errorNodes[groupName].parentNode.removeChild(errorNodes[groupName]);
-    if (state.groups[groupName].serverErrorNode) {
-        state.groups[groupName].serverErrorNode.classList.remove(DOTNET_CLASSNAMES.ERROR);
-        state.groups[groupName].serverErrorNode.classList.add(DOTNET_CLASSNAMES.VALID);
-    }
-    state.groups[groupName].fields.forEach(function (field) {
-        field.removeAttribute('aria-invalid');
-    });
-    delete errorNodes[groupName];
+var clearError = function clearError(groupName) {
+    return function (state) {
+        errorNodes[groupName].parentNode.removeChild(errorNodes[groupName]);
+        if (state.groups[groupName].serverErrorNode) {
+            state.groups[groupName].serverErrorNode.classList.remove(DOTNET_CLASSNAMES.ERROR);
+            state.groups[groupName].serverErrorNode.classList.add(DOTNET_CLASSNAMES.VALID);
+        }
+        state.groups[groupName].fields.forEach(function (field) {
+            field.removeAttribute('aria-invalid');
+        });
+        delete errorNodes[groupName];
+    };
 };
 
 var clearErrors = function clearErrors(state) {
     Object.keys(errorNodes).forEach(function (name) {
-        clearError(name, state);
+        clearError(name)(state);
     });
 };
 
 var renderErrors = function renderErrors(state) {
     Object.keys(state.groups).forEach(function (groupName) {
-        if (!state.groups[groupName].valid) renderError(groupName, state)();
+        if (!state.groups[groupName].valid) renderError(groupName)(state);
     });
 };
 
-var renderError = function renderError(groupName, state) {
-    return function () {
-        if (errorNodes[groupName]) clearError(groupName, state);
-
+var renderError = function renderError(groupName) {
+    return function (state) {
         errorNodes[groupName] = state.groups[groupName].serverErrorNode ? createErrorTextNode(state.groups[groupName], state.groups[groupName].errorMessages[0]) : state.groups[groupName].fields[state.groups[groupName].fields.length - 1].parentNode.appendChild(h('div', { class: DOTNET_CLASSNAMES.ERROR }, state.groups[groupName].errorMessages[0]));
 
         //set aria-invalid on invalid inputs
@@ -595,14 +633,42 @@ var renderError = function renderError(groupName, state) {
     };
 };
 
-// import { TRIGGER_EVENTS, KEY_CODES, DATA_ATTRIBUTES } from  './constants';
-// import { clear, render } from './manage-errors';
-
 var validate$1 = function validate$1() {};
 
 var addMethod = function addMethod(type, groupName, method, message) {
     if (type === undefined || groupName === undefined || method === undefined || message === undefined) return console.warn('Custom validation method cannot be added.');
     state.groups[groupName].validators.push({ type: type, method: method, message: message });
+};
+
+var realTimeValidation = function realTimeValidation() {
+    var handler = function handler(groupName) {
+        return function () {
+            if (!Store.getState().groups[groupName].valid) Store.dispatch(ACTIONS$1.CLEAR_ERROR(groupName), [clearError(groupName)]);
+            getGroupValidityState(Store.getState().groups[groupName]).then(function (res) {
+                if (!res.reduce(reduceGroupValidityState, true)) Store.dispatch(ACTIONS$1.VALIDATION_ERROR({
+                    group: groupName,
+                    errorMessages: res.reduce(function (acc, validity, j) {
+                        return validity === true ? acc : [].concat(_toConsumableArray(acc), [typeof validity === 'boolean' ? extractErrorMessage(Store.getState().groups[groupName].validators[j]) : validity]);
+                    }, [])
+                }), [renderError(groupName)]);
+            });
+        };
+    };
+
+    Object.keys(Store.getState().groups).forEach(function (groupName) {
+        Store.getState().groups[groupName].fields.forEach(function (input) {
+            input.addEventListener(chooseRealTimeEvent(input), handler(groupName));
+        });
+        var equalToValidator = Store.getState().groups[groupName].validators.filter(function (validator) {
+            return validator.type === 'equalto';
+        });
+
+        equalToValidator.length > 0 && equalToValidator[0].params.other.forEach(function (subgroup) {
+            subgroup.forEach(function (item) {
+                item.addEventListener('blur', handler(groupName));
+            });
+        });
+    });
 };
 
 var factory = function factory(form, settings) {
@@ -611,17 +677,10 @@ var factory = function factory(form, settings) {
     form.addEventListener('submit', function (e) {
         e.preventDefault();
 
-        //pass subscribed side-effects in action..?
-        //or add subscribe fn to store?
         Store.dispatch(ACTIONS$1.CLEAR_ERRORS(), [clearErrors]);
 
         getValidityState(Store.getState().groups).then(function (validityState) {
             var _ref2;
-
-            //either have connected ValidtionContainer that dispatches updates to the store for group vaildation states
-            //requires adding subscribe function... which we might need anyway...
-            //or extract validity booleans and map onto validation groups in reducer?
-            //let's try the second one for now...
 
             //no errors (all true, no false or error Strings), just submit
             if ((_ref2 = []).concat.apply(_ref2, _toConsumableArray(validityState)).reduce(reduceGroupValidityState, true)) return form.submit();
@@ -639,7 +698,7 @@ var factory = function factory(form, settings) {
                 }, acc;
             }, {})), [renderErrors]);
 
-            // initRealTimeValidation();
+            realTimeValidation();
         });
     });
 

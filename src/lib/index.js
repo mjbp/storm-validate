@@ -1,10 +1,8 @@
 import ACTIONS from './actions';
-// import { TRIGGER_EVENTS, KEY_CODES, DATA_ATTRIBUTES } from  './constants';
 import Store from './store';
-import { getInitialState, getValidityState, extractErrorMessage, reduceGroupValidityState } from './utils/validators';
-import { clearErrors, renderErrors }  from './utils/dom';
-
-// import { clear, render } from './manage-errors';
+import { getInitialState, getValidityState, getGroupValidityState, extractErrorMessage, reduceGroupValidityState } from './utils/validators';
+import { clearErrors, clearError, renderError, renderErrors }  from './utils/dom';
+import { chooseRealTimeEvent } from './utils';
 
 const validate = () => {};
 
@@ -13,23 +11,48 @@ const addMethod = (type, groupName, method, message) => {
     state.groups[groupName].validators.push({type, method, message});
 };
 
+const realTimeValidation = () => {
+    let handler = groupName => () => {
+        if(!Store.getState().groups[groupName].valid) Store.dispatch(ACTIONS.CLEAR_ERROR(groupName), [clearError(groupName)]);
+        getGroupValidityState(Store.getState().groups[groupName])
+            .then(res => {
+                if(!res.reduce(reduceGroupValidityState, true)) 
+                    Store.dispatch(ACTIONS.VALIDATION_ERROR({
+                        group: groupName,
+                        errorMessages: res.reduce((acc, validity, j) => {
+                                            return validity === true 
+                                                        ? acc 
+                                                        : [...acc, typeof validity === 'boolean' 
+                                                                    ? extractErrorMessage(Store.getState().groups[groupName].validators[j])
+                                                                    : validity];
+                                        }, [])
+                    }), [renderError(groupName)]);
+            });
+    };
+
+    Object.keys(Store.getState().groups).forEach(groupName => {
+        Store.getState().groups[groupName].fields.forEach(input => {
+            input.addEventListener(chooseRealTimeEvent(input), handler(groupName));
+        });
+        let equalToValidator = Store.getState().groups[groupName].validators.filter(validator => validator.type === 'equalto');
+        
+        equalToValidator.length > 0 
+            && equalToValidator[0].params.other.forEach(subgroup => {
+                subgroup.forEach(item => { item.addEventListener('blur', handler(groupName)); });
+            });
+    });
+};
+
 export default (form, settings) => {
     Store.dispatch(ACTIONS.SET_INITIAL_STATE(getInitialState(form)));
 
     form.addEventListener('submit', e => {
         e.preventDefault();
-        
-        //pass subscribed side-effects in action..?
-        //or add subscribe fn to store?
+
         Store.dispatch(ACTIONS.CLEAR_ERRORS(), [clearErrors]);
 
         getValidityState(Store.getState().groups)
             .then(validityState => {
-                //either have connected ValidtionContainer that dispatches updates to the store for group vaildation states
-                //requires adding subscribe function... which we might need anyway...
-                //or extract validity booleans and map onto validation groups in reducer?
-                //let's try the second one for now...
-
                 //no errors (all true, no false or error Strings), just submit
                 if([].concat(...validityState).reduce(reduceGroupValidityState, true)) return form.submit();
 
@@ -54,7 +77,7 @@ export default (form, settings) => {
                         }, {})), [renderErrors]
                 );
 
-                // initRealTimeValidation();
+                realTimeValidation();
             });
     });
 
