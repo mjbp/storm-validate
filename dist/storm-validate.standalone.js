@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.4.5: Wed, 07 Feb 2018 21:29:04 GMT
+ * @version 0.4.5: Wed, 07 Feb 2018 21:45:54 GMT
  * @author stormid
  * @license MIT
  */
@@ -640,6 +640,12 @@ var addMethod = function addMethod(type, groupName, method, message) {
     state.groups[groupName].validators.push({ type: type, method: method, message: message });
 };
 
+var reduceErrorMessages = function reduceErrorMessages(group) {
+    return function (acc, validity, j) {
+        return validity === true ? acc : [].concat(_toConsumableArray(acc), [typeof validity === 'boolean' ? extractErrorMessage(Store.getState().groups[group].validators[j]) : validity]);
+    };
+};
+
 var realTimeValidation = function realTimeValidation() {
     var handler = function handler(groupName) {
         return function () {
@@ -647,9 +653,7 @@ var realTimeValidation = function realTimeValidation() {
             getGroupValidityState(Store.getState().groups[groupName]).then(function (res) {
                 if (!res.reduce(reduceGroupValidityState, true)) Store.dispatch(ACTIONS$1.VALIDATION_ERROR({
                     group: groupName,
-                    errorMessages: res.reduce(function (acc, validity, j) {
-                        return validity === true ? acc : [].concat(_toConsumableArray(acc), [typeof validity === 'boolean' ? extractErrorMessage(Store.getState().groups[groupName].validators[j]) : validity]);
-                    }, [])
+                    errorMessages: res.reduce(reduceErrorMessages(groupName), [])
                 }), [renderError(groupName)]);
             });
         };
@@ -686,15 +690,9 @@ var factory = function factory(form, settings) {
             if ((_ref2 = []).concat.apply(_ref2, _toConsumableArray(validityState)).reduce(reduceGroupValidityState, true)) return form.submit();
 
             Store.dispatch(ACTIONS$1.VALIDATION_ERRORS(Object.keys(Store.getState().groups).reduce(function (acc, group, i) {
-                //reeeeeeeefactor pls ;_;
-                var groupValidityState = validityState[i].reduce(reduceGroupValidityState, true),
-                    errorMessages = validityState[i].reduce(function (acc, validity, j) {
-                    return validity === true ? acc : [].concat(_toConsumableArray(acc), [typeof validity === 'boolean' ? extractErrorMessage(Store.getState().groups[group].validators[j]) : validity]);
-                }, []);
-
                 return acc[group] = {
-                    valid: groupValidityState,
-                    errorMessages: errorMessages
+                    valid: validityState[i].reduce(reduceGroupValidityState, true),
+                    errorMessages: validityState[i].reduce(reduceErrorMessages(group), [])
                 }, acc;
             }, {})), [renderErrors]);
 

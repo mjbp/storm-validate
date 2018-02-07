@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.4.5: Wed, 07 Feb 2018 21:22:57 GMT
+ * @version 0.4.5: Wed, 07 Feb 2018 21:45:42 GMT
  * @author stormid
  * @license MIT
  */
@@ -243,7 +243,6 @@ var actionHandlers = (_actionHandlers = {}, _defineProperty(_actionHandlers, ACT
         }, {})
     });
 }), _defineProperty(_actionHandlers, ACTIONS.VALIDATION_ERROR, function (state, action) {
-    console.log(action);
     return Object.assign({}, state, {
         groups: Object.assign({}, state.groups, _defineProperty({}, action.data.group, Object.assign({}, state.groups[action.data.group], {
             errorMessages: action.data.errorMessages,
@@ -634,14 +633,17 @@ var renderError = function renderError(groupName) {
     };
 };
 
-// import { TRIGGER_EVENTS, KEY_CODES, DATA_ATTRIBUTES } from  './constants';
-// import { clear, render } from './manage-errors';
-
 var validate$1 = function validate$1() {};
 
 var addMethod = function addMethod(type, groupName, method, message) {
     if (type === undefined || groupName === undefined || method === undefined || message === undefined) return console.warn('Custom validation method cannot be added.');
     state.groups[groupName].validators.push({ type: type, method: method, message: message });
+};
+
+var reduceErrorMessages = function reduceErrorMessages(group) {
+    return function (acc, validity, j) {
+        return validity === true ? acc : [].concat(_toConsumableArray(acc), [typeof validity === 'boolean' ? extractErrorMessage(Store.getState().groups[group].validators[j]) : validity]);
+    };
 };
 
 var realTimeValidation = function realTimeValidation() {
@@ -651,14 +653,8 @@ var realTimeValidation = function realTimeValidation() {
             getGroupValidityState(Store.getState().groups[groupName]).then(function (res) {
                 if (!res.reduce(reduceGroupValidityState, true)) Store.dispatch(ACTIONS$1.VALIDATION_ERROR({
                     group: groupName,
-                    errorMessages: res.reduce(function (acc, validity, j) {
-                        return validity === true ? acc : [].concat(_toConsumableArray(acc), [typeof validity === 'boolean' ? extractErrorMessage(Store.getState().groups[groupName].validators[j]) : validity]);
-                    }, [])
+                    errorMessages: res.reduce(reduceErrorMessages(groupName), [])
                 }), [renderError(groupName)]);
-
-                //res.includes(false) 
-                // if(this.groups[group].errorDOM) this.removeError(group);
-                // if(res.includes(false)) this.renderError(group);
             });
         };
     };
@@ -694,15 +690,9 @@ var factory = function factory(form, settings) {
             if ((_ref2 = []).concat.apply(_ref2, _toConsumableArray(validityState)).reduce(reduceGroupValidityState, true)) return form.submit();
 
             Store.dispatch(ACTIONS$1.VALIDATION_ERRORS(Object.keys(Store.getState().groups).reduce(function (acc, group, i) {
-                //reeeeeeeefactor pls ;_;
-                var groupValidityState = validityState[i].reduce(reduceGroupValidityState, true),
-                    errorMessages = validityState[i].reduce(function (acc, validity, j) {
-                    return validity === true ? acc : [].concat(_toConsumableArray(acc), [typeof validity === 'boolean' ? extractErrorMessage(Store.getState().groups[group].validators[j]) : validity]);
-                }, []);
-
                 return acc[group] = {
-                    valid: groupValidityState,
-                    errorMessages: errorMessages
+                    valid: validityState[i].reduce(reduceGroupValidityState, true),
+                    errorMessages: validityState[i].reduce(reduceErrorMessages(group), [])
                 }, acc;
             }, {})), [renderErrors]);
 

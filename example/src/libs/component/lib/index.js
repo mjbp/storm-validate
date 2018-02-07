@@ -11,6 +11,14 @@ const addMethod = (type, groupName, method, message) => {
     state.groups[groupName].validators.push({type, method, message});
 };
 
+const reduceErrorMessages = group => (acc, validity, j) => {
+    return validity === true 
+                ? acc 
+                : [...acc, typeof validity === 'boolean' 
+                            ? extractErrorMessage(Store.getState().groups[group].validators[j])
+                            : validity];
+};
+
 const realTimeValidation = () => {
     let handler = groupName => () => {
         if(!Store.getState().groups[groupName].valid) Store.dispatch(ACTIONS.CLEAR_ERROR(groupName), [clearError(groupName)]);
@@ -19,13 +27,7 @@ const realTimeValidation = () => {
                 if(!res.reduce(reduceGroupValidityState, true)) 
                     Store.dispatch(ACTIONS.VALIDATION_ERROR({
                         group: groupName,
-                        errorMessages: res.reduce((acc, validity, j) => {
-                                            return validity === true 
-                                                        ? acc 
-                                                        : [...acc, typeof validity === 'boolean' 
-                                                                    ? extractErrorMessage(Store.getState().groups[groupName].validators[j])
-                                                                    : validity];
-                                        }, [])
+                        errorMessages: res.reduce(reduceErrorMessages(groupName), [])
                     }), [renderError(groupName)]);
             });
     };
@@ -58,21 +60,10 @@ export default (form, settings) => {
 
                 Store.dispatch(ACTIONS.VALIDATION_ERRORS(
                     Object.keys(Store.getState().groups)
-                        .reduce((acc, group, i) => {
-                            //reeeeeeeefactor pls ;_;
-                            let groupValidityState = validityState[i].reduce(reduceGroupValidityState, true),
-                                errorMessages = validityState[i]
-                                                    .reduce((acc, validity, j) => {
-                                                        return validity === true 
-                                                                    ? acc 
-                                                                    : [...acc, typeof validity === 'boolean' 
-                                                                                ? extractErrorMessage(Store.getState().groups[group].validators[j])
-                                                                                : validity];
-                                                    }, []);
-                                                                                                
+                        .reduce((acc, group, i) => {                                         
                             return acc[group] = {
-                                valid: groupValidityState,
-                                errorMessages: errorMessages
+                                valid: validityState[i].reduce(reduceGroupValidityState, true),
+                                errorMessages: validityState[i].reduce(reduceErrorMessages(group), [])
                             }, acc;
                         }, {})), [renderErrors]
                 );
