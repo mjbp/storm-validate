@@ -4,15 +4,13 @@ export const KEY_CODES = {
     ENTER: 13
 };
 
-export const ACTIONS = {
-    SET_INITIAL_STATE: 'SET_INITIAL_STATE',
+export const UPDATES = {
+    SET_INITIAL_MODEL: 'SET_INITIAL_MODEL',
     CLEAR_ERRORS: 'CLEAR_ERRORS',
     VALIDATION_ERRORS: 'VALIDATION_ERRORS',
     VALIDATION_ERROR: 'VALIDATION_ERROR',
     CLEAR_ERROR: 'CLEAR_ERROR'
 };
-
-export const CLASSNAMES = {};
 
 //https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address
 export const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;

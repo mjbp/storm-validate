@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.4.5: Thu, 08 Feb 2018 20:31:09 GMT
+ * @version 0.4.5: Thu, 08 Feb 2018 21:49:18 GMT
  * @author stormid
  * @license MIT
  */
@@ -24,7 +24,7 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _ACTIONS$, _actionHandlers;
+var _updates;
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
@@ -32,8 +32,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 var defaults = {};
 
-var ACTIONS = {
-    SET_INITIAL_STATE: 'SET_INITIAL_STATE',
+var UPDATES = {
+    SET_INITIAL_MODEL: 'SET_INITIAL_MODEL',
     CLEAR_ERRORS: 'CLEAR_ERRORS',
     VALIDATION_ERRORS: 'VALIDATION_ERRORS',
     VALIDATION_ERROR: 'VALIDATION_ERROR',
@@ -79,102 +79,64 @@ var DOTNET_CLASSNAMES = {
     ERROR: 'field-validation-error'
 };
 
-var ACTIONS$1 = (_ACTIONS$ = {}, _defineProperty(_ACTIONS$, ACTIONS.SET_INITIAL_STATE, function (data) {
-    return {
-        type: ACTIONS.SET_INITIAL_STATE,
-        data: data
-    };
-}), _defineProperty(_ACTIONS$, ACTIONS.CLEAR_ERRORS, function (data) {
-    return {
-        type: ACTIONS.CLEAR_ERRORS
-    };
-}), _defineProperty(_ACTIONS$, ACTIONS.CLEAR_ERROR, function (data) {
-    return {
-        type: ACTIONS.CLEAR_ERROR,
-        data: data
-    };
-}), _defineProperty(_ACTIONS$, ACTIONS.VALIDATION_ERRORS, function (data) {
-    return {
-        type: ACTIONS.VALIDATION_ERRORS,
-        data: data
-    };
-}), _defineProperty(_ACTIONS$, ACTIONS.VALIDATION_ERROR, function (data) {
-    return {
-        type: ACTIONS.VALIDATION_ERROR,
-        data: data
-    };
-}), _ACTIONS$);
-
-var createReducer = function createReducer(initialState, actionHandlers) {
-    return function () {
-        var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState;
-        var action = arguments[1];
-
-        if (actionHandlers.hasOwnProperty(action.type)) return actionHandlers[action.type](state, action);else return state;
-    };
-};
-
-var actionHandlers = (_actionHandlers = {}, _defineProperty(_actionHandlers, ACTIONS.SET_INITIAL_STATE, function (state, action) {
-    return Object.assign({}, state, action.data);
-}), _defineProperty(_actionHandlers, ACTIONS.CLEAR_ERRORS, function (state) {
-    return Object.assign({}, state, {
-        groups: Object.keys(state.groups).reduce(function (acc, group) {
-            acc[group] = Object.assign({}, state.groups[group], {
+var updates = (_updates = {}, _defineProperty(_updates, UPDATES.SET_INITIAL_MODEL, function (model, data) {
+    return Object.assign({}, model, data);
+}), _defineProperty(_updates, UPDATES.CLEAR_ERRORS, function (mdoel) {
+    return Object.assign({}, model, {
+        groups: Object.keys(model.groups).reduce(function (acc, group) {
+            acc[group] = Object.assign({}, model.groups[group], {
                 errorMessages: [],
                 valid: true
             });
             return acc;
         }, {})
     });
-}), _defineProperty(_actionHandlers, ACTIONS.CLEAR_ERROR, function (state, action) {
-    return Object.assign({}, state, {
-        groups: Object.assign({}, state.groups, _defineProperty({}, action.data, Object.assign({}, state.groups[action.data], {
+}), _defineProperty(_updates, UPDATES.CLEAR_ERROR, function (model, data) {
+    return Object.assign({}, model, {
+        groups: Object.assign({}, model.groups, _defineProperty({}, data, Object.assign({}, model.groups[data], {
             errorMessages: [],
             valid: true
         })))
     });
-}), _defineProperty(_actionHandlers, ACTIONS.VALIDATION_ERRORS, function (state, action) {
-    return Object.assign({}, state, {
-        groups: Object.keys(state.groups).reduce(function (acc, group) {
-            acc[group] = Object.assign({}, state.groups[group], action.data[group]);
+}), _defineProperty(_updates, UPDATES.VALIDATION_ERRORS, function (model, data) {
+    return Object.assign({}, model, {
+        groups: Object.keys(model.groups).reduce(function (acc, group) {
+            acc[group] = Object.assign({}, model.groups[group], data[group]);
             return acc;
         }, {})
     });
-}), _defineProperty(_actionHandlers, ACTIONS.VALIDATION_ERROR, function (state, action) {
-    return Object.assign({}, state, {
-        groups: Object.assign({}, state.groups, _defineProperty({}, action.data.group, Object.assign({}, state.groups[action.data.group], {
-            errorMessages: action.data.errorMessages,
+}), _defineProperty(_updates, UPDATES.VALIDATION_ERROR, function (model, data) {
+    return Object.assign({}, model, {
+        groups: Object.assign({}, model.groups, _defineProperty({}, data.group, Object.assign({}, model.groups[data.group], {
+            errorMessages: data.errorMessages,
             valid: false
         })))
     });
-}), _actionHandlers);
-var reducers = createReducer({}, actionHandlers);
+}), _updates);
 
 // import render from '../renderer';
 
-var state$1 = {};
+var model$1 = {};
 
-window.STATE_HISTORY = [];
+window.MODEL_HISTORY = [];
 
-var getState = function getState() {
-    return state$1;
+var getModel = function getModel() {
+    return model$1;
 };
 
-var dispatch = function dispatch(action, listeners) {
-    state$1 = action ? reducers(state$1, action) : state$1;
-    // window.STATE_HISTORY.push({[action.type]: state});
-    console.log(_defineProperty({}, action.type, state$1));
-    if (!listeners) return;
-    listeners.forEach(function (listener) {
-        listener(state$1);
-        // render[renderer] ? render[renderer](state) : renderer(state);
+var update = function update(type, nextModel, effects) {
+    model$1 = nextModel ? updates[type](model$1, nextModel) : model$1;
+    // window.MODEL_HISTORY.push({[action.type]: model});
+    console.log(_defineProperty({}, type, model$1));
+    if (!effects) return;
+    effects.forEach(function (effect) {
+        effect(model$1);
     });
 };
 
-var Store = {
-    dispatch: dispatch,
-
-    getState: getState
+var Model = {
+    update: update,
+    getModel: getModel
 };
 
 var isCheckable = function isCheckable(field) {
@@ -518,9 +480,9 @@ var extractErrorMessage = function extractErrorMessage(validator) {
     return validator.message || messages[validator.type](validator.params !== undefined ? validator.params : null);
 };
 
-var reduceErrorMessages = function reduceErrorMessages(group, state) {
+var reduceErrorMessages = function reduceErrorMessages(group, model) {
     return function (acc, validity, j) {
-        return validity === true ? acc : [].concat(_toConsumableArray(acc), [typeof validity === 'boolean' ? extractErrorMessage(state.groups[group].validators[j]) : validity]);
+        return validity === true ? acc : [].concat(_toConsumableArray(acc), [typeof validity === 'boolean' ? extractErrorMessage(model.groups[group].validators[j]) : validity]);
     };
 };
 
@@ -532,24 +494,24 @@ var removeUnvalidatableGroups = function removeUnvalidatableGroups(groups) {
     }return validationGroups;
 };
 
-var getInitialState = function getInitialState(form) {
+var getInitialModel = function getInitialModel(form) {
     return {
         groups: removeUnvalidatableGroups([].slice.call(form.querySelectorAll('input:not([type=submit]), textarea, select')).reduce(assembleValidationGroup, {}))
     };
 };
 
-var reduceGroupValidityState = function reduceGroupValidityState(acc, curr) {
+var reduceGroupValidityModel = function reduceGroupValidityModel(acc, curr) {
     if (curr !== true) acc = false;
     return acc;
 };
 
-var getValidityState = function getValidityState(groups) {
+var getValidityModel = function getValidityModel(groups) {
     return Promise.all(Object.keys(groups).map(function (group) {
-        return getGroupValidityState(groups[group]);
+        return getGroupValidityModel(groups[group]);
     }));
 };
 
-var getGroupValidityState = function getGroupValidityState(group) {
+var getGroupValidityModel = function getGroupValidityModel(group) {
     var hasError = false;
     return Promise.all(group.validators.map(function (validator) {
         return new Promise(function (resolve) {
@@ -569,7 +531,6 @@ var resolveRealTimeValidationEvent = function resolveRealTimeValidationEvent(inp
     return ['input', 'change'][Number(isCheckable(input) || isSelect(input) || isFile(input))];
 };
 
-//retain errorNodes in closure, not state
 var errorNodes = {};
 
 var h = function h(nodeName, attributes, text) {
@@ -592,38 +553,38 @@ var createErrorTextNode = function createErrorTextNode(group, msg) {
 };
 
 var clearError = function clearError(groupName) {
-    return function (state) {
+    return function (model) {
         errorNodes[groupName].parentNode.removeChild(errorNodes[groupName]);
-        if (state.groups[groupName].serverErrorNode) {
-            state.groups[groupName].serverErrorNode.classList.remove(DOTNET_CLASSNAMES.ERROR);
-            state.groups[groupName].serverErrorNode.classList.add(DOTNET_CLASSNAMES.VALID);
+        if (model.groups[groupName].serverErrorNode) {
+            model.groups[groupName].serverErrorNode.classList.remove(DOTNET_CLASSNAMES.ERROR);
+            model.groups[groupName].serverErrorNode.classList.add(DOTNET_CLASSNAMES.VALID);
         }
-        state.groups[groupName].fields.forEach(function (field) {
+        model.groups[groupName].fields.forEach(function (field) {
             field.removeAttribute('aria-invalid');
         });
         delete errorNodes[groupName];
     };
 };
 
-var clearErrors = function clearErrors(state) {
+var clearErrors = function clearErrors(model) {
     Object.keys(errorNodes).forEach(function (name) {
-        clearError(name)(state);
+        clearError(name)(model);
     });
 };
 
-var renderErrors = function renderErrors(state) {
-    Object.keys(state.groups).forEach(function (groupName) {
-        if (!state.groups[groupName].valid) renderError(groupName)(state);
+var renderErrors = function renderErrors(model) {
+    Object.keys(model.groups).forEach(function (groupName) {
+        if (!model.groups[groupName].valid) renderError(groupName)(model);
     });
 };
 
 var renderError = function renderError(groupName) {
-    return function (state) {
-        if (errorNodes[groupName]) clearError(groupName)(state);
+    return function (model) {
+        if (errorNodes[groupName]) clearError(groupName)(model);
 
-        errorNodes[groupName] = state.groups[groupName].serverErrorNode ? createErrorTextNode(state.groups[groupName], state.groups[groupName].errorMessages[0]) : state.groups[groupName].fields[state.groups[groupName].fields.length - 1].parentNode.appendChild(h('div', { class: DOTNET_CLASSNAMES.ERROR }, state.groups[groupName].errorMessages[0]));
+        errorNodes[groupName] = model.groups[groupName].serverErrorNode ? createErrorTextNode(model.groups[groupName], model.groups[groupName].errorMessages[0]) : model.groups[groupName].fields[model.groups[groupName].fields.length - 1].parentNode.appendChild(h('div', { class: DOTNET_CLASSNAMES.ERROR }, model.groups[groupName].errorMessages[0]));
 
-        state.groups[groupName].fields.forEach(function (field) {
+        model.groups[groupName].fields.forEach(function (field) {
             field.setAttribute('aria-invalid', 'true');
         });
     };
@@ -631,20 +592,20 @@ var renderError = function renderError(groupName) {
 
 var validate$1 = function validate$1(e) {
     e && e.preventDefault();
-    Store.dispatch(ACTIONS$1.CLEAR_ERRORS(), [clearErrors]);
+    Model.update(UPDATES.CLEAR_ERRORS, null, [clearErrors]);
 
-    getValidityState(Store.getState().groups).then(function (validityState) {
+    getValidityModel(Model.getModel().groups).then(function (validityModel) {
         var _ref2;
 
         //no errors (all true, no false or error Strings), just submit
-        if (e && e.target && (_ref2 = []).concat.apply(_ref2, _toConsumableArray(validityState)).reduce(reduceGroupValidityState, true)) return form.submit();
+        if (e && e.target && (_ref2 = []).concat.apply(_ref2, _toConsumableArray(validityModel)).reduce(reduceGroupValidityModel, true)) return form.submit();
 
-        Store.dispatch(ACTIONS$1.VALIDATION_ERRORS(Object.keys(Store.getState().groups).reduce(function (acc, group, i) {
+        Model.update(UPDATES.VALIDATION_ERRORS, Object.keys(Model.getModel().groups).reduce(function (acc, group, i) {
             return acc[group] = {
-                valid: validityState[i].reduce(reduceGroupValidityState, true),
-                errorMessages: validityState[i].reduce(reduceErrorMessages(group, Store.getState()), [])
+                valid: validityModel[i].reduce(reduceGroupValidityModel, true),
+                errorMessages: validityModel[i].reduce(reduceErrorMessages(group, Model.getModel()), [])
             }, acc;
-        }, {})), [renderErrors]);
+        }, {}), [renderErrors]);
 
         realTimeValidation();
     });
@@ -652,27 +613,27 @@ var validate$1 = function validate$1(e) {
 
 var addMethod = function addMethod(type, groupName, method, message) {
     if (type === undefined || groupName === undefined || method === undefined || message === undefined) return console.warn('Custom validation method cannot be added.');
-    state.groups[groupName].validators.push({ type: type, method: method, message: message });
+    model.groups[groupName].validators.push({ type: type, method: method, message: message });
 };
 
 var realTimeValidation = function realTimeValidation() {
     var handler = function handler(groupName) {
         return function () {
-            if (!Store.getState().groups[groupName].valid) Store.dispatch(ACTIONS$1.CLEAR_ERROR(groupName), [clearError(groupName)]);
-            getGroupValidityState(Store.getState().groups[groupName]).then(function (res) {
-                if (!res.reduce(reduceGroupValidityState, true)) Store.dispatch(ACTIONS$1.VALIDATION_ERROR({
+            if (!Model.getModel().groups[groupName].valid) Model.update(UPDATES.CLEAR_ERROR, groupName, [clearError(groupName)]);
+            getGroupValidityModel(Model.getModel().groups[groupName]).then(function (res) {
+                if (!res.reduce(reduceGroupValidityModel, true)) Model.update(UPDATES.VALIDATION_ERROR, {
                     group: groupName,
-                    errorMessages: res.reduce(reduceErrorMessages(groupName, Store.getState()), [])
-                }), [renderError(groupName)]);
+                    errorMessages: res.reduce(reduceErrorMessages(groupName, Model.getModel()), [])
+                }, [renderError(groupName)]);
             });
         };
     };
 
-    Object.keys(Store.getState().groups).forEach(function (groupName) {
-        Store.getState().groups[groupName].fields.forEach(function (input) {
+    Object.keys(Model.getModel().groups).forEach(function (groupName) {
+        Model.getModel().groups[groupName].fields.forEach(function (input) {
             input.addEventListener(resolveRealTimeValidationEvent(input), handler(groupName));
         });
-        var equalToValidator = Store.getState().groups[groupName].validators.filter(function (validator) {
+        var equalToValidator = Model.getModel().groups[groupName].validators.filter(function (validator) {
             return validator.type === 'equalto';
         });
 
@@ -685,12 +646,12 @@ var realTimeValidation = function realTimeValidation() {
 };
 
 var factory = function factory(form, settings) {
-    Store.dispatch(ACTIONS$1.SET_INITIAL_STATE(getInitialState(form)));
+    Model.update(UPDATES.SET_INITIAL_MODEL, getInitialModel(form));
 
     form.addEventListener('submit', validate$1);
 
     form.addEventListener('reset', function () {
-        Store.dispatch(ACTIONS$1.CLEAR_ERRORS(), [clearErrors]);
+        Model.update(UPDATES.CLEAR_ERRORS, null, [clearErrors]);
     });
 
     return {

@@ -72,11 +72,11 @@ export const assembleValidationGroup = (acc, input) => {
 
 const extractErrorMessage = validator => validator.message || messages[validator.type](validator.params !== undefined ? validator.params : null);
 
-export const reduceErrorMessages = (group, state) => (acc, validity, j) => {
+export const reduceErrorMessages = (group, model) => (acc, validity, j) => {
     return validity === true 
                 ? acc 
                 : [...acc, typeof validity === 'boolean' 
-                            ? extractErrorMessage(state.groups[group].validators[j])
+                            ? extractErrorMessage(model.groups[group].validators[j])
                             : validity];
 };
 
@@ -90,24 +90,24 @@ export const removeUnvalidatableGroups = groups => {
     return validationGroups;
 };
 
-export const getInitialState = form => ({
+export const getInitialModel = form => ({
     groups: removeUnvalidatableGroups([].slice.call(form.querySelectorAll('input:not([type=submit]), textarea, select'))
                     .reduce(assembleValidationGroup, {}))
 });
 
-export const reduceGroupValidityState = (acc, curr) => {
+export const reduceGroupValidityModel = (acc, curr) => {
     if(curr !== true) acc = false;
     return acc; 
 };
 
-export const getValidityState = groups => {
+export const getValidityModel = groups => {
     return Promise.all(
         Object.keys(groups)
-            .map(group => getGroupValidityState(groups[group]))
+            .map(group => getGroupValidityModel(groups[group]))
         );
 };
 
-export const getGroupValidityState = group => {
+export const getGroupValidityModel = group => {
     let hasError = false;
 	return Promise.all(group.validators.map(validator => {
         return new Promise(resolve => {
