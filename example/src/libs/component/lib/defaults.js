@@ -1,5 +1,2 @@
-export default {
-	errorsInline: true,
-	errorSummary: false
-	// callback: null
-};
+//what should be configurable?
+export default {};

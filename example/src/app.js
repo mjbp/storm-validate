@@ -1,7 +1,7 @@
 import Validate from './libs/component';
 
 const onDOMContentLoadedTasks = [() => {
-    let validator = Validate.init('form');
+    window.validator = Validate.init('form');
 
     // validator.addMethod(
     //     'test',

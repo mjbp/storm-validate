@@ -1,4 +1,4 @@
-import defaults from './lib/defaults';
+import defaults from './lib/constants/defaults';
 import factory from './lib';
 
 const init = (candidate, opts) => {

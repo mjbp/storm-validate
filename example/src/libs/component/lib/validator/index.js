@@ -1,7 +1,19 @@
-import methods from '../methods';
-import messages from '../messages';
-import { pipe, DOMNodesFromCommaList, extractValueFromGroup } from './';
-import { DOTNET_ADAPTORS, DOTNET_PARAMS, DOTNET_ERROR_SPAN_DATA_ATTRIBUTE, DOM_SELECTOR_PARAMS } from '../constants';
+import methods from './methods';
+import messages from '../constants/messages';
+import { 
+    pipe,
+    isCheckable,
+    isSelect,
+    isFile,
+    DOMNodesFromCommaList,
+    extractValueFromGroup
+} from './utils';
+import {
+    DOTNET_ADAPTORS,
+    DOTNET_PARAMS,
+    DOTNET_ERROR_SPAN_DATA_ATTRIBUTE,
+    DOM_SELECTOR_PARAMS
+} from '../constants';
 
 const resolveParam = (param, input) => {
     let value = input.getAttribute(`data-val-${param}`);
@@ -58,7 +70,15 @@ export const assembleValidationGroup = (acc, input) => {
                                     }, acc;
 };
 
-export const extractErrorMessage = validator => validator.message || messages[validator.type](validator.params !== undefined ? validator.params : null);
+const extractErrorMessage = validator => validator.message || messages[validator.type](validator.params !== undefined ? validator.params : null);
+
+export const reduceErrorMessages = (group, state) => (acc, validity, j) => {
+    return validity === true 
+                ? acc 
+                : [...acc, typeof validity === 'boolean' 
+                            ? extractErrorMessage(state.groups[group].validators[j])
+                            : validity];
+};
 
 export const removeUnvalidatableGroups = groups => {
     let validationGroups = {};
@@ -102,4 +122,6 @@ export const getGroupValidityState = group => {
                         .then(res => { resolve(res);});
         });
     }));
-}
+};
+
+export const resolveRealTimeValidationEvent = input => ['input', 'change'][Number(isCheckable(input) || isSelect(input) || isFile(input))];

@@ -1,5 +1,5 @@
+import { EMAIL_REGEX, URL_REGEX, DATE_ISO_REGEX, NUMBER_REGEX, DIGITS_REGEX } from '../constants';
 import { fetch, isRequired, extractValueFromGroup, resolveGetParams } from './utils';
-import { EMAIL_REGEX, URL_REGEX, DATE_ISO_REGEX, NUMBER_REGEX, DIGITS_REGEX } from './constants';
 
 const isOptional = group => !isRequired(group) && extractValueFromGroup(group) === '';
 

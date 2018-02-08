@@ -1,9 +1,3 @@
-export const SELECTOR = {
-};
-
-export const DATA_ATTRIBUTES = {
-};
-
 export const TRIGGER_EVENTS = ['click', 'keydown'];
 
 export const KEY_CODES = {

@@ -1,7 +1,19 @@
-import methods from '../methods';
-import messages from '../messages';
-import { pipe, DOMNodesFromCommaList, extractValueFromGroup } from './';
-import { DOTNET_ADAPTORS, DOTNET_PARAMS, DOTNET_ERROR_SPAN_DATA_ATTRIBUTE, DOM_SELECTOR_PARAMS } from '../constants';
+import methods from './methods';
+import messages from '../constants/messages';
+import { 
+    pipe,
+    isCheckable,
+    isSelect,
+    isFile,
+    DOMNodesFromCommaList,
+    extractValueFromGroup
+} from './utils';
+import {
+    DOTNET_ADAPTORS,
+    DOTNET_PARAMS,
+    DOTNET_ERROR_SPAN_DATA_ATTRIBUTE,
+    DOM_SELECTOR_PARAMS
+} from '../constants';
 
 const resolveParam = (param, input) => {
     let value = input.getAttribute(`data-val-${param}`);
@@ -26,17 +38,7 @@ const extractDataValValidators = input => DOTNET_ADAPTORS.reduce((validators, ad
                                                             ],
                                                         []);
 
-const extractAttrValidators = input => pipe(
-                                            email(input),
-                                            url(input),
-                                            number(input),
-                                            minlength(input),
-                                            maxlength(input),
-                                            min(input),
-                                            max(input),
-                                            pattern(input),
-                                            required(input)
-                                        );
+const extractAttrValidators = input => pipe(email(input), url(input), number(input), minlength(input), maxlength(input), min(input), max(input), pattern(input), required(input));
 
 //un-DRY... and unreadable
 const required = input => (validators = [])  => input.hasAttribute('required') && input.getAttribute('required') !== 'false' ? [...validators, {type: 'required'}] : validators;
@@ -68,7 +70,15 @@ export const assembleValidationGroup = (acc, input) => {
                                     }, acc;
 };
 
-export const extractErrorMessage = validator => validator.message || messages[validator.type](validator.params !== undefined ? validator.params : null);
+const extractErrorMessage = validator => validator.message || messages[validator.type](validator.params !== undefined ? validator.params : null);
+
+export const reduceErrorMessages = (group, state) => (acc, validity, j) => {
+    return validity === true 
+                ? acc 
+                : [...acc, typeof validity === 'boolean' 
+                            ? extractErrorMessage(state.groups[group].validators[j])
+                            : validity];
+};
 
 export const removeUnvalidatableGroups = groups => {
     let validationGroups = {};
@@ -90,11 +100,7 @@ export const reduceGroupValidityState = (acc, curr) => {
     return acc; 
 };
 
-
 export const getValidityState = groups => {
-    // let groupValidators = [];
-    // for(let group in groups) groupValidators.push(getGroupValidityState(groups[group]));
-    // return Promise.all(groupValidators);
     return Promise.all(
         Object.keys(groups)
             .map(group => getGroupValidityState(groups[group]))
@@ -111,11 +117,11 @@ export const getGroupValidityState = group => {
                     hasError = true;
                     resolve(false);
                 }
-            } else 
-                if(hasError) resolve(false) 
+            } else if(hasError) resolve(false);
                 else validate(group, validator)
                         .then(res => { resolve(res);});
-
         });
     }));
-}
+};
+
+export const resolveRealTimeValidationEvent = input => ['input', 'change'][Number(isCheckable(input) || isSelect(input) || isFile(input))];

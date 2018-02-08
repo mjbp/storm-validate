@@ -1,5 +1,4 @@
 import { DOTNET_CLASSNAMES } from '../constants';
-
 //retain errorNodes in closure, not state
 let errorNodes = {};
 
@@ -20,16 +19,6 @@ export const createErrorTextNode = (group, msg) => {
     
     return group.serverErrorNode.appendChild(node);
 };
-
-export const createErrorNode = (group, msg) => {
-    let node = group.fields[group.fields.length-1]
-                    .parentNode
-                    .appendChild(h('div', { class: DOTNET_CLASSNAMES.ERROR }, msg));
-
-    group.fields.forEach(field => { field.setAttribute('aria-invalid', 'true'); });
-
-    return node;
-}
 
 export const clearError = groupName => state => {
     errorNodes[groupName].parentNode.removeChild(errorNodes[groupName]);
@@ -54,16 +43,15 @@ export const renderErrors = state => {
 };
 
 export const renderError = groupName => state => {
-    if(errorNodes[groupName]) clearError(groupName, state);
+    if(errorNodes[groupName]) clearError(groupName)(state);
     
     errorNodes[groupName] = 
-        state.groups[groupName].serverErrorNode ? 
-				createErrorTextNode(state.groups[groupName], state.groups[groupName].errorMessages[0]) : 
-                    state.groups[groupName]
+        state.groups[groupName].serverErrorNode 
+            ? createErrorTextNode(state.groups[groupName], state.groups[groupName].errorMessages[0]) 
+            : state.groups[groupName]
 						.fields[state.groups[groupName].fields.length-1]
 						.parentNode
 						.appendChild(h('div', { class: DOTNET_CLASSNAMES.ERROR }, state.groups[groupName].errorMessages[0]));
 						
-		//set aria-invalid on invalid inputs
-		state.groups[groupName].fields.forEach(field => { field.setAttribute('aria-invalid', 'true'); });
+	state.groups[groupName].fields.forEach(field => { field.setAttribute('aria-invalid', 'true'); });
 };

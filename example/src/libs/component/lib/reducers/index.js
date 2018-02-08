@@ -1,5 +1,5 @@
-import { ACTIONS, SELECTOR } from '../constants';
-import { createReducer } from '../utils';
+import { ACTIONS } from '../constants';
+import { createReducer } from './create-reducer';
 
 const actionHandlers = {
     [ACTIONS.SET_INITIAL_STATE]: (state, action) => Object.assign({}, state, action.data),

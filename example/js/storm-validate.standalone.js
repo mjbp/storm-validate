@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.4.5: Wed, 07 Feb 2018 21:45:42 GMT
+ * @version 0.4.5: Thu, 08 Feb 2018 20:30:58 GMT
  * @author stormid
  * @license MIT
  */
@@ -30,11 +30,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var defaults = {
-    errorsInline: true,
-    errorSummary: false
-    // callback: null
-};
+var defaults = {};
 
 var ACTIONS = {
     SET_INITIAL_STATE: 'SET_INITIAL_STATE',
@@ -109,84 +105,6 @@ var ACTIONS$1 = (_ACTIONS$ = {}, _defineProperty(_ACTIONS$, ACTIONS.SET_INITIAL_
     };
 }), _ACTIONS$);
 
-var isSelect = function isSelect(field) {
-    return field.nodeName.toLowerCase() === 'select';
-};
-
-var isCheckable = function isCheckable(field) {
-    return (/radio|checkbox/i.test(field.type)
-    );
-};
-
-var isFile = function isFile(field) {
-    return field.getAttribute('type') === 'file';
-};
-
-var isRequired = function isRequired(group) {
-    return group.validators.filter(function (validator) {
-        return validator.type === 'required';
-    }).length > 0;
-};
-
-var resolveGetParams = function resolveGetParams(nodeArrays) {
-    return nodeArrays.map(function (nodes) {
-        return nodes[0].getAttribute('name') + '=' + extractValueFromGroup(nodes);
-    }).join('&');
-};
-
-var hasValue = function hasValue(input) {
-    return input.value !== undefined && input.value !== null && input.value.length > 0;
-};
-
-var groupValueReducer = function groupValueReducer(acc, input) {
-    if (!isCheckable(input) && hasValue(input)) acc = input.value;
-    if (isCheckable(input) && input.checked) {
-        if (Array.isArray(acc)) acc.push(input.value);else acc = [input.value];
-    }
-    return acc;
-};
-
-var extractValueFromGroup = function extractValueFromGroup(group) {
-    return group.hasOwnProperty('fields') ? group.fields.reduce(groupValueReducer, '') : group.reduce(groupValueReducer, '');
-};
-
-var chooseRealTimeEvent = function chooseRealTimeEvent(input) {
-    return ['input', 'change'][Number(isCheckable(input) || isSelect(input) || isFile(input))];
-};
-
-var pipe = function pipe() {
-    for (var _len = arguments.length, fns = Array(_len), _key = 0; _key < _len; _key++) {
-        fns[_key] = arguments[_key];
-    }
-
-    return fns.reduce(function (acc, fn) {
-        return fn(acc);
-    });
-};
-
-var fetch = function fetch(url, props) {
-    return new Promise(function (resolve, reject) {
-        var xhr = new XMLHttpRequest();
-        xhr.open(props.method || 'GET', url);
-        if (props.headers) {
-            Object.keys(props.headers).forEach(function (key) {
-                xhr.setRequestHeader(key, props.headers[key]);
-            });
-        }
-        xhr.onload = function () {
-            if (xhr.status >= 200 && xhr.status < 300) {
-                resolve(xhr.response);
-            } else {
-                reject(xhr.statusText);
-            }
-        };
-        xhr.onerror = function () {
-            return reject(xhr.statusText);
-        };
-        xhr.send(props.body);
-    });
-};
-
 var createReducer = function createReducer(initialState, actionHandlers) {
     return function () {
         var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState;
@@ -194,26 +112,6 @@ var createReducer = function createReducer(initialState, actionHandlers) {
 
         if (actionHandlers.hasOwnProperty(action.type)) return actionHandlers[action.type](state, action);else return state;
     };
-};
-
-var DOMNodesFromCommaList = function DOMNodesFromCommaList(list, input) {
-    return list.split(',').map(function (item) {
-        var resolvedSelector = escapeAttributeValue(appendModelPrefix(item, getModelPrefix(input.getAttribute('name'))));
-        return [].slice.call(document.querySelectorAll('[name=' + resolvedSelector + ']'));
-    });
-};
-
-var escapeAttributeValue = function escapeAttributeValue(value) {
-    return value.replace(/([!"#$%&'()*+,./:;<=>?@\[\\\]^`{|}~])/g, "\\$1");
-};
-
-var getModelPrefix = function getModelPrefix(fieldName) {
-    return fieldName.substr(0, fieldName.lastIndexOf('.') + 1);
-};
-
-var appendModelPrefix = function appendModelPrefix(value, prefix) {
-    if (value.indexOf("*.") === 0) value = value.replace("*.", prefix);
-    return value;
 };
 
 var actionHandlers = (_actionHandlers = {}, _defineProperty(_actionHandlers, ACTIONS.SET_INITIAL_STATE, function (state, action) {
@@ -277,6 +175,96 @@ var Store = {
     dispatch: dispatch,
 
     getState: getState
+};
+
+var isCheckable = function isCheckable(field) {
+    return (/radio|checkbox/i.test(field.type)
+    );
+};
+
+var isFile = function isFile(field) {
+    return field.getAttribute('type') === 'file';
+};
+
+var isSelect = function isSelect(field) {
+    return field.nodeName.toLowerCase() === 'select';
+};
+
+var isRequired = function isRequired(group) {
+    return group.validators.filter(function (validator) {
+        return validator.type === 'required';
+    }).length > 0;
+};
+
+var hasValue = function hasValue(input) {
+    return input.value !== undefined && input.value !== null && input.value.length > 0;
+};
+
+var groupValueReducer = function groupValueReducer(acc, input) {
+    if (!isCheckable(input) && hasValue(input)) acc = input.value;
+    if (isCheckable(input) && input.checked) {
+        if (Array.isArray(acc)) acc.push(input.value);else acc = [input.value];
+    }
+    return acc;
+};
+
+var resolveGetParams = function resolveGetParams(nodeArrays) {
+    return nodeArrays.map(function (nodes) {
+        return nodes[0].getAttribute('name') + '=' + extractValueFromGroup(nodes);
+    }).join('&');
+};
+
+var DOMNodesFromCommaList = function DOMNodesFromCommaList(list, input) {
+    return list.split(',').map(function (item) {
+        var resolvedSelector = escapeAttributeValue(appendModelPrefix(item, getModelPrefix(input.getAttribute('name'))));
+        return [].slice.call(document.querySelectorAll('[name=' + resolvedSelector + ']'));
+    });
+};
+
+var escapeAttributeValue = function escapeAttributeValue(value) {
+    return value.replace(/([!"#$%&'()*+,./:;<=>?@\[\\\]^`{|}~])/g, "\\$1");
+};
+
+var getModelPrefix = function getModelPrefix(fieldName) {
+    return fieldName.substr(0, fieldName.lastIndexOf('.') + 1);
+};
+
+var appendModelPrefix = function appendModelPrefix(value, prefix) {
+    if (value.indexOf("*.") === 0) value = value.replace("*.", prefix);
+    return value;
+};
+
+var pipe = function pipe() {
+    for (var _len = arguments.length, fns = Array(_len), _key = 0; _key < _len; _key++) {
+        fns[_key] = arguments[_key];
+    }
+
+    return fns.reduce(function (acc, fn) {
+        return fn(acc);
+    });
+};
+
+var extractValueFromGroup = function extractValueFromGroup(group) {
+    return group.hasOwnProperty('fields') ? group.fields.reduce(groupValueReducer, '') : group.reduce(groupValueReducer, '');
+};
+
+var fetch = function fetch(url, props) {
+    return new Promise(function (resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open(props.method || 'GET', url);
+        if (props.headers) {
+            Object.keys(props.headers).forEach(function (key) {
+                xhr.setRequestHeader(key, props.headers[key]);
+            });
+        }
+        xhr.onload = function () {
+            if (xhr.status >= 200 && xhr.status < 300) resolve(xhr.response);else reject(xhr.statusText);
+        };
+        xhr.onerror = function () {
+            return reject(xhr.statusText);
+        };
+        xhr.send(props.body);
+    });
 };
 
 var isOptional = function isOptional(group) {
@@ -530,6 +518,12 @@ var extractErrorMessage = function extractErrorMessage(validator) {
     return validator.message || messages[validator.type](validator.params !== undefined ? validator.params : null);
 };
 
+var reduceErrorMessages = function reduceErrorMessages(group, state) {
+    return function (acc, validity, j) {
+        return validity === true ? acc : [].concat(_toConsumableArray(acc), [typeof validity === 'boolean' ? extractErrorMessage(state.groups[group].validators[j]) : validity]);
+    };
+};
+
 var removeUnvalidatableGroups = function removeUnvalidatableGroups(groups) {
     var validationGroups = {};
 
@@ -550,9 +544,6 @@ var reduceGroupValidityState = function reduceGroupValidityState(acc, curr) {
 };
 
 var getValidityState = function getValidityState(groups) {
-    // let groupValidators = [];
-    // for(let group in groups) groupValidators.push(getGroupValidityState(groups[group]));
-    // return Promise.all(groupValidators);
     return Promise.all(Object.keys(groups).map(function (group) {
         return getGroupValidityState(groups[group]);
     }));
@@ -572,6 +563,10 @@ var getGroupValidityState = function getGroupValidityState(group) {
             });
         });
     }));
+};
+
+var resolveRealTimeValidationEvent = function resolveRealTimeValidationEvent(input) {
+    return ['input', 'change'][Number(isCheckable(input) || isSelect(input) || isFile(input))];
 };
 
 //retain errorNodes in closure, not state
@@ -624,26 +619,40 @@ var renderErrors = function renderErrors(state) {
 
 var renderError = function renderError(groupName) {
     return function (state) {
+        if (errorNodes[groupName]) clearError(groupName)(state);
+
         errorNodes[groupName] = state.groups[groupName].serverErrorNode ? createErrorTextNode(state.groups[groupName], state.groups[groupName].errorMessages[0]) : state.groups[groupName].fields[state.groups[groupName].fields.length - 1].parentNode.appendChild(h('div', { class: DOTNET_CLASSNAMES.ERROR }, state.groups[groupName].errorMessages[0]));
 
-        //set aria-invalid on invalid inputs
         state.groups[groupName].fields.forEach(function (field) {
             field.setAttribute('aria-invalid', 'true');
         });
     };
 };
 
-var validate$1 = function validate$1() {};
+var validate$1 = function validate$1(e) {
+    e && e.preventDefault();
+    Store.dispatch(ACTIONS$1.CLEAR_ERRORS(), [clearErrors]);
+
+    getValidityState(Store.getState().groups).then(function (validityState) {
+        var _ref2;
+
+        //no errors (all true, no false or error Strings), just submit
+        if (e && e.target && (_ref2 = []).concat.apply(_ref2, _toConsumableArray(validityState)).reduce(reduceGroupValidityState, true)) return form.submit();
+
+        Store.dispatch(ACTIONS$1.VALIDATION_ERRORS(Object.keys(Store.getState().groups).reduce(function (acc, group, i) {
+            return acc[group] = {
+                valid: validityState[i].reduce(reduceGroupValidityState, true),
+                errorMessages: validityState[i].reduce(reduceErrorMessages(group, Store.getState()), [])
+            }, acc;
+        }, {})), [renderErrors]);
+
+        realTimeValidation();
+    });
+};
 
 var addMethod = function addMethod(type, groupName, method, message) {
     if (type === undefined || groupName === undefined || method === undefined || message === undefined) return console.warn('Custom validation method cannot be added.');
     state.groups[groupName].validators.push({ type: type, method: method, message: message });
-};
-
-var reduceErrorMessages = function reduceErrorMessages(group) {
-    return function (acc, validity, j) {
-        return validity === true ? acc : [].concat(_toConsumableArray(acc), [typeof validity === 'boolean' ? extractErrorMessage(Store.getState().groups[group].validators[j]) : validity]);
-    };
 };
 
 var realTimeValidation = function realTimeValidation() {
@@ -653,7 +662,7 @@ var realTimeValidation = function realTimeValidation() {
             getGroupValidityState(Store.getState().groups[groupName]).then(function (res) {
                 if (!res.reduce(reduceGroupValidityState, true)) Store.dispatch(ACTIONS$1.VALIDATION_ERROR({
                     group: groupName,
-                    errorMessages: res.reduce(reduceErrorMessages(groupName), [])
+                    errorMessages: res.reduce(reduceErrorMessages(groupName, Store.getState()), [])
                 }), [renderError(groupName)]);
             });
         };
@@ -661,7 +670,7 @@ var realTimeValidation = function realTimeValidation() {
 
     Object.keys(Store.getState().groups).forEach(function (groupName) {
         Store.getState().groups[groupName].fields.forEach(function (input) {
-            input.addEventListener(chooseRealTimeEvent(input), handler(groupName));
+            input.addEventListener(resolveRealTimeValidationEvent(input), handler(groupName));
         });
         var equalToValidator = Store.getState().groups[groupName].validators.filter(function (validator) {
             return validator.type === 'equalto';
@@ -678,29 +687,11 @@ var realTimeValidation = function realTimeValidation() {
 var factory = function factory(form, settings) {
     Store.dispatch(ACTIONS$1.SET_INITIAL_STATE(getInitialState(form)));
 
-    form.addEventListener('submit', function (e) {
-        e.preventDefault();
+    form.addEventListener('submit', validate$1);
 
+    form.addEventListener('reset', function () {
         Store.dispatch(ACTIONS$1.CLEAR_ERRORS(), [clearErrors]);
-
-        getValidityState(Store.getState().groups).then(function (validityState) {
-            var _ref2;
-
-            //no errors (all true, no false or error Strings), just submit
-            if ((_ref2 = []).concat.apply(_ref2, _toConsumableArray(validityState)).reduce(reduceGroupValidityState, true)) return form.submit();
-
-            Store.dispatch(ACTIONS$1.VALIDATION_ERRORS(Object.keys(Store.getState().groups).reduce(function (acc, group, i) {
-                return acc[group] = {
-                    valid: validityState[i].reduce(reduceGroupValidityState, true),
-                    errorMessages: validityState[i].reduce(reduceErrorMessages(group), [])
-                }, acc;
-            }, {})), [renderErrors]);
-
-            realTimeValidation();
-        });
     });
-
-    // form.addEventListener('reset', clear);
 
     return {
         validate: validate$1,
