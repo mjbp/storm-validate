@@ -1,4 +1,17 @@
-export const CLASSNAMES = {};
+export const TRIGGER_EVENTS = ['click', 'keydown'];
+
+export const KEY_CODES = {
+    ENTER: 13
+};
+
+export const ACTIONS = {
+    SET_INITIAL_STATE: 'SET_INITIAL_STATE',
+    CLEAR_ERRORS: 'CLEAR_ERRORS',
+    VALIDATION_ERRORS: 'VALIDATION_ERRORS',
+    VALIDATION_ERROR: 'VALIDATION_ERROR',
+    CLEAR_ERROR: 'CLEAR_ERROR',
+    ADD_VALIDATION_METHOD: 'ADD_VALIDATION_METHOD'
+};
 
 //https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address
 export const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
@@ -39,8 +52,14 @@ export const DOTNET_ADAPTORS = [
     'number',
     'url',
     'length',
+    'minlength',
     'range',
     'equalto',
     'remote',//should be last
     // 'password' //-> maps to min, nonalphamain, and regex methods
 ];
+
+export const DOTNET_CLASSNAMES = {
+    VALID: 'field-validation-valid',
+    ERROR: 'field-validation-error'
+};

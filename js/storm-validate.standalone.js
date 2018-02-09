@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.2.1: Thu, 01 Feb 2018 20:10:19 GMT
+ * @version 0.4.5: Fri, 09 Feb 2018 13:51:24 GMT
  * @author stormid
  * @license MIT
  */
@@ -21,101 +21,24 @@
    'use strict';
 
 Object.defineProperty(exports, "__esModule", {
-  value: true
+    value: true
 });
 
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+var _reducers;
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-var defaults = {
-  errorsInline: true,
-  errorSummary: false
-  // callback: null
-};
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var isSelect = function isSelect(field) {
-  return field.nodeName.toLowerCase() === 'select';
-};
+var defaults = {};
 
-var isCheckable = function isCheckable(field) {
-  return (/radio|checkbox/i.test(field.type)
-  );
-};
-
-var isFile = function isFile(field) {
-  return field.getAttribute('type') === 'file';
-};
-
-var isRequired = function isRequired(group) {
-  return group.validators.filter(function (validator) {
-    return validator.type === 'required';
-  }).length > 0;
-};
-
-var resolveGetParams = function resolveGetParams(nodeArrays) {
-  return nodeArrays.map(function (nodes) {
-    return nodes[0].getAttribute('name') + '=' + extractValueFromGroup(nodes);
-  }).join('&');
-};
-
-var DOMNodesFromCommaList = function DOMNodesFromCommaList(list) {
-  return list.split(',').map(function (item) {
-    return [].slice.call(document.querySelectorAll('[name=' + item.substr(2) + ']'));
-  });
-};
-
-var hasValue = function hasValue(input) {
-  return input.value !== undefined && input.value !== null && input.value.length > 0;
-};
-
-var groupValueReducer = function groupValueReducer(acc, input) {
-  if (!isCheckable(input) && hasValue(input)) acc = input.value;
-  if (isCheckable(input) && input.checked) {
-    if (Array.isArray(acc)) acc.push(input.value);else acc = [input.value];
-  }
-  return acc;
-};
-
-var extractValueFromGroup = function extractValueFromGroup(group) {
-  return group.hasOwnProperty('fields') ? group.fields.reduce(groupValueReducer, '') : group.reduce(groupValueReducer, '');
-};
-
-var chooseRealTimeEvent = function chooseRealTimeEvent(input) {
-  return ['input', 'change'][Number(isCheckable(input) || isSelect(input) || isFile(input))];
-};
-
-var pipe = function pipe() {
-  for (var _len = arguments.length, fns = Array(_len), _key = 0; _key < _len; _key++) {
-    fns[_key] = arguments[_key];
-  }
-
-  return fns.reduce(function (acc, fn) {
-    return fn(acc);
-  });
-};
-
-var fetch = function fetch(url, props) {
-  return new Promise(function (resolve, reject) {
-    var xhr = new XMLHttpRequest();
-    xhr.open(props.method || 'GET', url);
-    if (props.headers) {
-      Object.keys(props.headers).forEach(function (key) {
-        xhr.setRequestHeader(key, props.headers[key]);
-      });
-    }
-    xhr.onload = function () {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve(xhr.response);
-      } else {
-        reject(xhr.statusText);
-      }
-    };
-    xhr.onerror = function () {
-      return reject(xhr.statusText);
-    };
-    xhr.send(props.body);
-  });
+var ACTIONS = {
+    SET_INITIAL_STATE: 'SET_INITIAL_STATE',
+    CLEAR_ERRORS: 'CLEAR_ERRORS',
+    VALIDATION_ERRORS: 'VALIDATION_ERRORS',
+    VALIDATION_ERROR: 'VALIDATION_ERROR',
+    CLEAR_ERROR: 'CLEAR_ERROR',
+    ADD_VALIDATION_METHOD: 'ADD_VALIDATION_METHOD'
 };
 
 //https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address
@@ -136,474 +59,636 @@ var DOM_SELECTOR_PARAMS = ['remote-additionalfields', 'equalto-other'];
 
 /* Can these two be folded into the same variable? */
 var DOTNET_PARAMS = {
-  length: ['length-min', 'length-max'],
-  stringlength: ['length-max'],
-  range: ['range-min', 'range-max'],
-  // min: ['min'],?
-  // max:  ['max'],?
-  minlength: ['minlength-min'],
-  maxlength: ['maxlength-max'],
-  regex: ['regex-pattern'],
-  equalto: ['equalto-other'],
-  remote: ['remote-url', 'remote-additionalfields', 'remote-type'] //??
+    length: ['length-min', 'length-max'],
+    stringlength: ['length-max'],
+    range: ['range-min', 'range-max'],
+    // min: ['min'],?
+    // max:  ['max'],?
+    minlength: ['minlength-min'],
+    maxlength: ['maxlength-max'],
+    regex: ['regex-pattern'],
+    equalto: ['equalto-other'],
+    remote: ['remote-url', 'remote-additionalfields', 'remote-type'] //??
 };
 
 var DOTNET_ADAPTORS = ['required', 'stringlength', 'regex',
 // 'digits',
-'email', 'number', 'url', 'length', 'range', 'equalto', 'remote'];
+'email', 'number', 'url', 'length', 'minlength', 'range', 'equalto', 'remote'];
+
+var DOTNET_CLASSNAMES = {
+    VALID: 'field-validation-valid',
+    ERROR: 'field-validation-error'
+};
+
+var reducers = (_reducers = {}, _defineProperty(_reducers, ACTIONS.SET_INITIAL_STATE, function (state, data) {
+    return Object.assign({}, state, data);
+}), _defineProperty(_reducers, ACTIONS.CLEAR_ERRORS, function (state) {
+    return Object.assign({}, state, {
+        groups: Object.keys(state.groups).reduce(function (acc, group) {
+            acc[group] = Object.assign({}, state.groups[group], {
+                errorMessages: [],
+                valid: true
+            });
+            return acc;
+        }, {})
+    });
+}), _defineProperty(_reducers, ACTIONS.CLEAR_ERROR, function (state, data) {
+    return Object.assign({}, state, {
+        groups: Object.assign({}, state.groups, _defineProperty({}, data, Object.assign({}, state.groups[data], {
+            errorMessages: [],
+            valid: true
+        })))
+    });
+}), _defineProperty(_reducers, ACTIONS.ADD_VALIDATION_METHOD, function (state, data) {
+    return Object.assign({}, state, {
+        groups: Object.assign({}, state.groups, _defineProperty({}, data.groupName, Object.assign({}, state.groups[data.groupName] ? state.groups[data.groupName] : {}, state.groups[data.groupName] ? { validators: [].concat(_toConsumableArray(state.groups[data.groupName].validators), [data.validator]) } : {
+            fields: [].slice.call(document.getElementsByName(data.groupName)),
+            serverErrorNode: document.querySelector('[' + DOTNET_ERROR_SPAN_DATA_ATTRIBUTE + '=' + data.groupName + ']') || false,
+            valid: false,
+            validators: [data.validator]
+        })))
+    });
+}), _defineProperty(_reducers, ACTIONS.VALIDATION_ERRORS, function (state, data) {
+    return Object.assign({}, state, {
+        groups: Object.keys(state.groups).reduce(function (acc, group) {
+            acc[group] = Object.assign({}, state.groups[group], data[group]);
+            return acc;
+        }, {})
+    });
+}), _defineProperty(_reducers, ACTIONS.VALIDATION_ERROR, function (state, data) {
+    return Object.assign({}, state, {
+        groups: Object.assign({}, state.groups, _defineProperty({}, data.group, Object.assign({}, state.groups[data.group], {
+            errorMessages: data.errorMessages,
+            valid: false
+        })))
+    });
+}), _reducers);
+
+var state = {};
+
+// window.__validator_history__ = [];
+
+var getState = function getState() {
+    return state;
+};
+
+var dispatch = function dispatch(type, nextState, effects) {
+    state = nextState ? reducers[type](state, nextState) : state;
+    // window.__validator_history__.push({[type]: state}), console.log(window.__validator_history__);
+    console.log(_defineProperty({}, type, state));
+    if (!effects) return;
+    effects.forEach(function (effect) {
+        effect(state);
+    });
+};
+
+var Store = { dispatch: dispatch, getState: getState };
+
+var isCheckable = function isCheckable(field) {
+    return (/radio|checkbox/i.test(field.type)
+    );
+};
+
+var isFile = function isFile(field) {
+    return field.getAttribute('type') === 'file';
+};
+
+var isSelect = function isSelect(field) {
+    return field.nodeName.toLowerCase() === 'select';
+};
+
+var isRequired = function isRequired(group) {
+    return group.validators.filter(function (validator) {
+        return validator.type === 'required';
+    }).length > 0;
+};
+
+var hasValue = function hasValue(input) {
+    return input.value !== undefined && input.value !== null && input.value.length > 0;
+};
+
+var groupValueReducer = function groupValueReducer(acc, input) {
+    if (!isCheckable(input) && hasValue(input)) acc = input.value;
+    if (isCheckable(input) && input.checked) {
+        if (Array.isArray(acc)) acc.push(input.value);else acc = [input.value];
+    }
+    return acc;
+};
+
+var resolveGetParams = function resolveGetParams(nodeArrays) {
+    return nodeArrays.map(function (nodes) {
+        return nodes[0].getAttribute('name') + '=' + extractValueFromGroup(nodes);
+    }).join('&');
+};
+
+var DOMNodesFromCommaList = function DOMNodesFromCommaList(list, input) {
+    return list.split(',').map(function (item) {
+        var resolvedSelector = escapeAttributeValue(appendStatePrefix(item, getStatePrefix(input.getAttribute('name'))));
+        return [].slice.call(document.querySelectorAll('[name=' + resolvedSelector + ']'));
+    });
+};
+
+var escapeAttributeValue = function escapeAttributeValue(value) {
+    return value.replace(/([!"#$%&'()*+,./:;<=>?@\[\\\]^`{|}~])/g, "\\$1");
+};
+
+var getStatePrefix = function getStatePrefix(fieldName) {
+    return fieldName.substr(0, fieldName.lastIndexOf('.') + 1);
+};
+
+var appendStatePrefix = function appendStatePrefix(value, prefix) {
+    if (value.indexOf("*.") === 0) value = value.replace("*.", prefix);
+    return value;
+};
+
+var pipe = function pipe() {
+    for (var _len = arguments.length, fns = Array(_len), _key = 0; _key < _len; _key++) {
+        fns[_key] = arguments[_key];
+    }
+
+    return fns.reduce(function (acc, fn) {
+        return fn(acc);
+    });
+};
+
+var extractValueFromGroup = function extractValueFromGroup(group) {
+    return group.hasOwnProperty('fields') ? group.fields.reduce(groupValueReducer, '') : group.reduce(groupValueReducer, '');
+};
+
+var fetch = function fetch(url, props) {
+    return new Promise(function (resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open(props.method || 'GET', url);
+        if (props.headers) {
+            Object.keys(props.headers).forEach(function (key) {
+                xhr.setRequestHeader(key, props.headers[key]);
+            });
+        }
+        xhr.onload = function () {
+            if (xhr.status >= 200 && xhr.status < 300) resolve(xhr.response);else reject(xhr.statusText);
+        };
+        xhr.onerror = function () {
+            return reject(xhr.statusText);
+        };
+        xhr.send(props.body);
+    });
+};
 
 var isOptional = function isOptional(group) {
-  return !isRequired(group) && extractValueFromGroup(group) === '';
+    return !isRequired(group) && extractValueFromGroup(group) === '';
 };
 
 var extractValidationParams = function extractValidationParams(group, type) {
-  return group.validators.filter(function (validator) {
-    return validator.type === type;
-  })[0].params;
+    return group.validators.filter(function (validator) {
+        return validator.type === type;
+    })[0].params;
 };
 
 var curryRegexMethod = function curryRegexMethod(regex) {
-  return function (group) {
-    return isOptional(group) || group.fields.reduce(function (acc, input) {
-      return acc = regex.test(input.value), acc;
-    }, false);
-  };
+    return function (group) {
+        return isOptional(group) || group.fields.reduce(function (acc, input) {
+            return acc = regex.test(input.value), acc;
+        }, false);
+    };
 };
 
 var curryParamMethod = function curryParamMethod(type, reducer) {
-  return function (group) {
-    return isOptional(group) || group.fields.reduce(reducer(extractValidationParams(group, type)), false);
-  };
+    return function (group) {
+        return isOptional(group) || group.fields.reduce(reducer(extractValidationParams(group, type)), false);
+    };
 };
 
 var methods = {
-  required: function required(group) {
-    return extractValueFromGroup(group) !== '';
-  },
-  email: curryRegexMethod(EMAIL_REGEX),
-  url: curryRegexMethod(URL_REGEX),
-  date: function date(group) {
-    return isOptional(group) || group.fields.reduce(function (acc, input) {
-      return acc = !/Invalid|NaN/.test(new Date(input.value).toString()), acc;
-    }, false);
-  },
-  dateISO: curryRegexMethod(DATE_ISO_REGEX),
-  number: curryRegexMethod(NUMBER_REGEX),
-  digits: curryRegexMethod(DIGITS_REGEX),
-  minlength: curryParamMethod('minlength', function (param) {
-    return function (acc, input) {
-      return acc = Array.isArray(input.value) ? input.value.length >= +param : +input.value.length >= +param, acc;
-    };
-  }),
-  maxlength: curryParamMethod('maxlength', function (param) {
-    return function (acc, input) {
-      return acc = Array.isArray(input.value) ? input.value.length <= +param : +input.value.length <= +param, acc;
-    };
-  }),
-  equalto: curryParamMethod('equalto', function (params) {
-    return function (acc, input) {
-      return acc = params[0].reduce(function (subgroupAcc, subgroup) {
-        if (extractValueFromGroup(subgroup) !== input.value) subgroupAcc = false;
-        return subgroupAcc;
-      }, true), acc;
-    };
-  }),
-  pattern: curryParamMethod('pattern', function () {
-    for (var _len2 = arguments.length, regexStr = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-      regexStr[_key2] = arguments[_key2];
+    required: function required(group) {
+        return extractValueFromGroup(group) !== '';
+    },
+    email: curryRegexMethod(EMAIL_REGEX),
+    url: curryRegexMethod(URL_REGEX),
+    date: function date(group) {
+        return isOptional(group) || group.fields.reduce(function (acc, input) {
+            return acc = !/Invalid|NaN/.test(new Date(input.value).toString()), acc;
+        }, false);
+    },
+    dateISO: curryRegexMethod(DATE_ISO_REGEX),
+    number: curryRegexMethod(NUMBER_REGEX),
+    digits: curryRegexMethod(DIGITS_REGEX),
+    minlength: curryParamMethod('minlength', function (params) {
+        return function (acc, input) {
+            return acc = Array.isArray(input.value) ? input.value.length >= +params.min : +input.value.length >= +params.min, acc;
+        };
+    }),
+    maxlength: curryParamMethod('maxlength', function (params) {
+        return function (acc, input) {
+            return acc = Array.isArray(input.value) ? input.value.length <= +params.max : +input.value.length <= +params.max, acc;
+        };
+    }),
+    equalto: curryParamMethod('equalto', function (params) {
+        return function (acc, input) {
+            return acc = params.other.reduce(function (subgroupAcc, subgroup) {
+                if (extractValueFromGroup(subgroup) !== input.value) subgroupAcc = false;
+                return subgroupAcc;
+            }, true), acc;
+        };
+    }),
+    pattern: curryParamMethod('pattern', function (params) {
+        return function (acc, input) {
+            return acc = RegExp(params.regex).test(input.value), acc;
+        };
+    }),
+    regex: curryParamMethod('regex', function (params) {
+        return function (acc, input) {
+            return acc = RegExp(params.regex).test(input.value), acc;
+        };
+    }),
+    min: curryParamMethod('min', function (params) {
+        return function (acc, input) {
+            return acc = +input.value >= +params.min, acc;
+        };
+    }),
+    max: curryParamMethod('max', function (params) {
+        return function (acc, input) {
+            return acc = +input.value <= +params.max, acc;
+        };
+    }),
+    length: curryParamMethod('length', function (params) {
+        return function (acc, input) {
+            return acc = +input.value.length >= +params.min && (params.max === undefined || +input.value.length <= +params.max), acc;
+        };
+    }),
+    range: curryParamMethod('range', function (params) {
+        return function (acc, input) {
+            return acc = +input.value >= +params.min && +input.value <= +params.max, acc;
+        };
+    }),
+    remote: function remote(group, params) {
+        return new Promise(function (resolve, reject) {
+            fetch(params.type !== 'get' ? params.url : params.url + '?' + resolveGetParams(params.additionalfields), {
+                method: params.type.toUpperCase(),
+                body: params.type === 'get' ? null : resolveGetParams(params.additionalfields),
+                headers: new Headers({
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                })
+            }).then(function (res) {
+                return res.json();
+            }).then(function (data) {
+                resolve(data);
+            }).catch(function (res) {
+                resolve('Server error: ' + res);
+            });
+        });
+    },
+    custom: function custom(method, group) {
+        return isOptional(group) || method(extractValueFromGroup(group), group.fields);
     }
-
-    return function (acc, input) {
-      return acc = RegExp(regexStr).test(input.value), acc;
-    };
-  }),
-  regex: curryParamMethod('regex', function () {
-    for (var _len3 = arguments.length, regexStr = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-      regexStr[_key3] = arguments[_key3];
-    }
-
-    return function (acc, input) {
-      return acc = RegExp(regexStr).test(input.value), acc;
-    };
-  }),
-  min: curryParamMethod('min', function () {
-    for (var _len4 = arguments.length, min = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-      min[_key4] = arguments[_key4];
-    }
-
-    return function (acc, input) {
-      return acc = +input.value >= +min, acc;
-    };
-  }),
-  max: curryParamMethod('max', function () {
-    for (var _len5 = arguments.length, max = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-      max[_key5] = arguments[_key5];
-    }
-
-    return function (acc, input) {
-      return acc = +input.value <= +max, acc;
-    };
-  }),
-  length: curryParamMethod('length', function (params) {
-    return function (acc, input) {
-      return acc = +input.value.length >= +params[0] && (params[1] === undefined || +input.value.length <= +params[1]), acc;
-    };
-  }),
-  range: curryParamMethod('range', function (params) {
-    return function (acc, input) {
-      return acc = +input.value >= +params[0] && +input.value <= +params[1], acc;
-    };
-  }),
-  remote: function remote(group, params) {
-    var _params = _slicedToArray(params, 3),
-        url = _params[0],
-        additionalfields = _params[1],
-        _params$ = _params[2],
-        type = _params$ === undefined ? 'get' : _params$;
-
-    return new Promise(function (resolve, reject) {
-      //to do?
-      //change this to XHR
-      fetch(type !== 'get' ? url : url + '?' + resolveGetParams(additionalfields), {
-        method: type.toUpperCase(),
-        body: type === 'get' ? null : resolveGetParams(additionalfields),
-        headers: new Headers({
-          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-        })
-      }).then(function (res) {
-        return res.json();
-      }).then(function (data) {
-        resolve(data);
-      }).catch(function (res) {
-        resolve(res);
-      }); //what to do if endpoint validation fails? returning error message as validation error
-    });
-  }
 };
 
 var messages = {
-  required: function required() {
-    return 'This field is required.';
-  },
-  email: function email() {
-    return 'Please enter a valid email address.';
-  },
-  pattern: function pattern() {
-    return 'The value must match the pattern.';
-  },
-  url: function url() {
-    return 'Please enter a valid URL.';
-  },
-  date: function date() {
-    return 'Please enter a valid date.';
-  },
-  dateISO: function dateISO() {
-    return 'Please enter a valid date (ISO).';
-  },
-  number: function number() {
-    return 'Please enter a valid number.';
-  },
-  digits: function digits() {
-    return 'Please enter only digits.';
-  },
-  maxlength: function maxlength(props) {
-    return 'Please enter no more than ' + props + ' characters.';
-  },
-  minlength: function minlength(props) {
-    return 'Please enter at least ' + props + ' characters.';
-  },
-  max: function max(props) {
-    return 'Please enter a value less than or equal to ' + [props] + '.';
-  },
-  min: function min(props) {
-    return 'Please enter a value greater than or equal to ' + props + '.';
-  },
-  equalTo: function equalTo() {
-    return 'Please enter the same value again.';
-  },
-  remote: function remote() {
-    return 'Please fix this field.';
-  }
+    required: function required() {
+        return 'This field is required.';
+    },
+    email: function email() {
+        return 'Please enter a valid email address.';
+    },
+    pattern: function pattern() {
+        return 'The value must match the pattern.';
+    },
+    url: function url() {
+        return 'Please enter a valid URL.';
+    },
+    date: function date() {
+        return 'Please enter a valid date.';
+    },
+    dateISO: function dateISO() {
+        return 'Please enter a valid date (ISO).';
+    },
+    number: function number() {
+        return 'Please enter a valid number.';
+    },
+    digits: function digits() {
+        return 'Please enter only digits.';
+    },
+    maxlength: function maxlength(props) {
+        return 'Please enter no more than ' + props + ' characters.';
+    },
+    minlength: function minlength(props) {
+        return 'Please enter at least ' + props + ' characters.';
+    },
+    max: function max(props) {
+        return 'Please enter a value less than or equal to ' + [props] + '.';
+    },
+    min: function min(props) {
+        return 'Please enter a value greater than or equal to ' + props + '.';
+    },
+    equalTo: function equalTo() {
+        return 'Please enter the same value again.';
+    },
+    remote: function remote() {
+        return 'Please fix this field.';
+    }
 };
 
-var resolveParam = function resolveParam(param, value) {
-  return !!~DOM_SELECTOR_PARAMS.indexOf(param) ? DOMNodesFromCommaList(value) : value;
+var resolveParam = function resolveParam(param, input) {
+    var value = input.getAttribute('data-val-' + param);
+    return _defineProperty({}, param.split('-')[1], !!~DOM_SELECTOR_PARAMS.indexOf(param) ? DOMNodesFromCommaList(value, input) : value);
 };
 
 var extractParams = function extractParams(input, adaptor) {
-  return DOTNET_PARAMS[adaptor] ? {
-    params: DOTNET_PARAMS[adaptor].reduce(function (acc, param) {
-      return [].concat(_toConsumableArray(acc), [input.hasAttribute('data-val-' + param) ? resolveParam(param, input.getAttribute('data-val-' + param)) : []]);
-    }, [])
-  } : false;
+    return DOTNET_PARAMS[adaptor] ? { params: DOTNET_PARAMS[adaptor].reduce(function (acc, param) {
+            return input.hasAttribute('data-val-' + param) ? Object.assign(acc, resolveParam(param, input)) : acc;
+        }, {}) } : false;
 };
 
 var extractDataValValidators = function extractDataValValidators(input) {
-  return DOTNET_ADAPTORS.reduce(function (validators, adaptor) {
-    return !input.getAttribute('data-val-' + adaptor) ? validators : [].concat(_toConsumableArray(validators), [Object.assign({
-      type: adaptor,
-      message: input.getAttribute('data-val-' + adaptor) }, extractParams(input, adaptor))]);
-  }, []);
+    return DOTNET_ADAPTORS.reduce(function (validators, adaptor) {
+        return !input.getAttribute('data-val-' + adaptor) ? validators : [].concat(_toConsumableArray(validators), [Object.assign({
+            type: adaptor,
+            message: input.getAttribute('data-val-' + adaptor) }, extractParams(input, adaptor))]);
+    }, []);
 };
 
 var extractAttrValidators = function extractAttrValidators(input) {
-  return pipe(email(input), url(input), number(input), minlength(input), maxlength(input), min(input), max(input), pattern(input), required(input));
+    return pipe(email(input), url(input), number(input), minlength(input), maxlength(input), min(input), max(input), pattern(input), required(input));
 };
 
-//un-DRY
+//un-DRY...
 var required = function required(input) {
-  return function () {
-    var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    return input.hasAttribute('required') && input.getAttribute('required') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'required' }]) : validators;
-  };
+    return function () {
+        var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+        return input.hasAttribute('required') && input.getAttribute('required') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'required' }]) : validators;
+    };
 };
 var email = function email(input) {
-  return function () {
-    var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    return input.getAttribute('type') === 'email' ? [].concat(_toConsumableArray(validators), [{ type: 'email' }]) : validators;
-  };
+    return function () {
+        var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+        return input.getAttribute('type') === 'email' ? [].concat(_toConsumableArray(validators), [{ type: 'email' }]) : validators;
+    };
 };
 var url = function url(input) {
-  return function () {
-    var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    return input.getAttribute('type') === 'url' ? [].concat(_toConsumableArray(validators), [{ type: 'url' }]) : validators;
-  };
+    return function () {
+        var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+        return input.getAttribute('type') === 'url' ? [].concat(_toConsumableArray(validators), [{ type: 'url' }]) : validators;
+    };
 };
 var number = function number(input) {
-  return function () {
-    var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    return input.getAttribute('type') === 'number' ? [].concat(_toConsumableArray(validators), [{ type: 'number' }]) : validators;
-  };
+    return function () {
+        var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+        return input.getAttribute('type') === 'number' ? [].concat(_toConsumableArray(validators), [{ type: 'number' }]) : validators;
+    };
 };
 var minlength = function minlength(input) {
-  return function () {
-    var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    return input.getAttribute('minlength') && input.getAttribute('minlength') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'minlength', params: [input.getAttribute('minlength')] }]) : validators;
-  };
+    return function () {
+        var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+        return input.getAttribute('minlength') && input.getAttribute('minlength') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'minlength', params: { min: input.getAttribute('minlength') } }]) : validators;
+    };
 };
 var maxlength = function maxlength(input) {
-  return function () {
-    var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    return input.getAttribute('maxlength') && input.getAttribute('maxlength') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'maxlength', params: [input.getAttribute('maxlength')] }]) : validators;
-  };
+    return function () {
+        var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+        return input.getAttribute('maxlength') && input.getAttribute('maxlength') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'maxlength', params: { max: input.getAttribute('maxlength') } }]) : validators;
+    };
 };
 var min = function min(input) {
-  return function () {
-    var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    return input.getAttribute('min') && input.getAttribute('min') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'min', params: [input.getAttribute('min')] }]) : validators;
-  };
+    return function () {
+        var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+        return input.getAttribute('min') && input.getAttribute('min') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'min', params: { min: input.getAttribute('min') } }]) : validators;
+    };
 };
 var max = function max(input) {
-  return function () {
-    var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    return input.getAttribute('max') && input.getAttribute('max') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'max', params: [input.getAttribute('max')] }]) : validators;
-  };
+    return function () {
+        var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+        return input.getAttribute('max') && input.getAttribute('max') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'max', params: { max: input.getAttribute('max') } }]) : validators;
+    };
 };
 var pattern = function pattern(input) {
-  return function () {
-    var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    return input.getAttribute('pattern') && input.getAttribute('pattern') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'pattern', params: [input.getAttribute('pattern')] }]) : validators;
-  };
+    return function () {
+        var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+        return input.getAttribute('pattern') && input.getAttribute('pattern') !== 'false' ? [].concat(_toConsumableArray(validators), [{ type: 'pattern', params: { regex: input.getAttribute('pattern') } }]) : validators;
+    };
 };
 
 var normaliseValidators = function normaliseValidators(input) {
-  return input.getAttribute('data-val') === 'true' ? extractDataValValidators(input) : extractAttrValidators(input);
+    return input.getAttribute('data-val') === 'true' ? extractDataValValidators(input) : extractAttrValidators(input);
 };
 
 var validate = function validate(group, validator) {
-  return validator.method ? validator.method(extractValueFromGroup(group), group.fields, validator.params) : methods[validator.type](group, validator.params && validator.params.length > 0 ? validator.params : null);
+    return validator.type === 'custom' ? methods['custom'](validator.method, group) : methods[validator.type](group, validator.params);
 };
 
 var assembleValidationGroup = function assembleValidationGroup(acc, input) {
-  var name = input.getAttribute('name');
-  return acc[name] = acc[name] ? Object.assign(acc[name], { fields: [].concat(_toConsumableArray(acc[name].fields), [input]) }) : {
-    valid: false,
-    validators: normaliseValidators(input),
-    fields: [input],
-    serverErrorNode: document.querySelector('[' + DOTNET_ERROR_SPAN_DATA_ATTRIBUTE + '=' + input.getAttribute('name') + ']') || false
-  }, acc;
+    var name = input.getAttribute('name');
+    return acc[name] = acc[name] ? Object.assign(acc[name], { fields: [].concat(_toConsumableArray(acc[name].fields), [input]) }) : {
+        valid: false,
+        validators: normaliseValidators(input),
+        fields: [input],
+        serverErrorNode: document.querySelector('[' + DOTNET_ERROR_SPAN_DATA_ATTRIBUTE + '=' + input.getAttribute('name') + ']') || false
+    }, acc;
 };
 
-var extractErrorMessage = function extractErrorMessage(validator, group) {
-  return validator.message || messages[validator.type](validator.params !== undefined ? validator.params : null);
+var extractErrorMessage = function extractErrorMessage(validator) {
+    return validator.message || messages[validator.type](validator.params !== undefined ? validator.params : null);
+};
+
+var reduceErrorMessages = function reduceErrorMessages(group, state) {
+    return function (acc, validity, j) {
+        return validity === true ? acc : [].concat(_toConsumableArray(acc), [typeof validity === 'boolean' ? extractErrorMessage(state.groups[group].validators[j]) : validity]);
+    };
 };
 
 var removeUnvalidatableGroups = function removeUnvalidatableGroups(groups) {
-  var validationGroups = {};
+    var validationGroups = {};
 
-  for (var group in groups) {
-    if (groups[group].validators.length > 0) validationGroups[group] = groups[group];
-  }return validationGroups;
+    for (var group in groups) {
+        if (groups[group].validators.length > 0) validationGroups[group] = groups[group];
+    }return validationGroups;
 };
+
+var getInitialState = function getInitialState(form) {
+    return {
+        groups: removeUnvalidatableGroups([].slice.call(form.querySelectorAll('input:not([type=submit]), textarea, select')).reduce(assembleValidationGroup, {}))
+    };
+};
+
+var reduceGroupValidityState = function reduceGroupValidityState(acc, curr) {
+    if (curr !== true) acc = false;
+    return acc;
+};
+
+var getValidityState = function getValidityState(groups) {
+    return Promise.all(Object.keys(groups).map(function (group) {
+        return getGroupValidityState(groups[group]);
+    }));
+};
+
+var getGroupValidityState = function getGroupValidityState(group) {
+    var hasError = false;
+    return Promise.all(group.validators.map(function (validator) {
+        return new Promise(function (resolve) {
+            if (validator.type !== 'remote') {
+                if (validate(group, validator)) resolve(true);else {
+                    hasError = true;
+                    resolve(false);
+                }
+            } else if (hasError) resolve(false);else validate(group, validator).then(function (res) {
+                resolve(res);
+            });
+        });
+    }));
+};
+
+var resolveRealTimeValidationEvent = function resolveRealTimeValidationEvent(input) {
+    return ['input', 'change'][Number(isCheckable(input) || isSelect(input) || isFile(input))];
+};
+
+var errorNodes = {};
 
 var h = function h(nodeName, attributes, text) {
-  var node = document.createElement(nodeName);
+    var node = document.createElement(nodeName);
 
-  for (var prop in attributes) {
-    node.setAttribute(prop, attributes[prop]);
-  }if (text !== undefined && text.length) node.appendChild(document.createTextNode(text));
+    for (var prop in attributes) {
+        node.setAttribute(prop, attributes[prop]);
+    }if (text !== undefined && text.length) node.appendChild(document.createTextNode(text));
 
-  return node;
+    return node;
 };
 
-var createErrorTextNode = function createErrorTextNode(group) {
-  var node = document.createTextNode(group.errorMessages[0]);
-  group.serverErrorNode.classList.add('error');
-  return group.serverErrorNode.appendChild(node);
+var createErrorTextNode = function createErrorTextNode(group, msg) {
+    var node = document.createTextNode(msg);
+
+    group.serverErrorNode.classList.remove(DOTNET_CLASSNAMES.VALID);
+    group.serverErrorNode.classList.add(DOTNET_CLASSNAMES.ERROR);
+
+    return group.serverErrorNode.appendChild(node);
 };
 
-// import inputPrototype from './input-prototype';
-var componentPrototype = {
-  init: function init() {
-    this.form.setAttribute('novalidate', 'novalidate');
-    this.groups = removeUnvalidatableGroups([].slice.call(this.form.querySelectorAll('input:not([type=submit]), textarea, select')).reduce(assembleValidationGroup, {}));
-    this.initListeners();
-
-    console.log(this.groups);
-    return this;
-  },
-  initListeners: function initListeners() {
-    var _this = this;
-
-    this.form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      _this.clearErrors();
-      _this.setValidityState().then(function (res) {
-        var _ref;
-
-        if (!(_ref = []).concat.apply(_ref, _toConsumableArray(res)).includes(false)) _this.form.submit();else _this.renderErrors(), _this.initRealTimeValidation();
-      });
-    });
-
-    this.form.addEventListener('reset', function (e) {
-      _this.clearErrors();
-    });
-  },
-  initRealTimeValidation: function initRealTimeValidation() {
-    var _this3 = this;
-
-    var handler = function (group) {
-      var _this2 = this;
-
-      this.setGroupValidityState(group).then(function (res) {
-        if (_this2.groups[group].errorDOM) _this2.removeError(group);
-        if (res.includes(false)) _this2.renderError(group);
-      });
-    }.bind(this);
-
-    var _loop = function _loop(group) {
-      _this3.groups[group].fields.forEach(function (input) {
-        input.addEventListener(chooseRealTimeEvent(input), handler.bind(_this3, group));
-      });
-
-      //pls, refactor me ;_;
-      var equalToValidator = _this3.groups[group].validators.filter(function (validator) {
-        return validator.type === 'equalto';
-      });
-
-      if (equalToValidator.length > 0) {
-        equalToValidator[0].params[0].forEach(function (subgroup) {
-          subgroup.forEach(function (item) {
-            item.addEventListener('blur', handler.bind(_this3, group));
-          });
+var clearError = function clearError(groupName) {
+    return function (model) {
+        errorNodes[groupName].parentNode.removeChild(errorNodes[groupName]);
+        if (model.groups[groupName].serverErrorNode) {
+            model.groups[groupName].serverErrorNode.classList.remove(DOTNET_CLASSNAMES.ERROR);
+            model.groups[groupName].serverErrorNode.classList.add(DOTNET_CLASSNAMES.VALID);
+        }
+        model.groups[groupName].fields.forEach(function (field) {
+            field.removeAttribute('aria-invalid');
         });
-      }
+        delete errorNodes[groupName];
+    };
+};
+
+var clearErrors = function clearErrors(model) {
+    Object.keys(errorNodes).forEach(function (name) {
+        clearError(name)(model);
+    });
+};
+
+var renderErrors = function renderErrors(model) {
+    Object.keys(model.groups).forEach(function (groupName) {
+        if (!model.groups[groupName].valid) renderError(groupName)(model);
+    });
+};
+
+var renderError = function renderError(groupName) {
+    return function (model) {
+        if (errorNodes[groupName]) clearError(groupName)(model);
+
+        errorNodes[groupName] = model.groups[groupName].serverErrorNode ? createErrorTextNode(model.groups[groupName], model.groups[groupName].errorMessages[0]) : model.groups[groupName].fields[model.groups[groupName].fields.length - 1].parentNode.appendChild(h('div', { class: DOTNET_CLASSNAMES.ERROR }, model.groups[groupName].errorMessages[0]));
+
+        model.groups[groupName].fields.forEach(function (field) {
+            field.setAttribute('aria-invalid', 'true');
+        });
+    };
+};
+
+var validate$1 = function validate$1(e) {
+    e && e.preventDefault();
+    Store.dispatch(ACTIONS.CLEAR_ERRORS, null, [clearErrors]);
+
+    getValidityState(Store.getState().groups).then(function (validityState) {
+        var _ref2;
+
+        if (e && e.target && (_ref2 = []).concat.apply(_ref2, _toConsumableArray(validityState)).reduce(reduceGroupValidityState, true)) return form.submit();
+
+        Store.dispatch(ACTIONS.VALIDATION_ERRORS, Object.keys(Store.getState().groups).reduce(function (acc, group, i) {
+            return acc[group] = {
+                valid: validityState[i].reduce(reduceGroupValidityState, true),
+                errorMessages: validityState[i].reduce(reduceErrorMessages(group, Store.getState()), [])
+            }, acc;
+        }, {}), [renderErrors]);
+
+        realTimeValidation();
+    });
+};
+
+var addMethod = function addMethod(groupName, method, message) {
+    //also check if Store.getState()[groupName] exists, if not check that document.getElementsByName(groupName).length !== 0
+    if (groupName === undefined || method === undefined || message === undefined || !Store.getState()[groupName] && document.getElementsByName(groupName).length === 0) return console.warn('Custom validation method cannot be added.');
+
+    Store.dispatch(ACTIONS.ADD_VALIDATION_METHOD, { groupName: groupName, validator: { type: 'custom', method: method, message: message } });
+};
+
+var realTimeValidation = function realTimeValidation() {
+    var handler = function handler(groupName) {
+        return function () {
+            if (!Store.getState().groups[groupName].valid) Store.dispatch(ACTIONS.CLEAR_ERROR, groupName, [clearError(groupName)]);
+            getGroupValidityState(Store.getState().groups[groupName]).then(function (res) {
+                if (!res.reduce(reduceGroupValidityState, true)) Store.dispatch(ACTIONS.VALIDATION_ERROR, {
+                    group: groupName,
+                    errorMessages: res.reduce(reduceErrorMessages(groupName, Store.getState()), [])
+                }, [renderError(groupName)]);
+            });
+        };
     };
 
-    for (var group in this.groups) {
-      _loop(group);
-    }
-  },
-  setGroupValidityState: function setGroupValidityState(group) {
-    var _this4 = this;
-
-    //reset validity and errorMessages
-    this.groups[group] = Object.assign({}, this.groups[group], { valid: true, errorMessages: [] });
-    return Promise.all(this.groups[group].validators.map(function (validator) {
-      return new Promise(function (resolve) {
-        //to do?
-        //only perform the remote validation if all else passes
-
-        //refactor, extract this whole fn...
-        if (validator.type !== 'remote') {
-          if (validate(_this4.groups[group], validator)) resolve(true);else {
-            //mutation and side effect...
-            _this4.groups[group].valid = false;
-            _this4.groups[group].errorMessages.push(extractErrorMessage(validator, group));
-            resolve(false);
-          }
-        } else validate(_this4.groups[group], validator).then(function (res) {
-          if (res && res === true) resolve(true);else {
-            //mutation, side effect, and un-DRY...
-            _this4.groups[group].valid = false;
-            _this4.groups[group].errorMessages.push(typeof res === 'boolean' ? extractErrorMessage(validator, group) : 'Server error: ' + res);
-            resolve(false);
-          }
+    Object.keys(Store.getState().groups).forEach(function (groupName) {
+        Store.getState().groups[groupName].fields.forEach(function (input) {
+            input.addEventListener(resolveRealTimeValidationEvent(input), handler(groupName));
         });
-      });
-    }));
-  },
-  setValidityState: function setValidityState() {
-    var groupValidators = [];
-    for (var group in this.groups) {
-      groupValidators.push(this.setGroupValidityState(group));
-    }return Promise.all(groupValidators);
-  },
-  clearErrors: function clearErrors() {
-    for (var group in this.groups) {
-      if (this.groups[group].errorDOM) this.removeError(group);
-    }
-  },
-  removeError: function removeError(group) {
-    this.groups[group].errorDOM.parentNode.removeChild(this.groups[group].errorDOM);
-    this.groups[group].serverErrorNode && this.groups[group].serverErrorNode.classList.remove('error');
-    this.groups[group].fields.forEach(function (field) {
-      field.removeAttribute('aria-invalid');
-    }); //or should i set this to false if field passes validation?
-    delete this.groups[group].errorDOM;
-  },
-  renderErrors: function renderErrors() {
-    //support for inline and error list?
-    for (var group in this.groups) {
-      if (!this.groups[group].valid) this.renderError(group);
-    }
-  },
-  renderError: function renderError(group) {
-    if (this.groups[group].errorDOM) this.removeError(group);
-    this.groups[group].errorDOM = this.groups[group].serverErrorNode ? createErrorTextNode(this.groups[group]) : this.groups[group].fields[this.groups[group].fields.length - 1].parentNode.appendChild(h('div', { class: 'error' }, this.groups[group].errorMessages[0]));
+        //;_; can do better?
+        var equalToValidator = Store.getState().groups[groupName].validators.filter(function (validator) {
+            return validator.type === 'equalto';
+        });
 
-    //set aria-invalid on invalid inputs
-    this.groups[group].fields.forEach(function (field) {
-      field.setAttribute('aria-invalid', 'true');
+        equalToValidator.length > 0 && equalToValidator[0].params.other.forEach(function (subgroup) {
+            subgroup.forEach(function (item) {
+                item.addEventListener('blur', handler(groupName));
+            });
+        });
     });
-  },
-  addMethod: function addMethod(name, method, message) {
-    this.groups[name].validators.push({ method: method, message: message });
-    //extend messages
-  }
+};
+
+var factory = function factory(form, settings) {
+    Store.dispatch(ACTIONS.SET_INITIAL_STATE, getInitialState(form));
+    form.addEventListener('submit', validate$1);
+    form.addEventListener('reset', function () {
+        Store.update(UPDATES.CLEAR_ERRORS, null, [clearErrors]);
+    });
+
+    return {
+        validate: validate$1,
+        addMethod: addMethod
+    };
 };
 
 var init = function init(candidate, opts) {
-  var els = void 0;
+    var els = void 0;
 
-  //assume it's a dom node
-  if (typeof candidate !== 'string' && candidate.nodeName && candidate.nodeName === 'FORM') els = [candidate];else els = [].slice.call(document.querySelectorAll(candidate));
+    if (typeof candidate !== 'string' && candidate.nodeName && candidate.nodeName === 'FORM') els = [candidate];else els = [].slice.call(document.querySelectorAll(candidate));
 
-  return els.reduce(function (acc, el) {
-    if (el.getAttribute('novalidate')) return;
-    acc.push(Object.assign(Object.create(componentPrototype), {
-      form: el,
-      settings: Object.assign({}, defaults, opts)
-    }).init());
-    return acc;
-  }, []);
+    if (els.length === 1 && window.__validators__ && window.__validators__[els[0]]) return window.__validators__[els[0]];
+
+    //attached to window.__validators__
+    //so we can both init, auto-initialise and refer back to an instance attached to a form to add additional validators
+    return window.__validators__ = Object.assign({}, window.__validators__, els.reduce(function (acc, el) {
+        if (el.getAttribute('novalidate')) return;
+        acc[el] = Object.assign(Object.create(factory(el, Object.assign({}, defaults, opts))));
+        return el.setAttribute('novalidate', 'novalidate'), acc;
+    }, {}));
 };
 
 //Auto-initialise
 {
-  [].slice.call(document.querySelectorAll('form')).forEach(function (form) {
-    form.querySelector('[data-val=true]') && init(form);
-  });
+    [].slice.call(document.querySelectorAll('form')).forEach(function (form) {
+        form.querySelector('[data-val=true]') && init(form);
+    });
 }
 
 var index = { init: init };
