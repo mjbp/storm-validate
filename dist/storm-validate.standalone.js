@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.4.5: Fri, 09 Feb 2018 13:51:24 GMT
+ * @version 0.5.0: Fri, 09 Feb 2018 15:36:15 GMT
  * @author stormid
  * @license MIT
  */
@@ -135,7 +135,7 @@ var getState = function getState() {
 var dispatch = function dispatch(type, nextState, effects) {
     state = nextState ? reducers[type](state, nextState) : state;
     // window.__validator_history__.push({[type]: state}), console.log(window.__validator_history__);
-    console.log(_defineProperty({}, type, state));
+    // console.log({[type]: state});
     if (!effects) return;
     effects.forEach(function (effect) {
         effect(state);

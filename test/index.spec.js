@@ -7,12 +7,12 @@ const html = `<form method="post" action="" autocomplete="off">
   <div class="form-group">
     <label for="cn">Text (required, at least 2 characters)</label>
     <input id="cn" name="cn" data-val="true" data-val-length="Please enter at least 2 characters." data-val-min="2" type="text" data-val-required="Custom error message">
-    <!-- <span class="text-danger field-validation-valid" data-valmsg-for="cn" data-valmsg-replace="true"></span> -->
+    <span class="text-danger field-validation-valid" data-valmsg-for="cn" data-valmsg-replace="true"></span>
   </div>
   <div class="form-group">
     <label for="clen">Text (required, min 2 characters, max 8 characters)</label>
     <input id="clen" name="clen" data-val="true" data-val-length="Please enter between 2 and 8 characters"  data-val-required="This field is required" data-val-min="2" data-val-max="8" type="text">
-    <!-- <span class="text-danger field-validation-valid" data-valmsg-for="cn" data-valmsg-replace="true"></span> -->
+    <span class="text-danger field-validation-valid" data-valmsg-for="cn" data-valmsg-replace="true"></span>
   </div>
   <div class="form-group">
     <label for="ignored">Ignored</label>
@@ -69,87 +69,35 @@ const html = `<form method="post" action="" autocomplete="off">
 
 document.body.innerHTML = html;
   
-let validators = Validate.init('form');
+let validator = Validate.init('form');
+
+let form = document.querySelector('form');
 
 
 describe('Initialisation', () => {
 
-  it('should return array of length 1', () => {
+  it('should return an Object with validate and addMethod functions', () => {
 
-    should(validators)
-      .Array()
-      .and.have.lengthOf(1);
-
-  });
-
-  it('each array item should be an object with DOMElement, settings, init, and  handleClick properties', () => {
-
-    validators[0].should.be.an.instanceOf(Object).and.not.empty();
-    validators[0].should.have.property('form');
-    validators[0].should.have.property('settings').Object();
-    validators[0].should.have.property('init').Function()
-    validators[0].should.have.property('groups').Object();
-    validators[0].should.have.property('groups').Object();
-    validators[0].should.have.property('initListeners').Function();
-    validators[0].should.have.property('initRealTimeValidation').Function();
-    validators[0].should.have.property('setGroupValidityState').Function();
-    validators[0].should.have.property('setValidityState').Function();
-    validators[0].should.have.property('clearErrors').Function();
-    validators[0].should.have.property('removeError').Function();
-    validators[0].should.have.property('renderErrors').Function();
-    validators[0].should.have.property('renderError').Function();
-    validators[0].should.have.property('addMethod').Function();
+    validator.should.be.an.instanceOf(Object).and.not.empty();
+    validator[form].should.have.property('validate').Function()
+    validator[form].should.have.property('addMethod').Function();
 
   });
 
+  it('should write errors to the dom on validation', () => {
 
-//   it('should attach the handleClick eventListener to DOMElement click event to toggle className', () => {
+    validator[form].validate();
 
-//     components[0].node.click();
-//     Array.from(components[0].node.classList).should.containEql('clicked');
-//     components[0].node.click();
-//     Array.from(components[0].node.classList).should.not.containEql('clicked');
+    //validate required text input
+    window.setTimeout(()=> {
+        document.getElementById('cn').nextElementSibling.innerHTML.should.be.equal('Custom error message');
+        document.getElementById('cn').nextElementSibling.classList.should.containEql('field-validation-error');
+    }, 0);
 
-//   });
-  
-//   it('should initialisation with different settings if different options are passed', () => {
+  });
 
-//     should(componentsTwo[0].settings.callback).not.equal(components[0].settings.callback);
-  
-//   });
-
-// });
-
-
-// describe('Callbacks', () => {
-
-//   it('should be passed in options', () => {
-
-//     should(components[0].settings.callback).null();
-//     should(componentsTwo[0].settings.callback).Function();
-
-//   });
-
-//   it('should execute in the context of the component', () => {
-
-//     componentsTwo[0].node.click();
-//     Array.from(componentsTwo[0].node.classList).should.containEql('callback-test');
-//     componentsTwo[0].node.click();
-//     Array.from(componentsTwo[0].node.classList).should.not.containEql('callback-test');
-
-//   });
-
-// });
-
-// describe('Component API', () => {
-
-//   it('should trigger the handleClick function toggling the className', () => {
-
-//     components[0].handleClick();
-//     Array.from(components[0].node.classList).should.containEql('clicked');
-//     components[0].handleClick();
-//     Array.from(components[0].node.classList).should.not.containEql('clicked');
-
-//    });
+/*
+Interegate individual fns
+*/
 
 });
