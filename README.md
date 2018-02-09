@@ -18,10 +18,9 @@ To add a custom validation method:
 let validator = Validate.init('form');
 
 validator.addMethod(
-    'test', //validator name
     'RequiredString', //input/input group name
     (value, fields, params) => { //validation method
-        return value === 'test';
+        return value === 'test'; //must return boolean
     },
     'Value must equal "test"' //error message on validation failure
 );
