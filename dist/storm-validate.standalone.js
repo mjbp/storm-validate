@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.4.5: Thu, 08 Feb 2018 21:49:18 GMT
+ * @version 0.4.5: Fri, 09 Feb 2018 13:37:25 GMT
  * @author stormid
  * @license MIT
  */
@@ -24,7 +24,7 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _updates;
+var _reducers;
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
@@ -32,12 +32,13 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 var defaults = {};
 
-var UPDATES = {
-    SET_INITIAL_MODEL: 'SET_INITIAL_MODEL',
+var ACTIONS = {
+    SET_INITIAL_STATE: 'SET_INITIAL_STATE',
     CLEAR_ERRORS: 'CLEAR_ERRORS',
     VALIDATION_ERRORS: 'VALIDATION_ERRORS',
     VALIDATION_ERROR: 'VALIDATION_ERROR',
-    CLEAR_ERROR: 'CLEAR_ERROR'
+    CLEAR_ERROR: 'CLEAR_ERROR',
+    ADD_VALIDATION_METHOD: 'ADD_VALIDATION_METHOD'
 };
 
 //https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address
@@ -79,65 +80,69 @@ var DOTNET_CLASSNAMES = {
     ERROR: 'field-validation-error'
 };
 
-var updates = (_updates = {}, _defineProperty(_updates, UPDATES.SET_INITIAL_MODEL, function (model, data) {
-    return Object.assign({}, model, data);
-}), _defineProperty(_updates, UPDATES.CLEAR_ERRORS, function (mdoel) {
-    return Object.assign({}, model, {
-        groups: Object.keys(model.groups).reduce(function (acc, group) {
-            acc[group] = Object.assign({}, model.groups[group], {
+var reducers = (_reducers = {}, _defineProperty(_reducers, ACTIONS.SET_INITIAL_STATE, function (state, data) {
+    return Object.assign({}, state, data);
+}), _defineProperty(_reducers, ACTIONS.CLEAR_ERRORS, function (state) {
+    return Object.assign({}, state, {
+        groups: Object.keys(state.groups).reduce(function (acc, group) {
+            acc[group] = Object.assign({}, state.groups[group], {
                 errorMessages: [],
                 valid: true
             });
             return acc;
         }, {})
     });
-}), _defineProperty(_updates, UPDATES.CLEAR_ERROR, function (model, data) {
-    return Object.assign({}, model, {
-        groups: Object.assign({}, model.groups, _defineProperty({}, data, Object.assign({}, model.groups[data], {
+}), _defineProperty(_reducers, ACTIONS.CLEAR_ERROR, function (state, data) {
+    return Object.assign({}, state, {
+        groups: Object.assign({}, state.groups, _defineProperty({}, data, Object.assign({}, state.groups[data], {
             errorMessages: [],
             valid: true
         })))
     });
-}), _defineProperty(_updates, UPDATES.VALIDATION_ERRORS, function (model, data) {
-    return Object.assign({}, model, {
-        groups: Object.keys(model.groups).reduce(function (acc, group) {
-            acc[group] = Object.assign({}, model.groups[group], data[group]);
+}), _defineProperty(_reducers, ACTIONS.ADD_VALIDATION_METHOD, function (state, data) {
+    return Object.assign({}, state, {
+        groups: Object.assign({}, state.groups, _defineProperty({}, data.groupName, Object.assign({}, state.groups[data.groupName] ? state.groups[data.groupName] : {}, state.groups[data.groupName] ? { validators: [].concat(_toConsumableArray(state.groups[data.groupName].validators), [data.validator]) } : {
+            fields: [].slice.call(document.getElementsByName(data.groupName)),
+            serverErrorNode: document.querySelector('[' + DOTNET_ERROR_SPAN_DATA_ATTRIBUTE + '=' + data.groupName + ']') || false,
+            valid: false,
+            validators: [data.validator]
+        })))
+    });
+}), _defineProperty(_reducers, ACTIONS.VALIDATION_ERRORS, function (state, data) {
+    return Object.assign({}, state, {
+        groups: Object.keys(state.groups).reduce(function (acc, group) {
+            acc[group] = Object.assign({}, state.groups[group], data[group]);
             return acc;
         }, {})
     });
-}), _defineProperty(_updates, UPDATES.VALIDATION_ERROR, function (model, data) {
-    return Object.assign({}, model, {
-        groups: Object.assign({}, model.groups, _defineProperty({}, data.group, Object.assign({}, model.groups[data.group], {
+}), _defineProperty(_reducers, ACTIONS.VALIDATION_ERROR, function (state, data) {
+    return Object.assign({}, state, {
+        groups: Object.assign({}, state.groups, _defineProperty({}, data.group, Object.assign({}, state.groups[data.group], {
             errorMessages: data.errorMessages,
             valid: false
         })))
     });
-}), _updates);
+}), _reducers);
 
-// import render from '../renderer';
+var state = {};
 
-var model$1 = {};
+// window.__validator_history__ = [];
 
-window.MODEL_HISTORY = [];
-
-var getModel = function getModel() {
-    return model$1;
+var getState = function getState() {
+    return state;
 };
 
-var update = function update(type, nextModel, effects) {
-    model$1 = nextModel ? updates[type](model$1, nextModel) : model$1;
-    // window.MODEL_HISTORY.push({[action.type]: model});
-    console.log(_defineProperty({}, type, model$1));
+var dispatch = function dispatch(type, nextState, effects) {
+    state = nextState ? reducers[type](state, nextState) : state;
+    // window.__validator_history__.push({[type]: state}), console.log(window.__validator_history__);
+    console.log(_defineProperty({}, type, state));
     if (!effects) return;
     effects.forEach(function (effect) {
-        effect(model$1);
+        effect(state);
     });
 };
 
-var Model = {
-    update: update,
-    getModel: getModel
-};
+var Store = { dispatch: dispatch, getState: getState };
 
 var isCheckable = function isCheckable(field) {
     return (/radio|checkbox/i.test(field.type)
@@ -178,7 +183,7 @@ var resolveGetParams = function resolveGetParams(nodeArrays) {
 
 var DOMNodesFromCommaList = function DOMNodesFromCommaList(list, input) {
     return list.split(',').map(function (item) {
-        var resolvedSelector = escapeAttributeValue(appendModelPrefix(item, getModelPrefix(input.getAttribute('name'))));
+        var resolvedSelector = escapeAttributeValue(appendStatePrefix(item, getStatePrefix(input.getAttribute('name'))));
         return [].slice.call(document.querySelectorAll('[name=' + resolvedSelector + ']'));
     });
 };
@@ -187,11 +192,11 @@ var escapeAttributeValue = function escapeAttributeValue(value) {
     return value.replace(/([!"#$%&'()*+,./:;<=>?@\[\\\]^`{|}~])/g, "\\$1");
 };
 
-var getModelPrefix = function getModelPrefix(fieldName) {
+var getStatePrefix = function getStatePrefix(fieldName) {
     return fieldName.substr(0, fieldName.lastIndexOf('.') + 1);
 };
 
-var appendModelPrefix = function appendModelPrefix(value, prefix) {
+var appendStatePrefix = function appendStatePrefix(value, prefix) {
     if (value.indexOf("*.") === 0) value = value.replace("*.", prefix);
     return value;
 };
@@ -331,6 +336,9 @@ var methods = {
                 resolve('Server error: ' + res);
             });
         });
+    },
+    custom: function custom(method, group) {
+        return isOptional(group) || method(extractValueFromGroup(group), group.fields);
     }
 };
 
@@ -402,7 +410,7 @@ var extractAttrValidators = function extractAttrValidators(input) {
     return pipe(email(input), url(input), number(input), minlength(input), maxlength(input), min(input), max(input), pattern(input), required(input));
 };
 
-//un-DRY... and unreadable
+//un-DRY...
 var required = function required(input) {
     return function () {
         var validators = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
@@ -463,7 +471,7 @@ var normaliseValidators = function normaliseValidators(input) {
 };
 
 var validate = function validate(group, validator) {
-    return validator.method ? validator.method(extractValueFromGroup(group), group.fields) : methods[validator.type](group, validator.params);
+    return validator.type === 'custom' ? methods['custom'](validator.method, group) : methods[validator.type](group, validator.params);
 };
 
 var assembleValidationGroup = function assembleValidationGroup(acc, input) {
@@ -480,9 +488,9 @@ var extractErrorMessage = function extractErrorMessage(validator) {
     return validator.message || messages[validator.type](validator.params !== undefined ? validator.params : null);
 };
 
-var reduceErrorMessages = function reduceErrorMessages(group, model) {
+var reduceErrorMessages = function reduceErrorMessages(group, state) {
     return function (acc, validity, j) {
-        return validity === true ? acc : [].concat(_toConsumableArray(acc), [typeof validity === 'boolean' ? extractErrorMessage(model.groups[group].validators[j]) : validity]);
+        return validity === true ? acc : [].concat(_toConsumableArray(acc), [typeof validity === 'boolean' ? extractErrorMessage(state.groups[group].validators[j]) : validity]);
     };
 };
 
@@ -494,24 +502,24 @@ var removeUnvalidatableGroups = function removeUnvalidatableGroups(groups) {
     }return validationGroups;
 };
 
-var getInitialModel = function getInitialModel(form) {
+var getInitialState = function getInitialState(form) {
     return {
         groups: removeUnvalidatableGroups([].slice.call(form.querySelectorAll('input:not([type=submit]), textarea, select')).reduce(assembleValidationGroup, {}))
     };
 };
 
-var reduceGroupValidityModel = function reduceGroupValidityModel(acc, curr) {
+var reduceGroupValidityState = function reduceGroupValidityState(acc, curr) {
     if (curr !== true) acc = false;
     return acc;
 };
 
-var getValidityModel = function getValidityModel(groups) {
+var getValidityState = function getValidityState(groups) {
     return Promise.all(Object.keys(groups).map(function (group) {
-        return getGroupValidityModel(groups[group]);
+        return getGroupValidityState(groups[group]);
     }));
 };
 
-var getGroupValidityModel = function getGroupValidityModel(group) {
+var getGroupValidityState = function getGroupValidityState(group) {
     var hasError = false;
     return Promise.all(group.validators.map(function (validator) {
         return new Promise(function (resolve) {
@@ -592,18 +600,17 @@ var renderError = function renderError(groupName) {
 
 var validate$1 = function validate$1(e) {
     e && e.preventDefault();
-    Model.update(UPDATES.CLEAR_ERRORS, null, [clearErrors]);
+    Store.dispatch(ACTIONS.CLEAR_ERRORS, null, [clearErrors]);
 
-    getValidityModel(Model.getModel().groups).then(function (validityModel) {
+    getValidityState(Store.getState().groups).then(function (validityState) {
         var _ref2;
 
-        //no errors (all true, no false or error Strings), just submit
-        if (e && e.target && (_ref2 = []).concat.apply(_ref2, _toConsumableArray(validityModel)).reduce(reduceGroupValidityModel, true)) return form.submit();
+        if (e && e.target && (_ref2 = []).concat.apply(_ref2, _toConsumableArray(validityState)).reduce(reduceGroupValidityState, true)) return form.submit();
 
-        Model.update(UPDATES.VALIDATION_ERRORS, Object.keys(Model.getModel().groups).reduce(function (acc, group, i) {
+        Store.dispatch(ACTIONS.VALIDATION_ERRORS, Object.keys(Store.getState().groups).reduce(function (acc, group, i) {
             return acc[group] = {
-                valid: validityModel[i].reduce(reduceGroupValidityModel, true),
-                errorMessages: validityModel[i].reduce(reduceErrorMessages(group, Model.getModel()), [])
+                valid: validityState[i].reduce(reduceGroupValidityState, true),
+                errorMessages: validityState[i].reduce(reduceErrorMessages(group, Store.getState()), [])
             }, acc;
         }, {}), [renderErrors]);
 
@@ -611,29 +618,32 @@ var validate$1 = function validate$1(e) {
     });
 };
 
-var addMethod = function addMethod(type, groupName, method, message) {
-    if (type === undefined || groupName === undefined || method === undefined || message === undefined) return console.warn('Custom validation method cannot be added.');
-    model.groups[groupName].validators.push({ type: type, method: method, message: message });
+var addMethod = function addMethod(groupName, method, message) {
+    //also check if Store.getState()[groupName] exists, if not check that document.getElementsByName(groupName).length !== 0
+    if (groupName === undefined || method === undefined || message === undefined || !Store.getState()[groupName] && document.getElementsByName(groupName).length === 0) return console.warn('Custom validation method cannot be added.');
+
+    Store.dispatch(ACTIONS.ADD_VALIDATION_METHOD, { groupName: groupName, validator: { type: 'custom', method: method, message: message } });
 };
 
 var realTimeValidation = function realTimeValidation() {
     var handler = function handler(groupName) {
         return function () {
-            if (!Model.getModel().groups[groupName].valid) Model.update(UPDATES.CLEAR_ERROR, groupName, [clearError(groupName)]);
-            getGroupValidityModel(Model.getModel().groups[groupName]).then(function (res) {
-                if (!res.reduce(reduceGroupValidityModel, true)) Model.update(UPDATES.VALIDATION_ERROR, {
+            if (!Store.getState().groups[groupName].valid) Store.dispatch(ACTIONS.CLEAR_ERROR, groupName, [clearError(groupName)]);
+            getGroupValidityState(Store.getState().groups[groupName]).then(function (res) {
+                if (!res.reduce(reduceGroupValidityState, true)) Store.dispatch(ACTIONS.VALIDATION_ERROR, {
                     group: groupName,
-                    errorMessages: res.reduce(reduceErrorMessages(groupName, Model.getModel()), [])
+                    errorMessages: res.reduce(reduceErrorMessages(groupName, Store.getState()), [])
                 }, [renderError(groupName)]);
             });
         };
     };
 
-    Object.keys(Model.getModel().groups).forEach(function (groupName) {
-        Model.getModel().groups[groupName].fields.forEach(function (input) {
+    Object.keys(Store.getState().groups).forEach(function (groupName) {
+        Store.getState().groups[groupName].fields.forEach(function (input) {
             input.addEventListener(resolveRealTimeValidationEvent(input), handler(groupName));
         });
-        var equalToValidator = Model.getModel().groups[groupName].validators.filter(function (validator) {
+        //;_; can do better?
+        var equalToValidator = Store.getState().groups[groupName].validators.filter(function (validator) {
             return validator.type === 'equalto';
         });
 
@@ -646,12 +656,10 @@ var realTimeValidation = function realTimeValidation() {
 };
 
 var factory = function factory(form, settings) {
-    Model.update(UPDATES.SET_INITIAL_MODEL, getInitialModel(form));
-
+    Store.dispatch(ACTIONS.SET_INITIAL_STATE, getInitialState(form));
     form.addEventListener('submit', validate$1);
-
     form.addEventListener('reset', function () {
-        Model.update(UPDATES.CLEAR_ERRORS, null, [clearErrors]);
+        Store.update(UPDATES.CLEAR_ERRORS, null, [clearErrors]);
     });
 
     return {

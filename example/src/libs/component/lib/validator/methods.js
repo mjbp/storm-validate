@@ -48,5 +48,6 @@ export default {
         .then(res => res.json())
         .then(data => { resolve(data); })
         .catch(res => { resolve(`Server error: ${res}`); });
-    })
+    }),
+    custom: (method, group) => isOptional(group)|| method(extractValueFromGroup(group), group.fields)
 };

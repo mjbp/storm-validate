@@ -1,16 +1,25 @@
 import Validate from './libs/component';
 
 const onDOMContentLoadedTasks = [() => {
-    window.validator = Validate.init('form');
+    let validator = Validate.init('form');
 
-    // validator.addMethod(
-    //     'test',
-    //     'RequiredString',
-    //     (value, fields, params) => {
-    //         return value === 'test';
-    //     },
-    //     'Value must equal "test"'
-    // );
+    console.log(validator);
+
+    validator.addMethod(
+        'RequiredString',
+        (value, fields, params) => {
+            return value === 'test';
+        },
+        'Value must equal "test"'
+    );
+
+    validator.addMethod(
+        'CustomValidator',
+        (value, fields, params) => {
+            return value === 'test 2';
+        },
+        'Value must equal "test 2"'
+    );
 
 }];
 

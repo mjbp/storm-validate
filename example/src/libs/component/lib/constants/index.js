@@ -4,12 +4,13 @@ export const KEY_CODES = {
     ENTER: 13
 };
 
-export const UPDATES = {
-    SET_INITIAL_MODEL: 'SET_INITIAL_MODEL',
+export const ACTIONS = {
+    SET_INITIAL_STATE: 'SET_INITIAL_STATE',
     CLEAR_ERRORS: 'CLEAR_ERRORS',
     VALIDATION_ERRORS: 'VALIDATION_ERRORS',
     VALIDATION_ERROR: 'VALIDATION_ERROR',
-    CLEAR_ERROR: 'CLEAR_ERROR'
+    CLEAR_ERROR: 'CLEAR_ERROR',
+    ADD_VALIDATION_METHOD: 'ADD_VALIDATION_METHOD'
 };
 
 //https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address

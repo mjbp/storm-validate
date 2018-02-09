@@ -40,7 +40,7 @@ const extractDataValValidators = input => DOTNET_ADAPTORS.reduce((validators, ad
 
 const extractAttrValidators = input => pipe(email(input), url(input), number(input), minlength(input), maxlength(input), min(input), max(input), pattern(input), required(input));
 
-//un-DRY... and unreadable
+//un-DRY...
 const required = input => (validators = [])  => input.hasAttribute('required') && input.getAttribute('required') !== 'false' ? [...validators, {type: 'required'}] : validators;
 const email = input => (validators = [])  => input.getAttribute('type') === 'email' ? [...validators, {type: 'email'}] : validators;
 const url = input => (validators = [])  => input.getAttribute('type') === 'url' ? [...validators, {type: 'url'}] : validators;
@@ -55,8 +55,8 @@ export const normaliseValidators = input => input.getAttribute('data-val') === '
                                             ? extractDataValValidators(input)
                                             : extractAttrValidators(input);
 
-export const validate = (group, validator) => validator.method 
-                                              ? validator.method(extractValueFromGroup(group), group.fields)
+export const validate = (group, validator) => validator.type === 'custom' 
+                                              ? methods['custom'](validator.method, group)
                                               : methods[validator.type](group, validator.params);
 
 export const assembleValidationGroup = (acc, input) => {
@@ -72,11 +72,11 @@ export const assembleValidationGroup = (acc, input) => {
 
 const extractErrorMessage = validator => validator.message || messages[validator.type](validator.params !== undefined ? validator.params : null);
 
-export const reduceErrorMessages = (group, model) => (acc, validity, j) => {
+export const reduceErrorMessages = (group, state) => (acc, validity, j) => {
     return validity === true 
                 ? acc 
                 : [...acc, typeof validity === 'boolean' 
-                            ? extractErrorMessage(model.groups[group].validators[j])
+                            ? extractErrorMessage(state.groups[group].validators[j])
                             : validity];
 };
 
@@ -90,24 +90,24 @@ export const removeUnvalidatableGroups = groups => {
     return validationGroups;
 };
 
-export const getInitialModel = form => ({
+export const getInitialState = form => ({
     groups: removeUnvalidatableGroups([].slice.call(form.querySelectorAll('input:not([type=submit]), textarea, select'))
                     .reduce(assembleValidationGroup, {}))
 });
 
-export const reduceGroupValidityModel = (acc, curr) => {
+export const reduceGroupValidityState = (acc, curr) => {
     if(curr !== true) acc = false;
     return acc; 
 };
 
-export const getValidityModel = groups => {
+export const getValidityState = groups => {
     return Promise.all(
         Object.keys(groups)
-            .map(group => getGroupValidityModel(groups[group]))
+            .map(group => getGroupValidityState(groups[group]))
         );
 };
 
-export const getGroupValidityModel = group => {
+export const getGroupValidityState = group => {
     let hasError = false;
 	return Promise.all(group.validators.map(validator => {
         return new Promise(resolve => {

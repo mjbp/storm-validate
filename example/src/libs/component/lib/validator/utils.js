@@ -23,15 +23,15 @@ export const resolveGetParams = nodeArrays => nodeArrays.map((nodes) => {
 
 export const DOMNodesFromCommaList = (list, input) => list.split(',')
                                                 .map(item => {
-                                                    let resolvedSelector = escapeAttributeValue(appendModelPrefix(item, getModelPrefix(input.getAttribute('name'))));
+                                                    let resolvedSelector = escapeAttributeValue(appendStatePrefix(item, getStatePrefix(input.getAttribute('name'))));
                                                     return [].slice.call(document.querySelectorAll(`[name=${resolvedSelector}]`));
                                                 });
 
 const escapeAttributeValue = value => value.replace(/([!"#$%&'()*+,./:;<=>?@\[\\\]^`{|}~])/g, "\\$1");
 
-const getModelPrefix = fieldName => fieldName.substr(0, fieldName.lastIndexOf('.') + 1);
+const getStatePrefix = fieldName => fieldName.substr(0, fieldName.lastIndexOf('.') + 1);
 
-const appendModelPrefix = (value, prefix) => {
+const appendStatePrefix = (value, prefix) => {
     if (value.indexOf("*.") === 0) value = value.replace("*.", prefix);
     return value;
 }

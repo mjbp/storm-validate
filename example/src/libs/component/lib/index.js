@@ -1,10 +1,10 @@
-import Model from './model';
-import { UPDATES } from './constants';
+import Store from './store';
+import { ACTIONS } from './constants';
 import { 
-    getInitialModel,
-    getValidityModel,
-    getGroupValidityModel,
-    reduceGroupValidityModel,
+    getInitialState,
+    getValidityState,
+    getGroupValidityState,
+    reduceGroupValidityState,
     resolveRealTimeValidationEvent,
     reduceErrorMessages
 } from './validator';
@@ -13,24 +13,23 @@ import {
     clearError,
     renderError,
     renderErrors
-}  from './view';
+}  from './dom';
 
 const validate = e => {
     e && e.preventDefault();
-    Model.update(UPDATES.CLEAR_ERRORS, null, [clearErrors]);
+    Store.dispatch(ACTIONS.CLEAR_ERRORS, null, [clearErrors]);
 
-    getValidityModel(Model.getModel().groups)
-        .then(validityModel => {
-            //no errors (all true, no false or error Strings), just submit
-            if(e && e.target && [].concat(...validityModel).reduce(reduceGroupValidityModel, true)) return form.submit();
+    getValidityState(Store.getState().groups)
+        .then(validityState => {
+            if(e && e.target && [].concat(...validityState).reduce(reduceGroupValidityState, true)) return form.submit();
 
-            Model.update(
-                UPDATES.VALIDATION_ERRORS,
-                Object.keys(Model.getModel().groups)
+            Store.dispatch(
+                ACTIONS.VALIDATION_ERRORS,
+                Object.keys(Store.getState().groups)
                     .reduce((acc, group, i) => {                                         
                         return acc[group] = {
-                            valid: validityModel[i].reduce(reduceGroupValidityModel, true),
-                            errorMessages: validityModel[i].reduce(reduceErrorMessages(group, Model.getModel()), [])
+                            valid: validityState[i].reduce(reduceGroupValidityState, true),
+                            errorMessages: validityState[i].reduce(reduceErrorMessages(group, Store.getState()), [])
                         }, acc;
                     }, {}),
                 [renderErrors]
@@ -40,34 +39,38 @@ const validate = e => {
         });
 };
 
-const addMethod = (type, groupName, method, message) => {
-    if(type === undefined || groupName === undefined || method === undefined || message === undefined) return console.warn('Custom validation method cannot be added.');
-    model.groups[groupName].validators.push({type, method, message});
+const addMethod = (groupName, method, message) => {
+    //also check if Store.getState()[groupName] exists, if not check that document.getElementsByName(groupName).length !== 0
+    if((groupName === undefined || method === undefined || message === undefined) || !Store.getState()[groupName] && document.getElementsByName(groupName).length === 0)
+        return console.warn('Custom validation method cannot be added.');
+
+    Store.dispatch(ACTIONS.ADD_VALIDATION_METHOD, {groupName, validator: {type: 'custom', method, message}});
 };
 
 
 const realTimeValidation = () => {
     let handler = groupName => () => {
-        if(!Model.getModel().groups[groupName].valid) Model.update(UPDATES.CLEAR_ERROR, groupName, [clearError(groupName)]);
-        getGroupValidityModel(Model.getModel().groups[groupName])
+        if(!Store.getState().groups[groupName].valid) Store.dispatch(ACTIONS.CLEAR_ERROR, groupName, [clearError(groupName)]);
+        getGroupValidityState(Store.getState().groups[groupName])
             .then(res => {
-                if(!res.reduce(reduceGroupValidityModel, true)) 
-                    Model.update(
-                        UPDATES.VALIDATION_ERROR,
+                if(!res.reduce(reduceGroupValidityState, true)) 
+                Store.dispatch(
+                        ACTIONS.VALIDATION_ERROR,
                         {
                             group: groupName,
-                            errorMessages: res.reduce(reduceErrorMessages(groupName, Model.getModel()), [])
+                            errorMessages: res.reduce(reduceErrorMessages(groupName, Store.getState()), [])
                         },
                         [renderError(groupName)]
                     );
             });
     };
 
-    Object.keys(Model.getModel().groups).forEach(groupName => {
-        Model.getModel().groups[groupName].fields.forEach(input => {
+    Object.keys(Store.getState().groups).forEach(groupName => {
+        Store.getState().groups[groupName].fields.forEach(input => {
             input.addEventListener(resolveRealTimeValidationEvent(input), handler(groupName));
         });
-        let equalToValidator = Model.getModel().groups[groupName].validators.filter(validator => validator.type === 'equalto');
+        //;_; can do better?
+        let equalToValidator = Store.getState().groups[groupName].validators.filter(validator => validator.type === 'equalto');
         
         equalToValidator.length > 0 
             && equalToValidator[0].params.other.forEach(subgroup => {
@@ -77,11 +80,9 @@ const realTimeValidation = () => {
 };
 
 export default (form, settings) => {
-    Model.update(UPDATES.SET_INITIAL_MODEL, (getInitialModel(form)));
-
+    Store.dispatch(ACTIONS.SET_INITIAL_STATE, (getInitialState(form)));
     form.addEventListener('submit', validate);
-
-    form.addEventListener('reset', () => { Model.update(UPDATES.CLEAR_ERRORS, null, [clearErrors]); });
+    form.addEventListener('reset', () => { Store.update(UPDATES.CLEAR_ERRORS, null, [clearErrors]); });
 
     return {
         validate,
