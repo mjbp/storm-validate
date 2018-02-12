@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.5.0: Fri, 09 Feb 2018 14:28:01 GMT
+ * @version 0.5.0: Mon, 12 Feb 2018 10:15:57 GMT
  * @author stormid
  * @license MIT
  */
@@ -598,24 +598,26 @@ var renderError = function renderError(groupName) {
     };
 };
 
-var validate$1 = function validate$1(e) {
-    e && e.preventDefault();
-    Store.dispatch(ACTIONS.CLEAR_ERRORS, null, [clearErrors]);
+var validate$1 = function validate$1(form) {
+    return function (e) {
+        e && e.preventDefault();
+        Store.dispatch(ACTIONS.CLEAR_ERRORS, null, [clearErrors]);
 
-    getValidityState(Store.getState().groups).then(function (validityState) {
-        var _ref2;
+        getValidityState(Store.getState().groups).then(function (validityState) {
+            var _ref2;
 
-        if (e && e.target && (_ref2 = []).concat.apply(_ref2, _toConsumableArray(validityState)).reduce(reduceGroupValidityState, true)) return form.submit();
+            if (e && e.target && (_ref2 = []).concat.apply(_ref2, _toConsumableArray(validityState)).reduce(reduceGroupValidityState, true)) return form.submit();
 
-        Store.dispatch(ACTIONS.VALIDATION_ERRORS, Object.keys(Store.getState().groups).reduce(function (acc, group, i) {
-            return acc[group] = {
-                valid: validityState[i].reduce(reduceGroupValidityState, true),
-                errorMessages: validityState[i].reduce(reduceErrorMessages(group, Store.getState()), [])
-            }, acc;
-        }, {}), [renderErrors]);
+            Store.dispatch(ACTIONS.VALIDATION_ERRORS, Object.keys(Store.getState().groups).reduce(function (acc, group, i) {
+                return acc[group] = {
+                    valid: validityState[i].reduce(reduceGroupValidityState, true),
+                    errorMessages: validityState[i].reduce(reduceErrorMessages(group, Store.getState()), [])
+                }, acc;
+            }, {}), [renderErrors]);
 
-        realTimeValidation();
-    });
+            realTimeValidation();
+        });
+    };
 };
 
 var addMethod = function addMethod(groupName, method, message) {
@@ -657,13 +659,13 @@ var realTimeValidation = function realTimeValidation() {
 
 var factory = function factory(form, settings) {
     Store.dispatch(ACTIONS.SET_INITIAL_STATE, getInitialState(form));
-    form.addEventListener('submit', validate$1);
+    form.addEventListener('submit', validate$1(form));
     form.addEventListener('reset', function () {
         Store.update(UPDATES.CLEAR_ERRORS, null, [clearErrors]);
     });
 
     return {
-        validate: validate$1,
+        validate: validate$1(form),
         addMethod: addMethod
     };
 };

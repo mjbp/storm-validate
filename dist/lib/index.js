@@ -15,7 +15,7 @@ import {
     renderErrors
 }  from './dom';
 
-const validate = e => {
+const validate = form => e => {
     e && e.preventDefault();
     Store.dispatch(ACTIONS.CLEAR_ERRORS, null, [clearErrors]);
 
@@ -81,11 +81,11 @@ const realTimeValidation = () => {
 
 export default (form, settings) => {
     Store.dispatch(ACTIONS.SET_INITIAL_STATE, (getInitialState(form)));
-    form.addEventListener('submit', validate);
+    form.addEventListener('submit', validate(form));
     form.addEventListener('reset', () => { Store.update(UPDATES.CLEAR_ERRORS, null, [clearErrors]); });
 
     return {
-        validate,
+        validate: validate(form),
         addMethod
     }
 };
