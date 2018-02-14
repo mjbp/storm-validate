@@ -4,14 +4,27 @@ import factory from './lib';
 const init = (candidate, opts) => {
 	let els;
 
-	if(typeof candidate !== 'string' && candidate.nodeName && candidate.nodeName === 'FORM') els = [candidate];
-	else els = [].slice.call(document.querySelectorAll(candidate));
+	//if we think candidate is a form DOM node, pass it in an Array
+	//otherwise convert candidate to an array of Nodes using it as a DOM query 
+	if(typeof candidate !== 'string' && candidate.nodeName && candidate.nodeName === 'FORM') {
+		els = [candidate];
+	}
+	else {
+		els = [].slice.call(document.querySelectorAll(candidate));
+	}
 	
-	if(els.length === 1 && window.__validators__ && window.__validators__[els[0]])
+	//return instance if one exists for candidate passed to init
+	//if inititialised using StormVaidation.init({sel}) the instance already exists thanks to auto-init
+	//but reference may be wanted for invoking API methods
+	//also for repeat initialisations
+	if(els.length === 1 && window.__validators__ && window.__validators__[els[0]]) {
 		return window.__validators__[els[0]];
+	}
 	
-	//attached to window.__validators__
-	//so we can both init, auto-initialise and refer back to an instance attached to a form to add additional validators
+	//attach returned instances to window.__validators__
+	//as an Array indexed by the DOM node
+	//we can both manually init and auto-initialise and refer to an instance later on
+	//to add additional validators or trigger manually validation
 	return window.__validators__ = 
 		Object.assign({}, window.__validators__, els.reduce((acc, el) => {
 			if(el.getAttribute('novalidate')) return;
@@ -23,7 +36,11 @@ const init = (candidate, opts) => {
 //Auto-initialise
 { 
 	[].slice.call(document.querySelectorAll('form'))
-		.forEach(form => { form.querySelector('[data-val=true]') && init(form); });
+		.forEach(form => { 
+			if(form.querySelector('[data-val=true]')) {
+				init(form);
+			}
+		});
 }
 
 export default { init };

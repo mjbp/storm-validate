@@ -15,32 +15,34 @@ import {
     renderErrors
 }  from './dom';
 
-const validate = form => e => {
-    e && e.preventDefault();
-    Store.dispatch(ACTIONS.CLEAR_ERRORS, null, [clearErrors]);
 
-    getValidityState(Store.getState().groups)
-        .then(validityState => {
-            if(e && e.target && [].concat(...validityState).reduce(reduceGroupValidityState, true)) return form.submit();
+const createValidate = form => {
+    return e => {
+        e && e.preventDefault();
+        Store.dispatch(ACTIONS.CLEAR_ERRORS, null, [clearErrors]);
 
-            Store.dispatch(
-                ACTIONS.VALIDATION_ERRORS,
-                Object.keys(Store.getState().groups)
-                    .reduce((acc, group, i) => {                                         
-                        return acc[group] = {
-                            valid: validityState[i].reduce(reduceGroupValidityState, true),
-                            errorMessages: validityState[i].reduce(reduceErrorMessages(group, Store.getState()), [])
-                        }, acc;
-                    }, {}),
-                [renderErrors]
-            );
+        getValidityState(Store.getState().groups)
+            .then(validityState => {
+                if(e && e.target && [].concat(...validityState).reduce(reduceGroupValidityState, true)) return form.submit();
 
-            realTimeValidation();
-        });
+                Store.dispatch(
+                    ACTIONS.VALIDATION_ERRORS,
+                    Object.keys(Store.getState().groups)
+                        .reduce((acc, group, i) => {                                         
+                            return acc[group] = {
+                                valid: validityState[i].reduce(reduceGroupValidityState, true),
+                                errorMessages: validityState[i].reduce(reduceErrorMessages(group, Store.getState()), [])
+                            }, acc;
+                        }, {}),
+                    [renderErrors]
+                );
+
+                realTimeValidation();
+            });
+        }
 };
 
 const addMethod = (groupName, method, message) => {
-    //also check if Store.getState()[groupName] exists, if not check that document.getElementsByName(groupName).length !== 0
     if((groupName === undefined || method === undefined || message === undefined) || !Store.getState()[groupName] && document.getElementsByName(groupName).length === 0)
         return console.warn('Custom validation method cannot be added.');
 
@@ -85,7 +87,7 @@ export default (form, settings) => {
     form.addEventListener('reset', () => { Store.update(UPDATES.CLEAR_ERRORS, null, [clearErrors]); });
 
     return {
-        validate: validate(form),
+        validate: createValidate(form),
         addMethod
     }
 };
