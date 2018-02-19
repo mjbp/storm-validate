@@ -25,11 +25,14 @@ export const NUMBER_REGEX = /^(?:-?\d+|-?\d{1,3}(?:,\d{3})+)?(?:\.\d+)?$/;
 
 export const DIGITS_REGEX = /^\d+$/;
 
+//data-attribute added to error message span created by .NET MVC
 export const DOTNET_ERROR_SPAN_DATA_ATTRIBUTE = 'data-valmsg-for';
 
+//validator parameters that require DOM lookup
 export const DOM_SELECTOR_PARAMS = ['remote-additionalfields', 'equalto-other'];
 
-
+//.NET MVC validator data-attribute parameters indexed by their validators
+//e.g. <input data-val-length="Error messge" data-val-length-min="8" data-val-length-max="10" type="text"... />
 export const DOTNET_PARAMS = {
     length: ['length-min', 'length-max'],
     stringlength: ['length-max'],
@@ -43,6 +46,7 @@ export const DOTNET_PARAMS = {
     remote: ['remote-url', 'remote-additionalfields', 'remote-type']//??
 };
 
+//.NET MVC data-attributes that identify validators
 export const DOTNET_ADAPTORS = [
     'required',
     'stringlength',
@@ -59,6 +63,7 @@ export const DOTNET_ADAPTORS = [
     // 'password' //-> maps to min, nonalphamain, and regex methods
 ];
 
+//classNames added/updated on .NET MVC error message span
 export const DOTNET_CLASSNAMES = {
     VALID: 'field-validation-valid',
     ERROR: 'field-validation-error'
