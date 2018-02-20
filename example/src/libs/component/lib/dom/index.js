@@ -1,4 +1,4 @@
-import { DOTNET_CLASSNAMES, ERROR_MSG_ID_SUFFIX } from '../constants';
+import { DOTNET_CLASSNAMES } from '../constants';
 
 //Track error message DOM nodes in local scope
 let errorNodes = {};
@@ -13,7 +13,7 @@ let errorNodes = {};
  * @returns node [DOM node]
  * 
  */
-const h = (nodeName, attributes, text) => {
+export const h = (nodeName, attributes, text) => {
     let node = document.createElement(nodeName);
 
     for(let prop in attributes) {
@@ -33,52 +33,20 @@ const h = (nodeName, attributes, text) => {
  * @returns node [Text node]
  * 
  */
-const createErrorTextNode = (group, msg) => {
+export const createErrorTextNode = (group, msg) => {
     let node = document.createTextNode(msg);
 
     group.serverErrorNode.classList.remove(DOTNET_CLASSNAMES.VALID);
     group.serverErrorNode.classList.add(DOTNET_CLASSNAMES.ERROR);
-
-    if(!group.serverErrorNode.hasAttribute('id')) {
-        group.serverErrorNode.setAttribute('id', `${group.serverErrorNode.getAttribute('data-valmsg-for')}${ERROR_MSG_ID_SUFFIX}`);
-        group.serverErrorNode.setAttribute('aria-live', 'polite');
-    }
-    group.fields.forEach(field => {
-        field.setAttribute('aria-labelledby', `${group.serverErrorNode.getAttribute('data-valmsg-for')}${ERROR_MSG_ID_SUFFIX}`);
-    });
-
-    return group.serverErrorNode.appendChild(node);
-};
-
-/**
- * Creates and appends a DOM node for a group error message
- * 
- * @param group [Object, vaidation group] 
- * @param msg [String] The error message
- * 
- * @returns node [DOM node]
- * 
- */
-const createErrorNode = (group, groupName, msg) => {
-    let node = group.fields[group.fields.length-1]
-                    .parentNode
-                    .appendChild(h('div', { 
-                        class: DOTNET_CLASSNAMES.ERROR,
-                        'aria-live': 'polite',
-                        id: `${groupName}${ERROR_MSG_ID_SUFFIX}`
-                    }, group.errorMessages[0]));
     
-    group.fields.forEach(field => {
-        field.setAttribute('aria-labelledby', `${groupName}${ERROR_MSG_ID_SUFFIX}`);
-    });
-    return node;
+    return group.serverErrorNode.appendChild(node);
 };
 
 /**
  * Removes the error message DOM node, updates .NET MVC error span classNames and deletes the 
  * error from local errorNodes tracking object
  * 
- * Signature: () => groupName => state => {}
+ * Signature () => groupName => state => {}
  * (Curried groupName for ease of use as eventListener and in whole form iteration)
  * 
  * @param groupName [String, vaidation group] 
@@ -91,7 +59,7 @@ export const clearError = groupName => state => {
         state.groups[groupName].serverErrorNode.classList.remove(DOTNET_CLASSNAMES.ERROR);
         state.groups[groupName].serverErrorNode.classList.add(DOTNET_CLASSNAMES.VALID);
     }
-    state.groups[groupName].fields.forEach(field => { field.removeAttribute('aria-labelledby'); });
+    state.groups[groupName].fields.forEach(field => { field.removeAttribute('aria-invalid'); });
     delete errorNodes[groupName];
 };
 
@@ -138,8 +106,12 @@ export const renderError = groupName => state => {
     errorNodes[groupName] = 
         state.groups[groupName].serverErrorNode 
                 ? createErrorTextNode(state.groups[groupName], state.groups[groupName].errorMessages[0]) 
-                : createErrorNode(state.groups[groupName], groupName, state.groups[groupName].errorMessages[0])
-                
-                
-	
+                : state.groups[groupName]
+                            .fields[state.groups[groupName].fields.length-1]
+                            .parentNode
+                            .appendChild(h('div', { class: DOTNET_CLASSNAMES.ERROR }, state.groups[groupName].errorMessages[0]));
+						
+	state.groups[groupName].fields.forEach(field => { 
+        field.setAttribute('aria-invalid', 'true');
+    });
 };

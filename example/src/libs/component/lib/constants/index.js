@@ -28,8 +28,6 @@ export const DIGITS_REGEX = /^\d+$/;
 //data-attribute added to error message span created by .NET MVC
 export const DOTNET_ERROR_SPAN_DATA_ATTRIBUTE = 'data-valmsg-for';
 
-export const ERROR_MSG_ID_SUFFIX = '--error_msg';
-
 //validator parameters that require DOM lookup
 export const DOM_SELECTOR_PARAMS = ['remote-additionalfields', 'equalto-other'];
 
