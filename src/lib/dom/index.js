@@ -16,7 +16,9 @@ let errorNodes = {};
 export const h = (nodeName, attributes, text) => {
     let node = document.createElement(nodeName);
 
-    for(let prop in attributes) node.setAttribute(prop, attributes[prop]);
+    for(let prop in attributes) {
+        node.setAttribute(prop, attributes[prop]);
+    }
     if(text !== undefined && text.length) node.appendChild(document.createTextNode(text));
 
     return node;
@@ -102,12 +104,14 @@ export const renderError = groupName => state => {
     if(errorNodes[groupName]) clearError(groupName)(state);
     
     errorNodes[groupName] = 
-    state.groups[groupName].serverErrorNode 
-            ? createErrorTextNode(model.groups[groupName], state.groups[groupName].errorMessages[0]) 
-            : state.groups[groupName]
-						.fields[state.groups[groupName].fields.length-1]
-						.parentNode
-						.appendChild(h('div', { class: DOTNET_CLASSNAMES.ERROR }, state.groups[groupName].errorMessages[0]));
+        state.groups[groupName].serverErrorNode 
+                ? createErrorTextNode(model.groups[groupName], state.groups[groupName].errorMessages[0]) 
+                : state.groups[groupName]
+                            .fields[state.groups[groupName].fields.length-1]
+                            .parentNode
+                            .appendChild(h('div', { class: DOTNET_CLASSNAMES.ERROR }, state.groups[groupName].errorMessages[0]));
 						
-	state.groups[groupName].fields.forEach(field => { field.setAttribute('aria-invalid', 'true'); });
+	state.groups[groupName].fields.forEach(field => { 
+        field.setAttribute('aria-invalid', 'true');
+    });
 };

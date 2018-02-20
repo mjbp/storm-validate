@@ -1,5 +1,8 @@
 import { ACTIONS, DOTNET_ERROR_SPAN_DATA_ATTRIBUTE } from '../constants';
 
+/**
+ * All state/model-modifying operations
+ */
 export default {
     [ACTIONS.SET_INITIAL_STATE]: (state, data) => Object.assign({}, state, data),
     [ACTIONS.CLEAR_ERRORS]: state => Object.assign({}, state, { 

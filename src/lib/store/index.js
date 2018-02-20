@@ -2,8 +2,10 @@ import reducers from '../reducers';
 //shared centralised validator state
 let state = {};
 
+//uncomment for debugging by writing state history to window
 // window.__validator_history__ = [];
 
+//state getter
 const getState = () => state;
 
 /**
@@ -17,8 +19,8 @@ const getState = () => state;
  */
 const dispatch = function(type, nextState, effects) {
     state = nextState ? reducers[type](state, nextState) : state;
+    //uncomment for debugging by writing state history to window
     // window.__validator_history__.push({[type]: state}), console.log(window.__validator_history__);
-    // console.log({[type]: state});
     if(!effects) return;
     effects.forEach(effect => { effect(state); });
 };

@@ -16,13 +16,13 @@ import {
 }  from './dom';
 
 /**
- * Returns a function that gets the validityState of the entire form that
+ * Returns a function that extracts the validityState of the entire form
  * can be used as a form submit eventListener or via the API
  * 
  * Submits the form if called as a submit eventListener and is valid
  * Dispatches error state to Store if errors
  * 
- * @param form [DOM node] On which to check validity state
+ * @param form [DOM node]
  * 
  * @returns [boolean] The validity state of the form
  * 
