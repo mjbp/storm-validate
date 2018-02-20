@@ -131,6 +131,7 @@ export default form => {
     form.addEventListener('submit', validate(form));
     form.addEventListener('reset', () => { Store.update(UPDATES.CLEAR_ERRORS, null, [clearErrors]); });
 
+    console.log(Store.getState());
     return {
         validate: validate(form),
         addMethod

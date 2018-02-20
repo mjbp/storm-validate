@@ -169,9 +169,12 @@
         <!-- <h1>Storm Validate</h1> -->
         <form method="post" action="" autocomplete="off">
             <!--
+
+                Should add  role="alert"
+
                 <div class="validation-summary-errors" data-valmsg-summary="true">
             <ul>
-                <li>The Email field is required.</li>
+                <li>The Email field is required.</li> //should link these, give them an  id and add an aria-describedby to the corresponding field/group
                 <li>The Password field is required.</li>
             </ul>
             </div>
@@ -217,11 +220,11 @@
                     <input class="form-control" type="text" data-val="true" data-val-regex="The field Regular Expression must match the regular expression &#x27;[a-z]&#x2B;&#x27;." data-val-regex-pattern="[a-z]&#x2B;" id="RegularExpression" name="RegularExpression" value="" />
                     <span style="color: red" class="field-validation-valid" data-valmsg-for="RegularExpression" data-valmsg-replace="true" />
                 </div>
-                <div class="form-group">
-                    <label for="CreditCard">Credit card (I&#x27;ve never used this)</label>
+                <!-- <div class="form-group">
+                    <label for="CreditCard">Credit card </label>
                     <input class="form-control" type="text" data-val="true" data-val-creditcard="The Credit card (I&#x27;ve never used this) field is not a valid credit card number." id="CreditCard" name="CreditCard" value="" />
                     <span style="color: red" class="field-validation-valid" data-valmsg-for="CreditCard" data-valmsg-replace="true" />
-                </div>
+                </div> -->
                 <div class="form-group">
                     <label for="Url">Url</label>
                     <input class="form-control" type="url" data-val="true" data-val-url="The Url field is not a valid URL." id="Url" name="Url" value="" />
