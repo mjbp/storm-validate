@@ -83,7 +83,7 @@ export const clearErrors = state => {
  */
 export const renderErrors = state => {
     Object.keys(state.groups).forEach(groupName => {
-        if(!state.groups[groupName].valid) renderError(groupName)(model);
+        if(!state.groups[groupName].valid) renderError(groupName)(state);
     })
 };
 
@@ -105,7 +105,7 @@ export const renderError = groupName => state => {
     
     errorNodes[groupName] = 
         state.groups[groupName].serverErrorNode 
-                ? createErrorTextNode(model.groups[groupName], state.groups[groupName].errorMessages[0]) 
+                ? createErrorTextNode(state.groups[groupName], state.groups[groupName].errorMessages[0]) 
                 : state.groups[groupName]
                             .fields[state.groups[groupName].fields.length-1]
                             .parentNode

@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.5.5: Tue, 20 Feb 2018 13:52:47 GMT
+ * @version 0.5.6: Thu, 01 Mar 2018 15:34:19 GMT
  * @author stormid
  * @license MIT
  */
@@ -779,7 +779,7 @@ var clearErrors = function clearErrors(state) {
  */
 var renderErrors = function renderErrors(state) {
     Object.keys(state.groups).forEach(function (groupName) {
-        if (!state.groups[groupName].valid) renderError(groupName)(model);
+        if (!state.groups[groupName].valid) renderError(groupName)(state);
     });
 };
 
@@ -800,7 +800,7 @@ var renderError = function renderError(groupName) {
     return function (state) {
         if (errorNodes[groupName]) clearError(groupName)(state);
 
-        errorNodes[groupName] = state.groups[groupName].serverErrorNode ? createErrorTextNode(model.groups[groupName], state.groups[groupName].errorMessages[0]) : state.groups[groupName].fields[state.groups[groupName].fields.length - 1].parentNode.appendChild(h('div', { class: DOTNET_CLASSNAMES.ERROR }, state.groups[groupName].errorMessages[0]));
+        errorNodes[groupName] = state.groups[groupName].serverErrorNode ? createErrorTextNode(state.groups[groupName], state.groups[groupName].errorMessages[0]) : state.groups[groupName].fields[state.groups[groupName].fields.length - 1].parentNode.appendChild(h('div', { class: DOTNET_CLASSNAMES.ERROR }, state.groups[groupName].errorMessages[0]));
 
         state.groups[groupName].fields.forEach(function (field) {
             field.setAttribute('aria-invalid', 'true');
