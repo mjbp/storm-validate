@@ -141,7 +141,7 @@ export const assembleValidationGroup = (acc, input) => {
                                         valid:  false,
                                         validators: normaliseValidators(input),
                                         fields: [input],
-                                        serverErrorNode: document.querySelector(`[${DOTNET_ERROR_SPAN_DATA_ATTRIBUTE}=${input.getAttribute('name')}]`) || false
+                                        serverErrorNode: document.querySelector(`[${DOTNET_ERROR_SPAN_DATA_ATTRIBUTE}="${input.getAttribute('name')}"]`) || false
                                     }, acc;
 };
 

@@ -22,7 +22,7 @@ export default {
             })
         })
     }),
-    [ACTIONS.ADD_VALIDATION_METHOD]: (state, data) =>Object.assign({}, state, {
+    [ACTIONS.ADD_VALIDATION_METHOD]: (state, data) => Object.assign({}, state, {
         groups: Object.assign({}, state.groups, {
             [data.groupName]: Object.assign({}, state.groups[data.groupName] ? state.groups[data.groupName] : {},
                                                 state.groups[data.groupName] ?  { validators: [...state.groups[data.groupName].validators, data.validator] }
