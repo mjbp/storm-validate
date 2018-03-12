@@ -35,7 +35,8 @@ export default {
         })
     }),
     [ACTIONS.VALIDATION_ERRORS]: (state, data) => {
-        return Object.assign({}, state, { 
+        return Object.assign({}, state, {
+            realTimeValidation: true,
             groups: Object.keys(state.groups).reduce((acc, group) => {
                 acc[group] = Object.assign({}, state.groups[group], data[group]);
                 return acc;

@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.5.7: Wed, 07 Mar 2018 13:03:46 GMT
+ * @version 0.5.8: Mon, 12 Mar 2018 11:06:51 GMT
  * @author stormid
  * @license MIT
  */
@@ -118,6 +118,7 @@ var reducers = (_reducers = {}, _defineProperty(_reducers, ACTIONS.SET_INITIAL_S
     });
 }), _defineProperty(_reducers, ACTIONS.VALIDATION_ERRORS, function (state, data) {
     return Object.assign({}, state, {
+        realTimeValidation: true,
         groups: Object.keys(state.groups).reduce(function (acc, group) {
             acc[group] = Object.assign({}, state.groups[group], data[group]);
             return acc;
@@ -627,6 +628,7 @@ var removeUnvalidatableGroups = function removeUnvalidatableGroups(groups) {
  */
 var getInitialState = function getInitialState(form) {
     return {
+        realTimeValidation: false,
         groups: removeUnvalidatableGroups([].slice.call(form.querySelectorAll('input:not([type=submit]), textarea, select')).reduce(assembleValidationGroup, {}))
     };
 };
@@ -792,7 +794,7 @@ var renderErrors = function renderErrors(state) {
  * Signature () => groupName => state => {}
  * (Curried groupName for ease of use as eventListener and in whole form iteration)
  * 
- * @param groupName [String, vaidation group] 
+ * @param groupName [String, validation group] 
  * @param state [Object, validation state]
  * 
  */
@@ -806,6 +808,21 @@ var renderError = function renderError(groupName) {
             field.setAttribute('aria-invalid', 'true');
         });
     };
+};
+
+/**
+ * Set focus on first invalid field after form-level validate()
+ * 
+ * We can assume that there is a group in an invalid state,
+ * and that the group has at least one field
+ * 
+ * @param groups [Object, validation group slice of state]
+ * 
+ */
+var focusFirstInvalidField = function focusFirstInvalidField(groups) {
+    groups[Object.keys(groups).filter(function (group) {
+        return !group.valid;
+    })[0]].fields[0].focus();
 };
 
 /**
@@ -833,6 +850,10 @@ var validate$1 = function validate$1(form) {
                 return true;
             }
 
+            Store.getState().realTimeValidation === false && startRealTimeValidation();
+
+            focusFirstInvalidField(Store.getState().groups);
+
             Store.dispatch(ACTIONS.VALIDATION_ERRORS, Object.keys(Store.getState().groups).reduce(function (acc, group, i) {
                 return acc[group] = {
                     valid: validityState[i].reduce(reduceGroupValidityState, true),
@@ -840,7 +861,6 @@ var validate$1 = function validate$1(form) {
                 }, acc;
             }, {}), [renderErrors]);
 
-            realTimeValidation();
             return false;
         });
     };
@@ -871,7 +891,7 @@ var addMethod = function addMethod(groupName, method, message) {
  * dispatched to the store to update state and render the error
  * 
  */
-var realTimeValidation = function realTimeValidation() {
+var startRealTimeValidation = function startRealTimeValidation() {
     var handler = function handler(groupName) {
         return function () {
             if (!Store.getState().groups[groupName].valid) {

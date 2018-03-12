@@ -12,7 +12,8 @@ import {
     clearErrors,
     clearError,
     renderError,
-    renderErrors
+    renderErrors,
+    focusFirstInvalidField
 }  from './dom';
 
 /**
@@ -38,6 +39,10 @@ const validate = form => e => {
                 return true
             }
 
+            Store.getState().realTimeValidation === false && startRealTimeValidation();
+
+            focusFirstInvalidField(Store.getState().groups);
+
             Store.dispatch(
                 ACTIONS.VALIDATION_ERRORS,
                 Object.keys(Store.getState().groups)
@@ -50,7 +55,6 @@ const validate = form => e => {
                 [renderErrors]
             );
 
-            realTimeValidation();
             return false;
         });
 };
@@ -82,7 +86,7 @@ const addMethod = (groupName, method, message) => {
  * dispatched to the store to update state and render the error
  * 
  */
-const realTimeValidation = () => {
+const startRealTimeValidation = () => {
     let handler = groupName => () => {
         if(!Store.getState().groups[groupName].valid) {
             Store.dispatch(ACTIONS.CLEAR_ERROR, groupName, [clearError(groupName)]);

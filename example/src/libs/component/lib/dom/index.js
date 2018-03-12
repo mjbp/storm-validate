@@ -96,7 +96,7 @@ export const renderErrors = state => {
  * Signature () => groupName => state => {}
  * (Curried groupName for ease of use as eventListener and in whole form iteration)
  * 
- * @param groupName [String, vaidation group] 
+ * @param groupName [String, validation group] 
  * @param state [Object, validation state]
  * 
  */
@@ -114,4 +114,20 @@ export const renderError = groupName => state => {
 	state.groups[groupName].fields.forEach(field => { 
         field.setAttribute('aria-invalid', 'true');
     });
+};
+
+/**
+ * Set focus on first invalid field after form-level validate()
+ * 
+ * We can assume that there is a group in an invalid state,
+ * and that the group has at least one field
+ * 
+ * @param groups [Object, validation group slice of state]
+ * 
+ */
+export const focusFirstInvalidField = groups => {
+    groups[Object.keys(groups)
+        .filter(group => !group.valid)[0]]
+        .fields[0]
+        .focus();
 };
