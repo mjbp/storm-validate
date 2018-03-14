@@ -1,7 +1,8 @@
 # Storm Validate
 [![npm version](https://badge.fury.io/js/storm-validate.svg)](https://badge.fury.io/js/storm-validate)
 
-Light, depenendency-free client-side form validation library to support .NET MVC (core) unobtrusive validation (using data-val attributes) and HTML5 constraint validation.
+Light, depenendency-free client-side form validation library to support .NET MVC (core) unobtrusive validation (using data-val attributes) and HTML5 attribute 
+-based constraint validation.
 
 ## Example
 [https://stormid.github.io/storm-validate](https://stormid.github.io/storm-validate)
@@ -22,19 +23,32 @@ HTML
     <input type="submit">
 </div>
 ```
-
+JS
 ```
 npm i -S storm-validate
 ```
 ```
 import Validate from 'storm-validate';
 ```
-
 or include dist/storm-validate.standalone.js in a script tag for unobstrusive auto-validation.
 
-To add a custom validation method:
+Instances can also be explicitly created by invoking the library's init method: 
 ```
+import Validate from 'storm-validate';
+
 let validator = Validate.init('form');
+
+```
+## API
+Initialisation (automatic or calling the init() method, see below) creates a window property \_\_validators\_\_.
+
+window.\_\_validators\_\_ is an object containing the returned value of each storm-validate instantiation, indexed by the form DOM element that they wrap.
+
+The returned value, the API, is an object composed of two functions:
+
+1. addMethod - to add a custom validation method:
+```
+let validator = Validate.init('.my-form');
 
 validator.addMethod(
     'MyFieldName', //input/input group name
@@ -43,7 +57,21 @@ validator.addMethod(
     },
     'Value must equal "test"' //error message on validation failure
 );
+```
+or using the window property
+```
+window.__validators__[document.querySelector('.my-form')].addMethod(...)
+```
 
+2. validate - to manually trigger validation on the whole form:
+```
+let validator = Validate.init('.my-form');
+
+validator.validate();
+```
+or using the window property
+```
+window.__validators__[document.querySelector('.my-form')].validate()
 ```
 
 ## Tests
