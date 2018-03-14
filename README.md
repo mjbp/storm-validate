@@ -1,8 +1,7 @@
 # Storm Validate
 [![npm version](https://badge.fury.io/js/storm-validate.svg)](https://badge.fury.io/js/storm-validate)
 
-Light, depenendency-free client-side form validation library to support .NET MVC (core) unobtrusive validation (using data-val attributes) and HTML5 attribute 
--based constraint validation.
+Light, depenendency-free client-side form validation library to support .NET MVC (core) unobtrusive validation (using data-val attributes) and HTML5 attribute-based constraint validation.
 
 ## Example
 [https://stormid.github.io/storm-validate](https://stormid.github.io/storm-validate)
@@ -18,8 +17,8 @@ HTML
     
     <!-- or .NET MVC-generated data-val attributes -->
     <input type="text" data-val="true" data-val-required="The Required String field is required." name="field-4" id="field-4" />
+	<!-- The server-rendered span is recycled by the library to render errors -->
     <span style="color: red" class="field-validation-valid" data-valmsg-for="field-4" data-valmsg-replace="true" />
-    <!-- The server-rendered error DOM is recycled by this client-side library to show errors -->
     <input type="submit">
 </div>
 ```
@@ -40,7 +39,7 @@ let validator = Validate.init('form');
 
 ```
 ## API
-Initialisation (automatic or calling the init() method, see below) creates a window property \_\_validators\_\_.
+Initialisation (automatic or calling the init() method) creates a window property \_\_validators\_\_.
 
 window.\_\_validators\_\_ is an object containing the returned value of each storm-validate instantiation, indexed by the form DOM element that they wrap.
 
