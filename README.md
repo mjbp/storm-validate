@@ -1,5 +1,5 @@
 # Storm Validate
-[![npm version](https://badge.fury.io/js/storm-modal.svg)](https://badge.fury.io/js/storm-modal)
+[![npm version](https://badge.fury.io/js/storm-validate.svg)](https://badge.fury.io/js/storm-validate)
 
 Light, depenendency-free client-side form validation library to support .NET MVC (core) unobtrusive validation (using data-val attributes) and HTML5 constraint validation.
 
