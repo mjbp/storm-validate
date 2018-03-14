@@ -18,7 +18,7 @@ HTML
     <!-- or .NET MVC-generated data-val attributes -->
     <input type="text" data-val="true" data-val-required="The Required String field is required." name="field-4" id="field-4" />
     <span style="color: red" class="field-validation-valid" data-valmsg-for="field-4" data-valmsg-replace="true" />
-
+    <!-- The server-rendered error DOM is recycled by this client-side library to show errors -->
     <input type="submit">
 </div>
 ```
@@ -37,7 +37,7 @@ To add a custom validation method:
 let validator = Validate.init('form');
 
 validator.addMethod(
-    'RequiredString', //input/input group name
+    'MyFieldName', //input/input group name
     (value, fields, params) => { //validation method
         return value === 'test'; //must return boolean
     },

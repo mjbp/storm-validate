@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.6.0: Wed, 14 Mar 2018 17:36:30 GMT
+ * @version 0.6.0: Wed, 14 Mar 2018 20:37:21 GMT
  * @author stormid
  * @license MIT
  */
