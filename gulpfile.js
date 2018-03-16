@@ -114,7 +114,7 @@ gulp.task('js:es6', function() {
         .pipe(plumber({errorHandler: onError}))
 		.pipe(gulp.dest('dist/'));
 
-    return gulp.src('./src/lib/*.js')
+    return gulp.src('./src/lib/**/*.js')
 		.pipe(gulp.dest('./dist/lib/'));
 });
 

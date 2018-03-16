@@ -1,4 +1,3 @@
-import defaults from './lib/constants/defaults';
 import factory from './lib';
 
 const init = (candidate, opts) => {
@@ -19,7 +18,7 @@ const init = (candidate, opts) => {
 	return window.__validators__ = 
 		Object.assign({}, window.__validators__, els.reduce((acc, el) => {
 			if(el.getAttribute('novalidate')) return;
-			acc[el] = Object.assign(Object.create(factory(el, Object.assign({}, defaults, opts))));
+			acc[el] = Object.assign(Object.create(factory(el, Object.assign({}, opts))));
 			return el.setAttribute('novalidate', 'novalidate'), acc;
 		}, {}));
 };

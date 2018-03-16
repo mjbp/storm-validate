@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.6.0: Wed, 14 Mar 2018 20:37:21 GMT
+ * @version 0.6.1: Fri, 16 Mar 2018 17:28:21 GMT
  * @author stormid
  * @license MIT
  */
@@ -29,8 +29,6 @@ var _reducers;
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-var defaults = {};
 
 var ACTIONS = {
     SET_INITIAL_STATE: 'SET_INITIAL_STATE',
@@ -964,7 +962,7 @@ var init = function init(candidate, opts) {
     //also for repeat initialisations
     return window.__validators__ = Object.assign({}, window.__validators__, els.reduce(function (acc, el) {
         if (el.getAttribute('novalidate')) return;
-        acc[el] = Object.assign(Object.create(factory(el, Object.assign({}, defaults, opts))));
+        acc[el] = Object.assign(Object.create(factory(el, Object.assign({}, opts))));
         return el.setAttribute('novalidate', 'novalidate'), acc;
     }, {}));
 };
