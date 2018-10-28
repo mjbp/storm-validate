@@ -1,17 +1,17 @@
-import Validate from './libs/component';
+import Validate from '../../dist';
 
 const onDOMContentLoadedTasks = [() => {
     let validator = Validate.init('form');
 
-    console.log(validator);
+    // console.log(validator);
 
-    validator.addMethod(
-        'CustomValidator',
-        (value, fields, params) => {
-            return value === 'test';
-        },
-        'Value must equal "test"'
-    );
+    // validator.addMethod(
+    //     'CustomValidator',
+    //     (value, fields, params) => {
+    //         return value === 'test';
+    //     },
+    //     'Value must equal "test"'
+    // );
 
     // validator.addMethod(
     //     'CustomValidator',

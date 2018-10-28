@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.6.2: Fri, 08 Jun 2018 16:07:34 GMT
+ * @version 0.6.3: Sun, 28 Oct 2018 21:48:33 GMT
  * @author stormid
  * @license MIT
  */
@@ -961,7 +961,7 @@ var init = function init(candidate, opts) {
     //but reference may be wanted for invoking API methods
     //also for repeat initialisations
     return window.__validators__ = Object.assign({}, window.__validators__, els.reduce(function (acc, el) {
-        if (el.getAttribute('novalidate')) return;
+        if (el.hasAttribute('novalidate')) return acc;
         acc[el] = Object.assign(Object.create(factory(el, Object.assign({}, opts))));
         return el.setAttribute('novalidate', 'novalidate'), acc;
     }, {}));
@@ -970,7 +970,7 @@ var init = function init(candidate, opts) {
 //Auto-initialise
 {
     [].slice.call(document.querySelectorAll('form')).forEach(function (form) {
-        form.querySelector('[data-val=true]') && init(form);
+        if (form.querySelector('[data-val=true]') && !form.hasAttribute('novalidate')) init(form);
     });
 }
 
