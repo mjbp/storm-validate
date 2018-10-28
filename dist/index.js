@@ -17,7 +17,7 @@ const init = (candidate, opts) => {
 	//also for repeat initialisations
 	return window.__validators__ = 
 		Object.assign({}, window.__validators__, els.reduce((acc, el) => {
-			if(el.getAttribute('novalidate')) return;
+			if(el.hasAttribute('novalidate')) return acc;
 			acc[el] = Object.assign(Object.create(factory(el, Object.assign({}, opts))));
 			return el.setAttribute('novalidate', 'novalidate'), acc;
 		}, {}));
@@ -26,7 +26,9 @@ const init = (candidate, opts) => {
 //Auto-initialise
 { 
 	[].slice.call(document.querySelectorAll('form'))
-		.forEach(form => { form.querySelector('[data-val=true]') && init(form); });
+		.forEach(form => { 
+			if(form.querySelector('[data-val=true]') && !form.hasAttribute('novalidate')) init(form);
+		});
 }
 
 export default { init };

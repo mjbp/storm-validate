@@ -120,10 +120,10 @@ gulp.task('js:es6', function() {
 
 gulp.task('js', ['js:es6', 'js:es5-rollup']);
 
-gulp.task('copy', function() {
-    return gulp.src('./src/**/*.js')
-		.pipe(gulp.dest('./example/src/libs/component'));
-});
+// gulp.task('copy', function() {
+//     return gulp.src('./src/**/*.js')
+// 		.pipe(gulp.dest('./example/src/libs/component'));
+// });
 
 gulp.task('example:import', function(){
     return browserify({
@@ -142,7 +142,7 @@ gulp.task('example:async', function(){
 });
 gulp.task('example', ['example:import', 'example:async']);
 
-gulp.task('server', ['js', 'copy', 'example'], function() {
+gulp.task('server', ['js', 'example'], function() {
     browserSync({
         notify: false,
         // https: true,
@@ -151,9 +151,9 @@ gulp.task('server', ['js', 'copy', 'example'], function() {
     });
 
       gulp.watch(['src/**/*'], function(){
-          runSequence('js', 'copy', 'example', reload);
+          runSequence('js', 'example', reload);
       });
-      gulp.watch(['example/**/*'], ['example', reload]);
+      gulp.watch(['example/src/**/*'], ['example', reload]);
       
 });
  
@@ -169,5 +169,5 @@ gulp.task('deploy', ['example'], function() {
 gulp.task('default', ['server']);
 gulp.task('serve', ['server']);
 gulp.task('build', function() {
-    runSequence('js', 'copy', 'example');
+    runSequence('js', 'example');
 });
