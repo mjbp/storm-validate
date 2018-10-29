@@ -4,6 +4,10 @@ export const isFile = field => field.getAttribute('type') === 'file';
 
 export const isSelect = field => field.nodeName.toLowerCase() === 'select';
 
+export const isSubmitButton = node =>  node.getAttribute('type') === 'submit' || node.nodeName === 'BUTTON';
+
+export const hasNameValue = node => node.hasAttribute('name') && node.hasAttribute('value');
+
 export const isRequired = group => group.validators.filter(validator => validator.type === 'required').length > 0;
 
 const hasValue = input => (input.value !== undefined && input.value !== null && input.value.length > 0);

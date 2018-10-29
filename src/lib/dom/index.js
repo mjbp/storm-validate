@@ -131,3 +131,28 @@ export const focusFirstInvalidField = groups => {
         .fields[0]
         .focus();
 };
+
+/**
+ * Creates a hidden field duplicate of a given field, for conferring submit button values
+ * 
+ * @param source [Node] A submit input/button
+ * @param form [Node] A form node
+ * 
+ */
+export const createButtonValueNode = (source, form) => {
+    const node = document.createElement('input');
+    node.setAttribute('type', 'hidden');
+    node.setAttribute('name', source.getAttribute('name'));
+    node.setAttribute('value', source.getAttribute('value'));
+    return form.appendChild(node);
+};
+
+/**
+ * Removes the node added in createButtonValueNode
+ * 
+ * @param node [Node] A hidden input
+ * 
+ */
+export const cleanupButtonValueNode = node => {
+    node.parentNode.removeChild(node);
+}

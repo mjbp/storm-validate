@@ -1,5 +1,6 @@
 import Store from './store';
 import { ACTIONS } from './constants';
+import { isSubmitButton, hasNameValue } from './validator/utils';
 import { 
     getInitialState,
     getValidityState,
@@ -13,7 +14,9 @@ import {
     clearError,
     renderError,
     renderErrors,
-    focusFirstInvalidField
+    focusFirstInvalidField,
+    createButtonValueNode,
+    cleanupButtonValueNode
 }  from './dom';
 
 /**
@@ -35,7 +38,14 @@ const validate = form => e => {
     getValidityState(Store.getState().groups)
         .then(validityState => {
             if([].concat(...validityState).reduce(reduceGroupValidityState, true)){
+                
+                if(isSubmitButton(document.activeElement) && hasNameValue(document.activeElement)) {
+                    const buttonValueNode = createButtonValueNode(document.activeElement, form);
+                }
                 if(e && e.target) form.submit();
+                
+                buttonValueNode && cleanupButtonValueNode(buttonValueNode);
+                debugger;
                 return true
             }
 
