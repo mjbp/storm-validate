@@ -1,6 +1,6 @@
 /**
  * @name storm-validate: 
- * @version 0.6.3: Sun, 28 Oct 2018 21:48:33 GMT
+ * @version 0.6.4: Tue, 30 Oct 2018 09:28:56 GMT
  * @author stormid
  * @license MIT
  */
@@ -954,7 +954,7 @@ var init = function init(candidate, opts) {
     //otherwise convert candidate to an array of Nodes using it as a DOM query 
     if (typeof candidate !== 'string' && candidate.nodeName && candidate.nodeName === 'FORM') els = [candidate];else els = [].slice.call(document.querySelectorAll(candidate));
 
-    if (els.length === 1 && window.__validators__ && window.__validators__[els[0]]) return window.__validators__[els[0]];
+    // if(els.length === 1 && window.__validators__ && window.__validators__[els[0]]) return window.__validators__[els[0]];
 
     //return instance if one exists for candidate passed to init
     //if inititialised using StormVaidation.init({sel}) the instance already exists thanks to auto-init
@@ -962,8 +962,9 @@ var init = function init(candidate, opts) {
     //also for repeat initialisations
     return window.__validators__ = Object.assign({}, window.__validators__, els.reduce(function (acc, el) {
         if (el.hasAttribute('novalidate')) return acc;
-        acc[el] = Object.assign(Object.create(factory(el, Object.assign({}, opts))));
-        return el.setAttribute('novalidate', 'novalidate'), acc;
+        acc[el] = Object.create(factory(el, opts));
+        el.setAttribute('novalidate', 'novalidate');
+        return acc;
     }, {}));
 };
 

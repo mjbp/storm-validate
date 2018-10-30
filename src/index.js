@@ -8,18 +8,17 @@ const init = (candidate, opts) => {
 	if(typeof candidate !== 'string' && candidate.nodeName && candidate.nodeName === 'FORM') els = [candidate];
 	else els = [].slice.call(document.querySelectorAll(candidate));
 	
-	if(els.length === 1 && window.__validators__ && window.__validators__[els[0]])
-		return window.__validators__[els[0]];
+	// if(els.length === 1 && window.__validators__ && window.__validators__[els[0]]) return window.__validators__[els[0]];
 	
 	//return instance if one exists for candidate passed to init
 	//if inititialised using StormVaidation.init({sel}) the instance already exists thanks to auto-init
 	//but reference may be wanted for invoking API methods
 	//also for repeat initialisations
-	return window.__validators__ = 
-		Object.assign({}, window.__validators__, els.reduce((acc, el) => {
+	return window.__validators__ = Object.assign({}, window.__validators__, els.reduce((acc, el) => {
 			if(el.hasAttribute('novalidate')) return acc;
-			acc[el] = Object.assign(Object.create(factory(el, Object.assign({}, opts))));
-			return el.setAttribute('novalidate', 'novalidate'), acc;
+			acc[el] = Object.create(factory(el, opts));
+			el.setAttribute('novalidate', 'novalidate');
+			return  acc;
 		}, {}));
 };
 
