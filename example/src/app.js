@@ -1,7 +1,7 @@
 import Validate from '../../dist';
 
 const onDOMContentLoadedTasks = [() => {
-    // let validator = Validate.init('form');
+    let validator = Validate.init('form');
 
     // console.log(validator);
 

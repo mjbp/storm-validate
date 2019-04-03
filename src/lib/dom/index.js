@@ -1,7 +1,7 @@
 import { DOTNET_CLASSNAMES } from '../constants';
 
-//Track error message DOM nodes in local scope
-let errorNodes = {};
+//Track error message DOM nodes in local scope => ;_;
+// let errorNodes = {};
 
 /**
  * Hypertext DOM factory function
@@ -54,13 +54,17 @@ export const createErrorTextNode = (group, msg) => {
  * 
  */
 export const clearError = groupName => state => {
-    errorNodes[groupName].parentNode.removeChild(errorNodes[groupName]);
+    state.errorNodes[groupName].parentNode.removeChild(state.errorNodes[groupName]);
+    // errorNodes[groupName].parentNode.removeChild(errorNodes[groupName]);
     if(state.groups[groupName].serverErrorNode) {
         state.groups[groupName].serverErrorNode.classList.remove(DOTNET_CLASSNAMES.ERROR);
         state.groups[groupName].serverErrorNode.classList.add(DOTNET_CLASSNAMES.VALID);
     }
-    state.groups[groupName].fields.forEach(field => { field.removeAttribute('aria-invalid'); });
-    delete errorNodes[groupName];
+    state.groups[groupName].fields.forEach(field => {
+        field.parentNode.classList.remove('is--invalid');
+        field.removeAttribute('aria-invalid');
+    });
+    delete state.errorNodes[groupName];//shouldn't be doing this here...
 };
 
 /**
@@ -70,7 +74,7 @@ export const clearError = groupName => state => {
  * 
  */
 export const clearErrors = state => {
-    Object.keys(errorNodes).forEach(name => {
+    state.errorNodes && Object.keys(state.errorNodes).forEach(name => {
         clearError(name)(state);
     });
 };
@@ -101,17 +105,21 @@ export const renderErrors = state => {
  * 
  */
 export const renderError = groupName => state => {
-    if(errorNodes[groupName]) clearError(groupName)(state);
+    if(state.errorNodes[groupName]) clearError(groupName)(state);
     
-    errorNodes[groupName] = 
+    state.errorNodes[groupName] = 
         state.groups[groupName].serverErrorNode 
                 ? createErrorTextNode(state.groups[groupName], state.groups[groupName].errorMessages[0]) 
                 : state.groups[groupName]
                             .fields[state.groups[groupName].fields.length-1]
                             .parentNode
-                            .appendChild(h('div', { class: DOTNET_CLASSNAMES.ERROR }, state.groups[groupName].errorMessages[0]));
+                            .appendChild(
+                                h('span', { class: DOTNET_CLASSNAMES.ERROR }, state.groups[groupName].errorMessages[0]),
+                                state.groups[groupName].fields[state.groups[groupName].fields.length-1]
+                            );
 						
-	state.groups[groupName].fields.forEach(field => { 
+	state.groups[groupName].fields.forEach(field => {
+        field.parentNode.classList.add('is--invalid');
         field.setAttribute('aria-invalid', 'true');
     });
 };
@@ -125,11 +133,12 @@ export const renderError = groupName => state => {
  * @param groups [Object, validation group slice of state]
  * 
  */
-export const focusFirstInvalidField = groups => {
-    groups[Object.keys(groups)
-        .filter(group => !group.valid)[0]]
-        .fields[0]
-        .focus();
+export const focusFirstInvalidField = state => {
+    const firstInvalid = Object.keys(state.groups).reduce((acc, curr) => {
+        if(!acc && !state.groups[curr].valid) acc = state.groups[curr].fields[0];
+        return acc;
+    }, false);
+    firstInvalid && firstInvalid.focus();
 };
 
 /**

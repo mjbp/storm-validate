@@ -14,20 +14,15 @@ const init = (candidate, opts) => {
 	//if inititialised using StormVaidation.init({sel}) the instance already exists thanks to auto-init
 	//but reference may be wanted for invoking API methods
 	//also for repeat initialisations
-	return window.__validators__ = Object.assign({}, window.__validators__, els.reduce((acc, el) => {
-			if(el.hasAttribute('novalidate')) return acc;
-			acc[el] = Object.create(factory(el, opts));
+	
+	return els.reduce((acc, el) => {
+		if(!el.hasAttribute('novalidate')) {
+			acc.push(Object.create(factory(el, opts)));
 			el.setAttribute('novalidate', 'novalidate');
-			return  acc;
-		}, {}));
-};
+		}
+		return acc;
+	}, []);
 
-//Auto-initialise
-{ 
-	[].slice.call(document.querySelectorAll('form'))
-		.forEach(form => { 
-			if(form.querySelector('[data-val=true]') && !form.hasAttribute('novalidate')) init(form);
-		});
-}
+};
 
 export default { init };
